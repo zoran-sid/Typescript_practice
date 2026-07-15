@@ -1,0 +1,19 @@
+{
+  "name": "typescript_practice",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A project-based TypeScript course derived from zoranzhou.com",
+  "scripts": {
+    "check": "tsc -p tsconfig.json --noEmit",
+    "day": "node scripts/run-day.mjs",
+    "current": "node scripts/run-current.mjs",
+    "branches:init": "node scripts/create-learning-branches.mjs",
+    "verify": "node scripts/verify-solutions.mjs",
+    "test": "npm run check && npm run verify"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4",
+    "typescript": "^5.0.0"
+  }
+}
