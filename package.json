@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A project-based TypeScript course derived from zoranzhou.com",
+  "description": "A zero-beginner TypeScript practice course",
   "scripts": {
-    "check": "tsc -p tsconfig.json --noEmit",
-    "day": "node scripts/run-day.mjs",
-    "current": "node scripts/run-current.mjs",
-    "branches:init": "node scripts/create-learning-branches.mjs",
-    "verify": "node scripts/verify-solutions.mjs",
-    "test": "npm run check && npm run verify"
+    "check": "tsc -p beginner/tsconfig.json --noEmit",
+    "beginner:doctor": "node beginner/scripts/doctor.mjs",
+    "beginner:check": "tsc -p beginner/tsconfig.json --noEmit",
+    "beginner": "node beginner/scripts/run.mjs practice",
+    "beginner:example": "node beginner/scripts/run.mjs example",
+    "beginner:solution": "node beginner/scripts/run.mjs solution",
+    "beginner:verify": "node beginner/scripts/verify.mjs",
+    "test": "npm run beginner:check && npm run beginner:verify"
   },
   "devDependencies": {
     "tsx": "^4.22.4",
