@@ -1,66 +1,80 @@
-# Day 21｜异步不是“以后再说”：Promise、await 与错误
+# Day 21：Promise、async/await 与异步错误
 
-网络请求、定时器和文件读取不会立刻给出结果。JavaScript 用 `Promise` 表示“未来会成功或失败的结果”，`async/await` 让我们用接近同步代码的顺序阅读它。
+预计用时：60–90 分钟。
 
-建议用时：60–90 分钟。
+网络请求、定时器和文件读取不会立刻给出结果。JavaScript 用 `Promise` 表示“未来会成功或失败的结果”，`async/await` 让异步步骤更接近从上到下的阅读顺序。
 
-## 今天会学到
+## 核心讲解
 
-- `Promise<T>` 与 `T` 不是同一种值；
-- `async` 函数总是返回 Promise；
-- `await` 取得成功值，也会把失败重新抛出；
-- 独立任务用 `Promise.all` 一起等待；
-- 为什么 `forEach(async () => ...)` 不会等待；
-- 用 `try/catch` 和 `unknown` 处理异步错误。
+`Promise<string>` 是“未来的字符串”，不是字符串本身。`await getName()` 才取得成功值；如果 Promise 失败，`await` 会像同步 `throw` 一样进入 `catch`。`async` 函数总是返回 Promise，因此其返回类型常写成 `Promise<T>`。
 
-## 最小心智模型
+互不依赖的任务可以一起创建，再统一等待：
 
-`getName()` 返回的是“装着未来名字的盒子”。`await getName()` 才是名字本身。
+~~~ts
+const [lesson, progress] = await Promise.all([
+  loadLesson(),
+  loadProgress(),
+]);
+~~~
 
-`async` 不会自动让所有代码按你想的顺序等待。你必须明确地 `await`，或者把一组 Promise 交给 `Promise.all`。
+不要写无人等待的 `forEach(async () => ...)`。`forEach` 不会收集回调返回的 Promise；应使用 `map` 产生 Promise 数组，再交给 `Promise.all`。
 
-## 今日路线
+调用异步函数后必须明确 `await`、`return` 或保存并统一等待。捕获异步错误时，错误值仍是 `unknown`，先用 `instanceof Error` 收窄。不要在 `catch` 中返回看似成功的假数据，除非产品明确要求且结果能标记为备用数据。
 
-1. 10 分钟：重做 Day 20 第 01 题，复习边界上的 `unknown`；
-2. 15 分钟：运行示例，画出 Promise 的成功与失败两条路；
-3. 35–50 分钟：完成 4 个高频易错练习；
-4. 10 分钟：关掉答案，解释“漏 await”和“async forEach”。
+## 阅读示例
 
-## 命令
+打开并右键运行 `example.ts`。画出 `Promise.all` 的成功路径和通知请求的失败路径，并指出每个 `await` 后变量的类型。
 
-```bash
-npm run beginner:example -- day21
-npm run beginner -- day21 1
-npm run beginner -- day21 2
-npm run beginner -- day21 3
-npm run beginner -- day21 4
-```
+## 独立练习（从空文件开始）
 
-答案命令示例：`npm run beginner:solution -- day21 3`。
+请从头编写“并行课程加载器”。
 
-## 最容易踩的坑
+必须创建：
 
-- 把 `Promise<string>` 当成 `string`；
-- 为了“保险”把所有独立请求都一个个 await，白白串行等待；
-- 认为 `forEach` 会等待 async 回调；
-- 调用 async 函数却既不 await，也不返回它；
-- catch 后返回假数据，把真实失败伪装成成功；
-- 以为 `await` 只处理成功，不会抛出错误。
+- `LessonRequest`：`title: string`，可选 `shouldFail?: boolean`。
+- `fetchLesson(request: LessonRequest): Promise<string>`：
+  - 先 `await Promise.resolve()` 模拟异步边界。
+  - `shouldFail` 为真时抛出 `Error("网络不可用")`。
+  - 否则返回课程标题。
+- `loadLessons(titles: readonly string[]): Promise<string[]>`：
+  - 使用 `map` 为每个标题创建 Promise。
+  - 使用 `Promise.all` 一起等待并返回结果。
+- `errorMessage(error: unknown): string`：安全读取错误文字。
+- `main(): Promise<void>`：加载固定标题 `变量、函数、联合`，然后单独请求一个会失败的“通知”。
 
-## 间隔复习
+精确输出：
 
-明天开始前，先重做第 01、03 题。三天后重做第 04 题，把错误类型仍然写成 `unknown`。
+~~~text
+完成数量：3
+课程：变量、函数、联合
+失败：网络不可用
+~~~
 
-## 完成标准
+限制：
 
-- 4 个练习全部通过；
-- 能解释 `Promise<T>` 和 `T` 的区别；
-- 知道何时并行使用 `Promise.all`；
-- 不再写无人等待的 `forEach(async ...)`；
-- 异步失败不会被悄悄吞掉。
+- 不得使用 `any`、类型断言、非空断言或 `forEach(async ...)`。
+- 三个正常请求必须先通过 `map` 创建，再统一交给 `Promise.all`。
+- `main` 必须 `await loadLessons`，不能把 Promise 当作字符串数组。
+- 失败请求必须被 `try/catch` 等待并处理，不得留下未处理的 rejected Promise。
+- `catch` 值保持 `unknown`，不得把失败伪装成成功课程。
+- 文件末尾必须等待 `main()` 完成。
+
+完成标准：右键运行后显示 PASS；能解释 `Promise<T>` 与 `T`、并行与串行、`map + Promise.all` 与异步 `forEach` 的区别。
+
+## 容易出错的地方
+
+- 把 `Promise<string>` 直接当成 `string`。
+- 互不依赖的请求仍逐个等待，造成不必要串行。
+- 认为 `forEach` 会等待 async 回调。
+- 调用 async 函数却既不等待也不返回。
+- 捕获后返回假数据，把失败伪装成成功。
+- 忘记 `await` 也会把拒绝重新抛出。
+
+## 拓展思考（不要求写代码）
+
+如果第二个请求必须使用第一个请求返回的课程 id，它们还能放进同一个 `Promise.all` 吗？请画出依赖顺序，并指出哪些请求仍可能并行。
 
 ## 官方资料
 
-- [TypeScript 4.5：Awaited 与 Promise 改进](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#the-awaited-type-and-promise-improvements)
 - [MDN：async function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/async_function)
 - [MDN：Promise.all](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)

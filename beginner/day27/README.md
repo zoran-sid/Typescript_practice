@@ -1,71 +1,66 @@
-# Day 27（选修）：浏览器、请求与命令行边界
+# Day 27（选修）｜浏览器、请求与命令行边界
 
-从这里开始是选修专题。主线 Day 00–26 已足够支撑普通 TypeScript 学习；当你准备做网页、调用接口或写命令行工具时，再进入本篇。
+TypeScript 总在某个运行环境中执行。浏览器提供 DOM、事件和 `fetch`，Node.js 提供命令行与文件系统。类型声明描述环境 API，却不会创造运行时能力；外部输入仍要验证。
 
-TypeScript 程序总在某个运行环境中执行。浏览器提供 DOM、事件和 `fetch`，Node.js 提供 `process`、文件系统等能力。类型会随着环境的库声明而变化，但外部输入仍必须在运行时验证。
+建议用时：60–90 分钟。
 
-## 今天能做到什么
+## 今天会学到
 
-- 认识 DOM 元素与事件的常用类型，并安全处理可能为空的目标。
-- 把 `fetch`/客户端返回的数据视为 `unknown`。
-- 把命令行参数解析写成可测试的纯函数。
-- 理解 `lib` 与 `@types/...` 为环境 API 提供声明，不会安装运行时本身。
+- 用结构类型表达输入事件，并处理空目标；
+- 把客户端响应保留为 `Promise<unknown>`；
+- 把命令行参数解析成可测试的纯函数；
+- 区分环境声明、运行时 API 与外部数据验证。
 
-## 60–90 分钟安排
+## 核心讲解
 
-1. 15 分钟：运行示例，区分浏览器、Node 与课程中的假客户端。
-2. 15 分钟：练习 01，用结构类型模拟输入事件。
-3. 20 分钟：练习 02，验证异步请求结果。
-4. 20 分钟：练习 03，解析可能缺失的 CLI 参数。
-5. 10 分钟：在浏览器控制台观察 `document.querySelector`，但不要把真实网络请求写进自动练习。
+真实浏览器事件可用 `HTMLInputElement` 和 `event.currentTarget`，但课程在 Node 中运行，不能直接执行 `document`。独立练习用最小结构模拟事件，把可测试业务逻辑与真实 DOM 绑定分开。
 
-## 环境类型不是运行时能力
+请求客户端即使写成 TypeScript，也无法保证服务器响应。先 `await` 得到 `unknown`，再验证对象与字段。命令行解析也不要在业务函数内部读取全局 `process.argv`；让 `parseArgs(args)` 接收普通字符串数组，更容易测试。
 
-```ts
-const input = document.querySelector<HTMLInputElement>("#search");
-input?.addEventListener("input", (event) => {
-  const target = event.currentTarget;
-  if (target instanceof HTMLInputElement) console.log(target.value);
-});
+## 独立练习（从空文件开始）
+
+从零完成一个“课程搜索入口”，同时处理事件、请求和 CLI 参数。
+
+必须名称：`InputEventLike`、`readQuery`、`JsonClient`、`Lesson`、`isRecord`、`loadLesson`、`Options`、`valueAfter`、`parseArgs`。
+
+需求：
+
+1. `readQuery` 读取可为空的 `currentTarget.value`，去掉两端空格；缺失时返回空字符串。
+2. `JsonClient.get(path)` 返回 `Promise<unknown>`；`loadLesson` 请求 `/lesson`，只接受字符串 title 和有限数字 minutes，无效时返回 `null`。
+3. `parseArgs` 读取 `--day` 与 `--mode` 后一项；day 必须是非负整数，否则默认 0；mode 只有 `example` 时取 example，否则为 practice。
+4. 使用与 README 对应的两个假客户端及两组参数输出结果，不依赖真实 DOM、网络或 `process`。
+
+精确输出：
+
+```text
+Query: typescript
+Missing: empty
+Valid: DOM/35
+Invalid: rejected
+Day: 27
+Mode: example
+Defaults: 0/practice
 ```
 
-上面的代码只能在浏览器中真实执行。课程运行器在 Node 中运行，所以示例只声明并类型检查 DOM 绑定函数，不会假装 Node 有 `document`。相反，业务部分通过小接口注入假客户端，这让练习稳定、快速、无需联网。
+固定输入：事件值为 `"  typescript  "` 和 null；好响应 `{ title: "DOM", minutes: 35 }`，坏响应的 minutes 为字符串；参数为 `["--day", "27", "--mode", "example"]` 和 `[]`。
 
-Node 命令行里常见 `process.argv.slice(2)`。练习先写 `parseArgs(args)` 纯函数；真实项目只在最外层把 `process.argv` 传进去。这样解析逻辑不依赖全局环境，也容易测试。
+限制：不使用 `any`、类型断言、非空断言；不访问真实 `document`、网络或 `process.argv`。
 
-## 练习
-
-```powershell
-npm run beginner:example -- day27
-npm run beginner -- day27 01
-npm run beginner -- day27 02
-npm run beginner -- day27 03
-npm run beginner -- day27 all
-```
-
-| 编号 | 内容 | 重点 |
-| --- | --- | --- |
-| 01 | 读取输入事件 | 事件目标可能为空、结构类型 |
-| 02 | 读取请求结果 | `Promise<unknown>`、运行时验证 |
-| 03 | 解析命令行参数 | 数组越界、`undefined`、默认值 |
+完成标准：右击运行 `practice.ts` 后输出完全一致；三个边界逻辑都是可独立测试的普通函数。
 
 ## 常见错误
 
-- 在 Node 中直接执行 `document.querySelector`。
-- 写了 `fetch(...).then(response => response.json() as User)` 就认为数据已验证。
-- 用非空断言 `document.querySelector(...)!` 隐藏元素缺失。
-- 在业务函数内部直接读取 `process.argv`，使测试必须篡改全局状态。
-- 误以为加入 DOM 类型或 `@types/node` 会自动提供浏览器/Node 运行时。
+- 在 Node 中直接执行 `document.querySelector`；
+- 把响应断言成 Lesson 而没有验证；
+- 忘记标志后的数组项可能不存在；
+- 把全局环境藏进业务函数。
 
-## 完成标准
+## 拓展思考（不要求写代码）
 
-- 三题通过，且练习不依赖网络或真实 DOM。
-- 能指出“环境声明”“外部数据验证”“运行时 API”三者的职责。
-- 能把真实边界留在入口，把可测试逻辑写成普通函数。
+真实网页中应把哪一小段代码留在最外层，负责把 `HTMLInputElement`、`fetch` 和这里的纯函数连接起来？这样拆分对测试有什么帮助？
 
 ## 官方资料
 
-- [TypeScript for the New Programmer](https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html)
 - [DOM Manipulation](https://www.typescriptlang.org/docs/handbook/dom-manipulation.html)
 - [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
 - [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)

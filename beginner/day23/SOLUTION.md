@@ -1,30 +1,12 @@
-# Day 23 参考答案与记忆卡
+# Day 23 参考思路
 
-## 01：undefined 是真实分支
+完整答案在 `solution.ts`。这道题把四类“可能缺失”放进同一个程序中。
 
-`find` 找不到时返回 `undefined`。开启 `strictNullChecks` 后，先检查再把值当作字符串使用。
+- `find` 和数组索引都可能产生 `undefined`，答案用明确分支处理，而不是用 `!`。
+- `double` 接受 `unknown`，只有 `typeof value === "number"` 后才计算。
+- `clearTheme` 通过解构取走 `theme`，返回其余属性组成的新对象；这与保留键并赋值为 `undefined` 不同。
+- 检查配置同时开启了数组索引和精确可选属性规则，所以参考答案没有绕开真正风险。
 
-## 02：未知输入先写 unknown
+## 拓展思考方向
 
-`noImplicitAny` 不让没有说明的参数悄悄失去检查。边界输入可以写成 `unknown`，再用 `typeof` 缩小。遇到许多错误时，先修第一条。
-
-## 03：数组索引可能越界
-
-`number[]` 表示元素如果存在就是数字，不保证 `scores[0]` 一定存在。`noUncheckedIndexedAccess` 会把索引结果视为 `number | undefined`。
-
-## 04：不存在不等于值为 undefined
-
-开启 `exactOptionalPropertyTypes` 后，`theme?: ...` 表示属性可以缺席。删除属性要构造一个不含它的新对象，而不是给它赋 `undefined`。
-
-记忆卡：
-
-- `strict`：严格检查组；
-- `strictNullChecks`：缺失值必须处理；
-- `noImplicitAny`：别让类型信息悄悄丢失；
-- `noUncheckedIndexedAccess`：索引可能越界；
-- `exactOptionalPropertyTypes`：可选属性可以不存在；
-- `noEmit`：只检查，不输出；
-- `target` 管 JavaScript 语法，`module` 管模块规则；
-- 多条错误：永远先读第一条。
-
-间隔复习：三天后重做第 03、04 题；一周后给别人解释这八行记忆卡。
+可先把第一项保存到局部变量，再判断 `first === undefined`；也可以用解构得到 `const [first] = scores` 后判断。两种写法都让被检查的值与后续使用的是同一个变量，比依赖长度与索引之间的间接关系更清楚。

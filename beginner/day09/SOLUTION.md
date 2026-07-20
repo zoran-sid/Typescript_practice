@@ -1,21 +1,11 @@
 # Day 09 参考答案说明
 
-## 01 类型化商品
+`ProjectId` 给字符串编号取了业务名称。`Project` 集中描述项目对象，使变量和函数参数共用同一份类型规则。
 
-`ProductId` 是 `string` 的类型名称，`Product` 描述完整对象。答案只修正价格；输出始终读取对象属性。
+`id` 与整个 `progress` 引用是只读属性，`members` 使用 `ReadonlyArray<string>`，因此函数只能读取这些数据。`note?` 允许属性缺失，`describeProject` 使用 `?? "无"` 生成明确显示。
 
-## 02 可选简介
+函数创建局部的成员文字和备注文字，再把四行放进数组并用换行连接。它只读取参数，不修改项目，最终一次 `console.log` 就产生四行报告。
 
-`bio?: string` 允许简介缺失，读取后用 `?? "暂无简介"` 提供显示文字。`id` 是只读的，不应当被重新分配。
+## 拓展思考参考方向
 
-## 03 浅层只读
-
-`info` 属性本身是只读的，不能换成另一个对象；但 `info.lessons` 没有 `readonly`，所以增加 1 能通过类型检查。这是行为演示，不表示业务代码一定应该修改它。
-
-## 04 项目摘要
-
-数组长度已经是实际成员数，不要额外加 1。可选备注缺失时，使用题目要求的“无”。
-
-```powershell
-npm run beginner:solution -- day09 04
-```
+`readonly progress` 修饰的是 `progress` 这个顶层属性，所以不能让它指向另一个对象；内部 `completed` 和 `total` 仍是普通可写数字。若要求深层只读，需要在内层也写 `readonly completed` 与 `readonly total`，或使用表达相同约束的只读类型。

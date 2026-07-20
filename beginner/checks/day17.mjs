@@ -6,50 +6,22 @@ export default {
     "状态：published=已发布",
     "可用状态：draft、published、archived",
   ],
-  exercises: [
-    {
-      id: "01",
-      title: "Omit 与真实运行时字段",
-      expected: ["公开字段：id,name,active"],
-      success: "公开类型和运行时对象都真正排除了 email。",
-      hints: [
-        'PublicAccount 使用 Omit<Account, "email">。',
-        "只改类型不会删除运行时字段。",
-        "用 const { email: _privateEmail, ...publicAccount } = account 收集公开字段。",
-      ],
-    },
-    {
-      id: "02",
-      title: "Partial 与不可变补丁",
-      expected: ["原资料：Ada/light", "新资料：Lin/dark"],
-      success: "Partial 补丁已合并到新对象，原资料保持不变。",
-      hints: [
-        "移除 patch 参数名前的下划线。",
-        "返回 { ...profile, ...patch }。",
-        "不要直接给 profile.name 或 profile.theme 赋值。",
-      ],
-    },
-    {
-      id: "03",
-      title: "as const 派生字面量联合",
-      expected: ["当前：中级", "可选：初级、中级、高级"],
-      success: "Level 已从 readonly 字面量元组自动派生。",
-      hints: [
-        "在 levels 数组后添加 as const。",
-        "Level 写成 (typeof levels)[number]。",
-        "currentLevel 选择现有成员“中级”。",
-      ],
-    },
-    {
-      id: "04",
-      title: "Record 与 satisfies",
-      expected: ["home=/", "about=/about", "learn=/learn"],
-      success: "完整路径表通过 satisfies 检查且运行值正确。",
-      hints: [
-        "在对象后添加 satisfies Record<RouteName, string>。",
-        "about 的值改为 /about，learn 的值改为 /learn。",
-        "不要用 as Record 强制断言。",
-      ],
-    },
+  expected: [
+    "原标题：旧标题",
+    "新标题：TypeScript 工具类型",
+    "原状态：draft",
+    "新状态：published=已发布",
+    "公开字段：id,title,published,status",
+    "可用状态：draft、published、archived",
+  ],
+  success: "派生类型、不可变补丁、字面量联合、完整标签表和运行时字段移除均已完成。",
+  hints: [
+    "Status 写成 (typeof statuses)[number]，三个派生类型使用 Partial、Pick 和 Omit。",
+    "updateArticle 返回 { ...article, ...patch }，不要修改原文章。",
+    "statusLabels 使用 satisfies Record<Status, string>，不要使用 as 强制断言。",
+    "toPublicArticle 可解构 summary，再用对象 rest 收集真正的公开字段。",
+  ],
+  runtimeHints: [
+    "若公开字段仍出现 summary，说明你只改变了类型，没有改变真实对象。",
   ],
 };

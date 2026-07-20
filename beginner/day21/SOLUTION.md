@@ -1,27 +1,15 @@
-# Day 21 参考答案与记忆卡
+# Day 21 参考答案说明
 
-## 01：Promise 不是最终值
+## 解题路线
 
-`fetchUserName()` 的类型是 `Promise<string>`。加上 `await` 后，`name` 才是 `string`。
+`fetchLesson` 返回 `Promise<string>`；只有 `await` 后才得到字符串。`loadLessons` 先用 `map` 创建所有 Promise，再用 `Promise.all` 统一等待，因此结果是按输入顺序排列的 `string[]`。
 
-## 02：独立任务一起开始
+`main` 明确等待正常加载和失败请求。Promise 拒绝会在 `await` 处进入 `catch`，捕获值仍以 `unknown` 交给 `errorMessage` 收窄。文件末尾再等待 `main()`，避免程序留下未观察的异步工作。
 
-两个任务互不依赖，所以先都调用，再由 `Promise.all` 等待。事件顺序先出现两个“开始”，证明它们不是一个完成后才启动另一个。
+## 易错点
 
-## 03：forEach 不会等待 async 回调
+`forEach` 不会保存或等待 async 回调的 Promise。也不要把 Promise 用 `String(...)` 掩盖成文字，或在 `catch` 中返回一门假课程冒充成功。
 
-`forEach` 不会收集回调返回的 Promise。用 `map` 得到 Promise 数组，再 `await Promise.all(...)`。
+## 拓展思考参考方向
 
-## 04：不要把失败伪装成成功
-
-备用数据可能是产品需求，但必须明确标记。这里要求调用者看到失败，所以在 `await` 外层捕获，并把 `unknown` 缩小为 `Error`。
-
-记忆卡：
-
-- 漏 `await`：拿到盒子，不是盒中值；
-- 互不依赖：`Promise.all`；
-- 数组异步：`map + Promise.all`；
-- `await` 失败：像同步 `throw` 一样进入 catch；
-- `return` 是交付结果，`console.log` 只是展示。
-
-间隔复习：两天后不看答案重做第 02、03 题；一周后再做第 04 题。
+依赖第一个结果的第二个请求必须在第一个 `await` 之后创建，不能和它放入同一批并行任务。拿到课程 id 后，所有只依赖该 id、彼此互不依赖的后续请求仍可以一起交给 `Promise.all`。

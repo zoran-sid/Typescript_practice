@@ -1,23 +1,12 @@
 # Day 30 参考思路
 
-## 练习 01
+完整入口答案在 `solution.ts`；`score.js` 与 `score.d.ts` 是题目给定的模块边界，不需要修改。
 
-先读真实的 `.js`：`score` 对数组做数值相加，因此声明应为：
+- 导入在运行时找到 JS 实现，在类型检查时由同名 d.ts 描述。
+- 两段 LessonInfo 合并成同时需要 title 和 minutes 的结构。
+- normalizeStatus 把旧枚举成员和现代字面量统一到现代表示。
+- `.d.ts` 必须忠实描述已有行为，不能用来粉饰不兼容实现。
 
-```ts
-export declare function score(points: readonly number[]): number;
-```
+## 拓展思考方向
 
-只改调用者或加断言会隐藏声明错误，其他调用处仍会被误导。
-
-## 练习 02
-
-两个同名 `interface LessonInfo` 会合并成 `{ title: string; minutes: number }`，所以对象必须同时提供两项。声明合并发生在类型检查阶段。
-
-## 练习 03
-
-旧数字枚举的 Draft/Published 在运行时分别是 0/1；现代对象的值是字面量字符串。函数接收两套表示，在边界统一为 `"draft" | "published"`，其余新代码只使用现代状态。
-
-## 维护原则
-
-声明文件描述事实，不是愿望。优先从文档、实现和真实测试确认 API；若要扩展第三方声明，范围越小越好，并为关键调用补运行时测试。
+参数和返回类型没有变化，所以 TypeScript 无法发现“忽略负数”的业务规则变化。应由包含负数输入的运行时测试保护，并在需求或文档中明确规则。

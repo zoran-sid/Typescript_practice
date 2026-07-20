@@ -1,4 +1,4 @@
-// TODO: 修改双引号中的文字，让程序输出 Hello, TypeScript!
-const message = "Change this message";
-
-console.log(message);
+// 请先完整阅读本目录的 README.md，再从下一行开始独立编写程序。
+// 必须使用变量名 message，并让它保存题目指定的字符串。
+// 请自行写出变量声明与 console.log，不要复制 example.ts。
+// 完成后按照项目首页说明，右击本文件运行并核对输出。

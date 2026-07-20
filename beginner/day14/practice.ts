@@ -1,0 +1,4 @@
+// 请先阅读同目录 README.md 的“独立练习（从空文件开始）”。
+// 从空入口文件开始组合现有模块，不要复制 example.ts 或辅助模块。
+// 必须使用名称：courseTitle、lessonCount、formatScore、passingScore、Student、summarizeStudent、student、scores。
+// 导入来源、固定数据、精确输出和限制均以 README.md 为准。

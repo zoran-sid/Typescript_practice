@@ -1,76 +1,67 @@
-# Day 28（选修）：元组、重载、`this` 与可变参数
+# Day 28（选修）｜元组、重载、`this` 与可变参数
 
-普通业务函数优先使用简单参数和联合类型。本专题面向“需要设计或阅读库 API”的场景：返回固定位置的数据、保留一组参数的精确类型、描述依赖调用者的 `this`，以及理解函数重载。
+普通业务函数优先使用简单参数和联合类型。本专题帮助你设计或阅读库 API：固定位置的数据、保留整组参数的通用包装器、输入与返回形状不同的重载，以及依赖调用者的 `this`。
 
-## 今天能做到什么
+建议用时：60–90 分钟。
 
-- 用元组表达“固定长度、每个位置含义不同”的数组。
-- 用剩余参数和可变参数元组保留参数列表。
-- 阅读重载签名，并知道联合参数通常更简单。
-- 用显式 `this` 参数检查调用方式。
+## 今天会学到
 
-## 60–90 分钟安排
+- 用只读元组表达固定长度和位置含义；
+- 用剩余参数与可变参数元组保留函数签名；
+- 正确排列重载签名和实现签名；
+- 用显式 `this` 参数检查调用上下文。
 
-1. 15 分钟：运行示例，对比数组与元组。
-2. 15 分钟：练习 01，返回固定二元组。
-3. 20 分钟：练习 02，写保留参数关系的通用调用器。
-4. 15 分钟：练习 03，完成两个重载分支。
-5. 15 分钟：练习 04，使用显式 `this`。
-6. 5 分钟：把一个重载改写成联合版本，比较可读性。
+## 核心讲解
 
-## 四个核心形状
+`readonly [completed: number, total: number]` 有固定两个位置，与任意长度的 `number[]` 不同。元组标签只帮助阅读，不会成为运行时属性。
 
-```ts
-type Pair = readonly [title: string, minutes: number];
+通用调用器中的 `Args` 同时出现在函数参数和实参数组，`Result` 同时连接原函数与包装器返回值，因此类型关系不会丢失。重载签名写在实现上方，实现必须覆盖全部分支；如果输入输出关系没有变化，简单联合通常更清楚。
 
-function call<Args extends unknown[], Result>(
-  fn: (...args: Args) => Result,
-  ...args: Args
-): Result {
-  return fn(...args);
-}
+显式 `this` 参数只用于类型检查，不是运行时第一个实参；可以通过 `.call(context, ...)` 提供调用者。
 
-function format(value: string): string;
-function format(value: number): string;
-function format(value: string | number): string {
-  return String(value);
-}
+## 独立练习（从空文件开始）
 
-function describe(this: { title: string }): string {
-  return this.title;
-}
+从零完成一个“高级函数工具箱”。
+
+必须名称：`ProgressPair`、`progress`、`invoke`、`normalize`、`CourseContext`、`describe`。
+
+需求：
+
+1. `progress([true, false, true, true])` 返回只读元组 `[3, 4]`。
+2. `invoke` 使用 `Args extends unknown[]` 与 `Result`，分别调用数字乘法和标题拼接函数。
+3. `normalize` 提供字符串重载和只读字符串数组重载；都执行 trim + 小写，返回类型分别是 string 和 string[]。
+4. `describe` 有显式 `this: CourseContext` 和 prefix 参数，通过 `.call` 输出课程说明。
+
+精确输出：
+
+```text
+Progress: 3/4
+Total: 36
+Day 28
+types
+modules, generics
+Elective Day 28: Advanced functions
 ```
 
-元组的标签帮助阅读，但不会在运行时创建属性。重载把调用签名放在实现上方，实现签名通常不直接对调用者可见。若输入与输出关系不随重载改变，优先考虑简单联合。
+固定输入：乘法 12×3；标题函数接收 `"Day "`、28；normalize 输入 `"  TYPES "` 及 `[" Modules ", " GENERICS "]`；上下文 title 为 Advanced functions、day 为 28。
 
-## 练习
+限制：不使用 `any`、类型断言或普通数组冒充元组；实现签名必须覆盖两个重载。
 
-```powershell
-npm run beginner:example -- day28
-npm run beginner -- day28 01
-npm run beginner -- day28 02
-npm run beginner -- day28 03
-npm run beginner -- day28 04
-npm run beginner -- day28 all
-```
+完成标准：右击运行 `practice.ts` 后输出完全一致；能指出每个泛型参数连接了哪些位置，并说明 `this` 参数为何不出现在运行时实参数组中。
 
 ## 常见错误
 
-- 把任意长度的普通数组断言成固定元组。
-- 用 `any[]` 写包装函数，导致参数和返回类型关系丢失。
-- 只写重载签名却忘记实现，或实现无法覆盖所有重载。
-- 以为 `this` 参数是运行时第一个实参；它只存在于类型位置。
-- 能用联合清楚表达却堆很多重载，使调用者与实现都更难维护。
+- 用 `(number | boolean)[]` 代替固定元组；
+- 包装器写成 `any[]` 丢失关系；
+- 只写重载签名却没有兼容实现；
+- 把显式 this 当成普通第一个参数。
 
-## 完成标准
+## 拓展思考（不要求写代码）
 
-- 四题全部通过。
-- 能解释 `[string, number]` 与 `(string | number)[]` 的差别。
-- 能指出可变参数元组里的 `Args` 同时连接了函数参数和实参数组。
-- 能说明重载与联合各适合什么场景。
+`normalize` 能否只用联合参数写成一个函数？比较联合版本与重载版本在调用处返回类型精度和实现可读性上的差别。
 
 ## 官方资料
 
 - [More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html)
-- [Object Types：Tuple Types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types)
-- [TypeScript 4.0：Variadic Tuple Types](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#variadic-tuple-types)
+- [Tuple Types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types)
+- [Variadic Tuple Types](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#variadic-tuple-types)

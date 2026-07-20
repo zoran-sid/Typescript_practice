@@ -1,70 +1,69 @@
-# Day 30（选修）：声明文件与旧式 TypeScript
+# Day 30（选修）｜声明文件与旧式 TypeScript
 
-现代项目通常从 npm 包直接获得类型，但维护旧 JavaScript、无类型库或历史代码时会遇到 `.d.ts`、声明合并、枚举与命名空间。今天的目标是能消费和修正这些类型，不是把新项目写成旧风格。
+现代 npm 包通常自带类型，但维护旧 JavaScript 或历史代码时会遇到 `.d.ts`、声明合并、枚举与命名空间。目标是准确消费这些边界，不是在新项目中默认复制旧风格。
 
-## 今天能做到什么
+建议用时：60–90 分钟。
 
-- 解释 `.d.ts` 只描述现有运行时，不生成 JavaScript。
-- 为一个小型 JavaScript 模块写匹配的导出声明。
-- 识别接口声明合并，并理解它和 type alias 的差别。
-- 阅读 `enum`、`namespace`，新代码中优先考虑字面量联合、对象与 ES 模块。
-- 知道错误声明可能让编译器“相信谎言”。
+## 今天会学到
 
-## 60–90 分钟安排
+- 理解 `.d.ts` 只描述运行时，不生成 JavaScript；
+- 对照 JavaScript 导出与声明文件；
+- 识别同名 interface 的声明合并；
+- 把旧 enum 归一化成现代字面量状态；
+- 知道错误声明会让编译器相信不真实的行为。
 
-1. 15 分钟：同时打开 `legacy-score.js`、`legacy-score.d.ts` 和 `example.ts`。
-2. 20 分钟：练习 01，修正与真实 JS 不一致的声明文件。
-3. 15 分钟：练习 02，观察两个同名 interface 如何合并。
-4. 20 分钟：练习 03，把旧枚举值归一化为现代字面量状态。
-5. 10 分钟：在 `node_modules` 中任选一个包，只观察其 `.d.ts` 入口。
-
-## 三层必须一致
+## 核心讲解
 
 ```text
-真实 JavaScript 行为  ←必须吻合→  .d.ts 声明  ←供检查→  TypeScript 调用者
+真实 JavaScript 行为 ←必须吻合→ .d.ts 声明 ←供检查→ TypeScript 调用者
 ```
 
-声明文件中的这段代码不会创建函数：
+本目录的 `score.js` 是运行时代码，`score.d.ts` 描述其参数和返回值。声明里的 `declare function` 不会创建函数；删除真实 JS 后，运行时仍会失败。
 
-```ts
-export declare function total(values: readonly number[]): number;
+同名 interface 会合并，适合扩展外部声明；type alias 不会这样合并。`enum` 常见于旧代码，新代码通常可用 `as const` 对象加字面量联合，既直观又符合 ES 模块习惯。
+
+## 独立练习（从空文件开始）
+
+只编辑 `practice.ts`，从零完成“旧模块兼容入口”；不要修改 `score.js` 或 `score.d.ts`。
+
+必须名称：`LessonInfo`、`LegacyStatus`、`ModernStatus`、`normalizeStatus`。还要从 `./score.js` 导入 `score`。
+
+需求：
+
+1. 阅读两个 score 文件，给 `[10, 20, 30]` 求和，并用 number 接收结果。
+2. 写两段同名 `LessonInfo` interface：第一段 title，第二段 minutes；创建 Declarations / 35 对象。
+3. 写 `LegacyStatus` 数字枚举 Draft、Published。
+4. 写现代 `ModernStatus` 常量对象与同名字面量联合类型，值为 draft、published。
+5. `normalizeStatus` 同时接受旧枚举和现代状态，并统一返回 ModernStatus。
+
+精确输出：
+
+```text
+Score: 60
+Declarations: 35 minutes
+Legacy: published
+Modern: draft
 ```
 
-运行时仍必须存在一个真正导出的 `total`。如果声明写成返回 `string`、真实代码却返回 `number`，TypeScript 会按照错误声明继续推理，直到运行时出现问题。
+限制：不使用 `any`、类型断言或 namespace；不要修改辅助模块来迎合调用代码。
 
-同名 `interface` 可以合并，这对扩展外部声明有用，也可能让来源不清晰。`type` 别名不能同名重复。模块增强、ambient module、triple-slash、`export =` 等属于维护具体旧库时再查的专项内容。
-
-## 练习
-
-```powershell
-npm run beginner:example -- day30
-npm run beginner -- day30 01
-npm run beginner -- day30 02
-npm run beginner -- day30 03
-npm run beginner -- day30 all
-```
-
-练习 01 需要同时修正 `practice-legacy-score.d.ts`，终端的类型提示会指出当前声明与调用方式的冲突。
+完成标准：右击运行 `practice.ts` 后输出完全一致；能指出 `.js`、`.d.ts`、`.ts` 中哪些代码会在运行时执行，以及声明错误会造成什么风险。
 
 ## 常见错误
 
-- 在 `.d.ts` 里写实现，期待它生成运行时代码。
-- 为了尽快消除红线，把无类型模块整体声明成 `any`。
-- 声明的可选性、返回值或异常行为与真实 JS 不一致。
-- 不知道接口已在别处合并，误判某个字段从哪里来。
-- 认为 enum 已“不能用”；它仍受支持，但很多现代场景用 `as const` 对象或字面量联合更直观。
-- 新代码继续使用 namespace 组织模块，而项目已经采用 ESM。
+- 以为 `.d.ts` 会生成实现；
+- 声明与真实 JS 的参数或返回类型不一致；
+- 期待 type alias 像 interface 一样合并；
+- 新模块继续用 namespace 组织代码；
+- 用断言掩盖错误声明。
 
-## 完成标准
+## 拓展思考（不要求写代码）
 
-- 三题通过，能明确指出哪些文件在运行时执行。
-- 能为给定 JS 导出写最小、非 `any` 的声明。
-- 能读懂 enum/namespace，但不会因为历史代码存在就默认在新代码中复制。
+如果 `score.js` 实际开始忽略负数，但 `.d.ts` 完全没有变化，TypeScript 能发现这次业务行为变更吗？应由哪类测试保护它？
 
 ## 官方资料
 
 - [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)
 - [Declaration Files](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html)
 - [Declaration Merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
-- [Enums：Objects vs Enums](https://www.typescriptlang.org/docs/handbook/enums.html#objects-vs-enums)
-- [Namespaces](https://www.typescriptlang.org/docs/handbook/namespaces.html)
+- [Enums](https://www.typescriptlang.org/docs/handbook/enums.html)

@@ -1,21 +1,12 @@
-# Day 32 参考答案说明
+# Day 32 参考思路
 
-## 01 类型安全方法装饰器
+完整答案在 `solution.ts`。
 
-包装函数在调用原方法前输出 `context.name`。泛型 `This`、`Args`、`Return` 没有改变，因此 `total` 仍只接受两个数字并返回数字。
+- tracedMethod 使用标准 `(value, context)`，三个泛型分别保存实例、参数列表和返回值。
+- 包装函数显式声明 this，并用 target.call 传回原方法。
+- 类装饰器只从 context 读取类名；withTag 用交叉类型保留原能力。
+- MessageService 通过构造器组合 Formatter，依赖清楚且可替换。
 
-## 02 类装饰器上下文
+## 拓展思考方向
 
-标准类装饰器通过 `ClassDecoratorContext` 读取 `context.name`。返回 `void`，所以没有替换 `Report` 类。
-
-## 03 对象 Mixin
-
-Mixin 接收原实例，并通过 `Object.assign` 增加标签。交叉类型保留原来的 `Task` 成员，同时加入只读的 `tag` 类型。答案将标签设为 `advanced`。
-
-## 04 组合优先
-
-`MessageService` 不继承格式器，也不需要 Mixin。它只持有 `Formatter` 接口并调用 `format`，因此测试时可以轻松替换另一种格式器。
-
-```powershell
-npm run beginner:solution -- day32 04
-```
+当前通用 Return 会原样保留 Promise 类型，调用前日志仍可工作。若要等待完成后记录，包装函数必须变成 async，返回会统一成 Promise；可把目标约束为返回 Promise<Result>，再返回 Promise<Result>，避免把任意同步 Return 意外包装成 Promise。

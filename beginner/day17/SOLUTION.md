@@ -1,17 +1,15 @@
 # Day 17 参考答案说明
 
-## 练习 01
+## 解题路线
 
-Omit<Account, "email"> 只产生类型，不会从 account 的运行时对象删除 email。答案用对象 rest 真正取出 email 并收集其余字段，再让 PublicAccount 检查结果形状。
+`Status` 从只读字面量元组派生；状态增减时，联合自动同步。`ArticlePatch`、`ArticlePreview` 和 `PublicArticle` 都从唯一 `Article` 派生，避免重复定义漂移。`statusLabels` 使用 `satisfies`，所以漏掉任何状态或写错值类型都会得到检查提示。
 
-## 练习 02
+`updateArticle` 用 spread 返回新对象。`toPublicArticle` 还必须解构掉 `summary`，因为 `Omit` 只改变类型，并不会删除运行时字段。
 
-Partial<Profile> 允许补丁只提供部分属性。返回 { ...profile, ...patch } 创建新对象，后展开的 patch 覆盖同名属性；original 保持不变。
+## 易错点
 
-## 练习 03
+不要用断言强迫标签表通过，也不要把 `original` 直接改掉。仅把完整文章赋给 `PublicArticle` 变量并不能移除额外的运行时字段，必须真的构造公开对象。
 
-as const 保留数组每项的字面量。typeof levels 得到 readonly 元组类型，再用 [number] 取得所有数字索引位置的元素联合，Level 因此只允许三个级别。
+## 拓展思考参考方向
 
-## 练习 04
-
-Record<RouteName, string> 要求三个键完整存在且值为 string。satisfies 检查对象字面量是否符合要求，同时保留 paths 自身的具体属性。它不会自动修复错误路径，运行时字符串仍需我们写正确。
+若先把 `scheduled` 加入 `statuses`，`Status`、`Article.status` 和相关派生类型会自动包含它；`statusLabels` 会因缺少键立即报错，迫使你提供用户可读标签。需要穷尽处理状态的业务分支也应同步报错。

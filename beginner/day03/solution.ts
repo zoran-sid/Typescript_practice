@@ -1,4 +1,4 @@
-const studyMinutes: number[] = [30, 45, 60];
+const studyMinutes: number[] = [30, 45, 60, 20];
 let totalMinutes = 0;
 let longestSession = 0;
 

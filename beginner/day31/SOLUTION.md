@@ -1,17 +1,11 @@
-# Day 31 参考答案说明
+# Day 31 参考思路
 
-## 01 生成偶数
+完整答案在 `solution.ts`。
 
-循环仍负责推进数字，只有 `current % 2 === 0` 时才执行 `yield`。生成器不会先创建六项数组再筛选，而是按请求逐个产生符合条件的值。
+- evenNumbers 只在当前值为偶数时 yield，没有预先建立结果数组。
+- createCountdown 的可迭代对象每次创建一个带独立 current 状态的迭代器；先保存本次 value，再递减。
+- bigint 的递增量也是 bigint；进入 JSON 前显式变成字符串。
 
-## 02 手写迭代协议
+## 拓展思考方向
 
-`current` 应从传入的 `start` 开始。每次 `next()` 先保存本次值，再减 1；小于 1 后返回 `{ done: true, value: undefined }`。
-
-## 03 超大整数与 JSON
-
-`bigint` 必须与 `bigint` 运算，因此递增量是 `1n`。原生 JSON 不支持 `bigint`，答案通过 `toString()` 明确把标识保存成字符串。
-
-```powershell
-npm run beginner:solution -- day31 03
-```
+无限序列只能由“取有限个后停止”的消费逻辑安全处理。直接展开、Array.from 或没有 break 的 for...of 会不断请求下一个值，既无法结束也会持续占用资源。

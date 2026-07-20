@@ -1,79 +1,67 @@
-# Day 25：结课项目（二）——业务逻辑、不可变更新与模块
+# Day 25｜结课项目（二）：业务逻辑、不可变更新与模块
 
-昨天把外部数据安全地变成了任务，今天处理这些任务：开始、完成、筛选、排序和统计。重点不是写更多语法，而是让每个函数职责单一，并且不偷偷修改调用者传入的数据。
+昨天把外部数据变成了可信任务，今天从空文件实现更新、筛选、排序和统计。示例继续展示多模块组织；独立练习只写一个入口文件，让注意力集中在数据关系和不可变更新上。
 
-## 今天能做到什么
+建议用时：60–90 分钟。
 
-- 用展开语法更新数组中的一个对象，同时保留旧数据。
-- 区分“新数组”“新对象”和仍然共享的嵌套引用。
-- 用 `Record` 保证每种状态都有统计结果。
-- 用一个小泛型表达“输入实体和输出实体保持同一种类型”。
-- 把模型、业务逻辑和报告拆进不同模块。
+## 今天会学到
 
-## 60–90 分钟安排
+- 用 `map` 和对象展开替换一个任务，不修改旧数据；
+- 区分新数组、新对象与复用的旧引用；
+- 避免 `sort` 原地修改调用者数组；
+- 用 `Record` 保证每种状态都有统计位置；
+- 用受约束泛型保留实体的具体类型。
 
-1. 10 分钟：复习 Day 13 的浅复制，预测 `array === [...array]` 与 `array[0] === [...array][0]`。
-2. 15 分钟：阅读并运行多文件 `example.ts`。
-3. 15 分钟：练习 01，完成单项不可变更新。
-4. 15 分钟：练习 02，筛选并排序，同时保护原数组。
-5. 15 分钟：练习 03，用 `Record` 汇总所有状态。
-6. 15 分钟：练习 04，用受约束的泛型复用按 id 更新。
+## 核心讲解
 
-## 示例的模块关系
+`map` 创建新数组，命中项用对象展开创建新对象；未命中项没有变化，可以安全复用旧引用。对象展开是浅复制，嵌套可变对象仍共享引用。
+
+`sort` 会原地修改数组，应先 `filter` 或复制再排序。`Record<TaskStatus, number>` 比任意字符串键严格：新增状态时会提醒补齐统计初值。
+
+`T extends { readonly id: string }` 表示函数接受任意带 id 的实体，并让输入、更新回调和返回数组保持同一种 `T`。
+
+## 独立练习（从空文件开始）
+
+在 `practice.ts` 中从零完成“任务业务服务与报告”。
+
+必须名称：`TaskStatus`、`StudyTask`、`Report`、`updateById`、`completeTask`、`plannedByDuration`、`buildReport`、`original`、`updated`。
+
+固定任务：a / Types / 30 / todo；b / Modules / 45 / doing；c / Validation / 20 / todo；d / Variables / 50 / todo。
+
+需求：
+
+1. `updateById<T extends { readonly id: string }>` 用 `map` 只更新命中项。
+2. `completeTask` 复用它，把 id 为 a 的状态改为 done。
+3. `plannedByDuration` 只保留 todo，按分钟升序排列，不能改动传入数组。
+4. `buildReport` 返回 `Record<TaskStatus, number>` 的 counts 和总分钟数。
+5. 输出原始/更新状态、引用比较、计划顺序和更新后报告。
+
+精确输出：
 
 ```text
-models.ts ← task-service.ts
-     ↑            ↑
-     └── report.ts ── example.ts
+Original first: todo
+Updated first: done
+Same array: false
+Same untouched task: true
+Planned: Validation, Variables
+Counts: todo=2, doing=1, done=1
+Minutes: 145
 ```
 
-- `models.ts` 只放共享类型。
-- `task-service.ts` 负责更新任务。
-- `report.ts` 负责从任务派生统计结果。
-- `example.ts` 组合它们，不重复业务规则。
+限制：不使用 `any`、非空断言 `!`；不得给原数组调用会修改它的方法，不得直接赋值修改任务属性。
 
-## 不可变更新的三步
-
-```ts
-const next = tasks.map((task) =>
-  task.id === targetId ? { ...task, status: "done" } : task,
-);
-```
-
-`map` 创建新数组；命中的项通过展开创建新对象；未命中的项可安全复用原对象。展开是浅复制，如果对象内还有可修改的嵌套对象，修改嵌套字段前还要再复制一层。
-
-## 练习与命令
-
-| 编号 | 内容 | 重点 |
-| --- | --- | --- |
-| 01 | 完成一个任务 | 不修改原数组，保留未命中引用 |
-| 02 | 筛选并排序 | `sort` 会原地修改，先复制 |
-| 03 | 生成状态报告 | `Record` 不漏掉任何状态 |
-| 04 | 通用按 id 更新器 | 泛型表达输入输出关系 |
-
-```powershell
-npm run beginner:example -- day25
-npm run beginner -- day25 01
-npm run beginner -- day25 02
-npm run beginner -- day25 03
-npm run beginner -- day25 04
-npm run beginner -- day25 all
-```
+完成标准：右击运行 `practice.ts` 后输出完全一致；能解释为何目标项是新对象、未命中项可以复用，以及 `Record` 如何防止遗漏状态。
 
 ## 常见错误
 
-- 直接写 `task.status = "done"`，使旧页面或测试中的对象也发生变化。
-- 以为 `{ ...task }` 会递归复制全部嵌套对象。
-- 对传入数组直接调用 `sort`；它返回同一个、已经被修改的数组。
-- 用 `{ [key: string]: number }` 统计状态，拼错键也不报错；这里更适合 `Record<TaskStatus, number>`。
-- 泛型 `T` 只出现一次。泛型应表达至少两个位置之间的类型关系。
+- 直接写 `task.status = "done"`；
+- 对参数数组直接 `sort`；
+- 误以为对象展开会深复制；
+- 用任意字符串键统计状态。
 
-## 完成标准
+## 拓展思考（不要求写代码）
 
-- 四题全部通过，原数组和原对象未被意外修改。
-- 能解释为什么未命中的任务可以复用旧引用。
-- 能指出 `T extends { readonly id: string }` 的约束解决了什么问题。
-- 能画出示例中四个模块的依赖方向。
+如果任务新增可修改的 `details: { notes: string[] }`，更新其中一条 notes 时需要复制哪几层，才能保证旧任务完全不变？
 
 ## 官方资料
 

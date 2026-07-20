@@ -1,19 +1,15 @@
 # Day 11 参考答案说明
 
-请先独立尝试，再运行对应 solution。
+## 解题路线
 
-## 练习 01
+`StudyTask` 用 `status` 把不同数据拆成四个合法成员。`describeTask` 先检查判别字段，因此每个 `case` 只会看到当前成员拥有的属性。
 
-switch 检查 status 后，每个 case 都得到更具体的成员类型。paid 分支才能读取 amount，cancelled 分支才能读取 reason。pending 分支也应该使用对象自己的 orderId，而不是写死结果。
+`completed` 已经收窄了联合，但 `score` 自身仍可能是 `undefined`。答案用 `??` 生成“待评分”，并只在确实有分数时追加单位。`default` 中的 `task` 在所有成员都处理后是 `never`；未来添加状态却忘记分支时，这里会首先报错。
 
-## 练习 02
+## 易错点
 
-原错误不是类型错误，而是业务分支返回了错误文字。类型正确不等于逻辑正确。答案同时加入 assertNever；新增 TaskState 成员后，default 中的 task 将不再是 never，检查器会指出漏掉的分支。
+不要把 `score`、`minutes` 和 `reason` 全部写成可选属性，也不要用 `!` 或 `as` 绕过检查。类型正确不代表业务文字一定正确，所以仍要对照五行精确输出。
 
-## 练习 03
+## 拓展思考参考方向
 
-三个图形的面积公式需要的字段不同。判别后再计算，既不需要可选属性，也不需要非空断言。
-
-## 练习 04
-
-success 已经收窄了联合，但 receiptId 自身仍是可选属性，所以类型仍包含 undefined。使用空值合并运算符提供“待生成”，比非空断言安全。declined 和 error 必须分别处理，不能合并成模糊的“尚未处理”。
+加入 `paused` 后，构造输入的地方会接受新成员，而 `describeTask` 的 `default` 会因为 `task` 不再是 `never` 而报错。补上 `paused` 分支后错误消失，这正是在强迫所有消费者同步处理新状态。

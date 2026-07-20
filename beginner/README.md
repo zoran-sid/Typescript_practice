@@ -1,82 +1,72 @@
 # TypeScript 零基础完整路线
 
-这条路线专门写给还没有 JavaScript 基础的学习者。它把完成当天 TypeScript 学习所需的 JavaScript 知识一起讲清楚，不要求你先理解 Git 分支、框架、模块或测试工具。
+这条路线不假设你已经学习 JavaScript。每一天先用 `example.ts` 展示完整做法，再由你在几乎空白的 `practice.ts` 中从头写出一道完整程序。
 
-主线是 Day 00–26，每天按 60–90 分钟设计；Day 27–32 是遇到真实需求时再学的选修。
+主线是 Day 00–26，每天按 60–90 分钟设计；Day 27–32 是按需选修。
 
-## 第一次开始
+## 推荐学习流程
 
-在项目根目录 `F:\typescript_practice` 打开 PowerShell：
+1. 用 8–10 分钟回忆昨天、三天前和七天前的内容。
+2. 阅读当天 README 的概念与完整示例说明。
+3. 右击 `example.ts`，选择 **Run Code**，然后修改输入并预测输出。
+4. 阅读“独立练习（从空文件开始）”中的需求、固定命名和期望输出。
+5. 打开 `practice.ts`，从第一行开始写全部代码。
+6. 右击 `practice.ts` → **Run Code**，根据中文类型提示或输出差异修改。
+7. 回答 README 最后的一道拓展思考题。
+8. 实在卡住时再阅读 `SOLUTION.md` 或右击 `solution.ts`。
+
+## 开启右键运行
+
+项目包含 `.vscode` 配置。用 VS Code/Cursor 打开项目根目录后，安装编辑器推荐的 **Code Runner** 扩展。官方扩展支持在编辑器或文件列表中右击并选择 **Run Code**。
+
+右键以下文件时会自动选择正确模式：
+
+| 文件 | 自动行为 |
+| --- | --- |
+| `example.ts` | 类型检查并运行完整示例 |
+| `practice.ts` | 类型检查、运行并核对你的输出 |
+| `solution.ts` | 验证参考答案 |
+
+如果不安装扩展，可以按 `F5`，或运行内置任务“课程：运行当前文件”。
+
+## practice.ts 的规则
+
+- 每天只有一个 `practice.ts`。
+- 文件初始只有 3–6 行注释，没有任何起始代码。
+- 注释最多规定必要名称，例如 `tasks`、`calculateTotal`。
+- 完整输入、处理、分支、函数和输出都由你自己编写。
+- 自动检查只关心类型、运行结果和精确输出，不要求代码与答案逐字相同。
+
+## 可选命令行方式
 
 ```powershell
-npm install
+# 环境检查
 npm run beginner:doctor
-npm run beginner:example -- day00
-npm run beginner -- day00
-```
 
-练习第一次不通过是正常现象。先阅读当天 `README.md`，修改对应的 `practice.ts` 或 `practice-XX.ts`，保存后重新运行同一条命令。
-
-## Day 04 以后的多题命令
-
-易错内容被拆成多道短题。题号始终是两位数字：
-
-```powershell
-# 先运行当天完整示例
+# 示例 / 自己的练习 / 参考答案
 npm run beginner:example -- day10
+npm run beginner -- day10
+npm run beginner:solution -- day10
 
-# 只检查一道练习
-npm run beginner -- day10 01
-
-# 按顺序检查当天全部练习
-npm run beginner -- day10 all
-
-# 卡住后再核对指定参考答案
-npm run beginner:solution -- day10 01
-
-# 核对当天所有参考答案
-npm run beginner:solution -- day10 all
-```
-
-`day10` 也可写成 `10`。Day 00–03 保留单文件形式，省略题号即可。
-
-验证命令不会检查你的初始练习，而是检查课程示例与参考答案：
-
-```powershell
-# 统一类型检查（排除刻意未完成的 practice）
-npm run beginner:check
-
-# 只验证一天
+# 验证一天或全部课程
 npm run beginner:verify -- day10
-
-# 验证全部课程
 npm run beginner:verify
 ```
 
-## 每天怎样学习
-
-1. 用 8–10 分钟复习昨天、三天前和七天前的易错点。
-2. 阅读当天目标和必要概念，不要求一次背完。
-3. 运行 `example.ts`，修改数据并预测输出。
-4. 依次完成短练习：回忆、修错、迁移、综合。
-5. 根据中文的期望/实际输出和提示自行定位。
-6. 卡住后阅读 `SOLUTION.md`，最后才运行答案。
-7. 用自己的话记录错误原因，而不是只记正确代码。
-
-详细复习方法见 [REVIEW.md](./REVIEW.md)，可打印或复制的进度表见 [PROGRESS.md](./PROGRESS.md)。
+现在每天只有一道题，不再填写题号，也不再使用 `all`。
 
 ## 主线课程地图
 
 | 阶段 | Day | 内容 | 完成后的能力 |
 | --- | --- | --- | --- |
-| 起步 | 00–03 | 环境、变量、转换、条件、数组、循环 | 能运行和修改第一批 TypeScript 程序 |
-| JavaScript 桥梁 | 04–08 | 布尔分支、函数、对象、数组方法、缺失值 | 补齐阅读 TypeScript 代码所需的 JS 基础 |
-| 日常建模 | 09–13 | type/interface、联合收窄、函数类型、不可变更新 | 用类型表达普通应用数据和行为 |
+| 起步 | 00–03 | 环境、变量、转换、条件、数组、循环 | 能独立写出第一批小程序 |
+| JavaScript 桥梁 | 04–08 | 布尔分支、函数、对象、数组方法、缺失值 | 补齐阅读 TypeScript 所需的 JS 基础 |
+| 日常建模 | 09–13 | type/interface、联合收窄、函数类型、不可变更新 | 用类型表达应用数据与行为 |
 | 组织与复用 | 14–18 | ES 模块、泛型、keyof、工具类型、类 | 拆分多文件代码并安全复用 |
-| 边界与质量 | 19–23 | 错误、JSON 验证、异步、测试、TSConfig | 处理外部数据、失败和工程检查 |
-| 结课项目 | 24–26 | 模型、验证、业务逻辑、异步状态、回归测试 | 完成“学习任务与进度报告器”全流程 |
+| 边界与质量 | 19–23 | 错误、JSON 验证、异步、测试、TSConfig | 处理外部数据、失败与工程检查 |
+| 结课项目 | 24–26 | 模型、验证、业务逻辑、异步状态、回归测试 | 完成任务与进度报告器全流程 |
 
-Day 00–26 的逐日主题和 +1/+3/+7 复习格位于 [PROGRESS.md](./PROGRESS.md)。
+逐日主题与 +1/+3/+7 复习格见 [PROGRESS.md](./PROGRESS.md)。
 
 ## 按需选修
 
@@ -87,58 +77,24 @@ Day 00–26 的逐日主题和 +1/+3/+7 复习格位于 [PROGRESS.md](./PROGRESS
 | 29 | 映射、条件、infer、模板字面量、品牌类型 | 需要消除稳定重复的类型时 |
 | 30 | `.d.ts`、声明合并、枚举与历史代码 | 维护无类型 JavaScript 或旧项目 |
 | 31 | Iterable、Iterator、Generator、Symbol、bigint | 处理惰性序列或协议 |
-| 32 | TypeScript 5+ 标准装饰器与对象 Mixin | 框架或库明确依赖这些能力时 |
+| 32 | TypeScript 5+ 标准装饰器与对象 Mixin | 框架或库明确依赖时 |
 
-选修不是主线毕业要求。条件类型、声明文件和装饰器都很有用，但零基础阶段过早学习会遮住更常用的函数、对象和收窄。
-
-## 文件结构
-
-Day 00–03：
+## 每日文件结构
 
 ```text
 dayXX/
-  README.md
-  example.ts
-  practice.ts
-  solution.ts
-  SOLUTION.md
+  README.md      概念、一道独立练习、一道拓展思考
+  example.ts     完整示例
+  practice.ts    只有命名提示，由你从零编写
+  solution.ts    唯一参考答案
+  SOLUTION.md    解题思路与拓展思考方向
 ```
 
-Day 04 以后：
+少数模块、声明文件或异步课程会保留示例所需的辅助文件，但练习入口始终只有 `practice.ts`。
 
-```text
-dayXX/
-  README.md
-  example.ts
-  practice-01.ts
-  practice-02.ts
-  ...
-  solution-01.ts
-  solution-02.ts
-  ...
-  SOLUTION.md
-```
+## 复习与资料
 
-自动检查元数据位于 `beginner/checks/`，不混入学习文件。少数多文件课程还会包含模型、工具或 JavaScript 模块。
-
-某些高级“类型修复题”会故意从 TypeScript 错误开始。全局课程检查排除初始 `practice-XX.ts`，但逐题运行器仍会检查你正在做的文件，并优先显示前三条类型提示。
-
-## 高频内容为什么会重复
-
-课程把容易遗忘的知识放入不同领域重复使用：
-
-- `return` 与 `console.log`：Day 05、07、12、22。
-- `undefined`、越界和 `find`：Day 03、08、10、20、23–26。
-- 对象引用、浅复制与不可变更新：Day 06、13、17、25。
-- 联合收窄：Day 10、11、19–21、24、26。
-- 类型擦除与运行时验证：Day 00、19、20、22–24、26、30。
-- `await` 与异步错误：Day 21、22、26、27。
-
-不要跳过看似相似的题；换领域重新回忆，正是加强长期记忆的部分。
-
-## 资料依据
-
-课程不机械照搬官方手册顺序。官方说明 Handbook 不完整教授 JavaScript 基础，因此本路线先补必要的 JavaScript 桥梁，再进入 TypeScript 建模和工程主题：
+详细复习方式见 [REVIEW.md](./REVIEW.md)。课程顺序以零基础认知负担为优先，并参考 TypeScript 官方资料：
 
 - [TypeScript Handbook 介绍](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
@@ -150,5 +106,3 @@ dayXX/
 - [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
 - [Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
 - [TSConfig Reference](https://www.typescriptlang.org/tsconfig/)
-
-课程案例优先采用通用场景；完成主线后，再把同样的思路迁移到你选择的真实项目。

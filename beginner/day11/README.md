@@ -2,43 +2,22 @@
 
 预计用时：75–90 分钟。
 
-今天把“一个值可能处于几种状态”写成 TypeScript 能检查的模型。重点不在记住 switch，而在于：先找判别字段，再让每一种状态都有自己的数据和处理分支。
+今天把“一个值可能处于几种状态”写成 TypeScript 能检查的模型。重点不是背诵 `switch`，而是为每种状态保存恰当的数据，并让遗漏分支尽早变成类型错误。
 
-## 前置复习（10 分钟）
+## 核心讲解
 
-先口头回答：
-
-1. 联合类型中的竖线表示什么？
-2. 为什么读取可选属性时可能得到 undefined？
-3. if 或 switch 的一个分支漏掉 return，会发生什么？
-
-如果答不完整也没关系。今天的练习会再次遇到这些问题。
-
-## 1. 判别联合是什么
-
-下面每个成员都有同名字段 status，但字段值不同：
+判别联合的每个成员都有同名的字面量字段：
 
 ~~~ts
 type LoadState =
   | { status: "idle" }
-  | { status: "loading" }
   | { status: "success"; items: string[] }
   | { status: "error"; message: string };
 ~~~
 
-status 叫作判别字段（discriminant）。检查它之后，TypeScript 就知道当前成员有哪些属性：
+检查 `state.status` 后，TypeScript 会把值收窄到对应成员。因此，只有 `success` 分支能读取 `items`，只有 `error` 分支能读取 `message`。不要把所有字段都改成可选属性；那会允许“成功却没有数据”之类的不合理组合。
 
-~~~ts
-if (state.status === "success") {
-  console.log(state.items.length);
-}
-~~~
-
-不要把所有属性都写成可选属性。那样会允许“成功但没有 items”这类不合理对象。
-
-## 2. switch 与 never
-
-switch 很适合逐个处理字面量成员。never 表示“这里不应该再有任何可能值”：
+`switch` 很适合逐个处理成员。可以在 `default` 中调用穷尽检查函数：
 
 ~~~ts
 function assertNever(value: never): never {
@@ -46,76 +25,65 @@ function assertNever(value: never): never {
 }
 ~~~
 
-把 assertNever 放在 default 中后，未来给联合增加成员却忘记补分支，TypeScript 会在检查阶段提醒你。
+当联合增加新成员但分支没有同步更新时，传给 `assertNever` 的值不再是 `never`，检查器就会提醒你。成员内部的可选字段仍需单独处理，例如使用 `??` 为缺失分数提供说明。
 
-注意：assertNever 会在真的到达时抛错；它不是为了隐藏错误，而是把“漏分支”变成明显错误。
+## 阅读示例
 
-## 3. 运行完整示例
+打开 `example.ts`，按项目根目录 README 介绍的右键方式运行。阅读每个 `case`，指出该分支里的 `state` 具体是哪一种类型。
 
-~~~powershell
-npm run beginner:example -- day11
+## 独立练习（从空文件开始）
+
+请在 `practice.ts` 中从第一行开始编写“学习任务状态说明器”。
+
+固定类型 `StudyTask` 必须包含以下五种成员：
+
+- `{ status: "waiting"; title: string }`
+- `{ status: "studying"; title: string; minutes: number }`
+- `{ status: "completed"; title: string; score?: number }`
+- `{ status: "failed"; title: string; reason: string }`
+
+虽然上面只有四种 `status`，`completed` 必须分别测试“有分数”和“无分数”，因此固定输入一共有五项。请实现 `assertNever(value: never): never` 和 `describeTask(task: StudyTask): string`，使用 `switch` 完成收窄，并创建名为 `tasks` 的数组：
+
+~~~text
+waiting / 联合类型
+studying / 函数 / 45
+completed / 对象 / 92
+completed / 复习 / 不提供 score
+failed / 提交 / 网络中断
 ~~~
 
-阅读 example.ts，依次指出每个 case 中 state 的具体类型。
+程序必须精确输出：
 
-## 4. 必做练习
-
-### 练习 01：回忆判别字段
-
-为订单的 pending、paid、cancelled 三种状态返回正确说明。
-
-~~~powershell
-npm run beginner -- day11 01
+~~~text
+待开始：联合类型
+学习中：函数（45 分钟）
+已完成：对象（92 分）
+已完成：复习（待评分）
+失败：提交（网络中断）
 ~~~
 
-### 练习 02：修复错误分支并补穷尽检查
+限制：
 
-现有程序把 failed 错写成完成。修复它，并用 assertNever 保证所有任务状态都被处理。
+- 不得把成员专属字段全部改成可选属性。
+- 不得使用 `any`、类型断言或非空断言。
+- `completed` 分支必须用空值合并处理缺失分数。
+- `default` 必须把 `task` 交给 `assertNever`。
 
-~~~powershell
-npm run beginner -- day11 02
-~~~
+完成标准：右键运行 `practice.ts` 后显示 PASS；新增一个 `paused` 成员时，能看到穷尽检查提示缺失分支。
 
-### 练习 03：迁移到图形计算
+## 容易出错的地方
 
-使用 kind 判别正方形、长方形和三角形，计算面积。不要在分支外读取某个成员独有的属性。
+- 在收窄前读取 `score` 或 `reason`。
+- 用一个宽泛对象加许多可选属性代替判别联合。
+- `default` 直接返回“未知”，让新状态悄悄漏掉。
+- 忘记 `case` 中的 `return`。
+- 用非空断言掩盖可选的 `score`。
 
-~~~powershell
-npm run beginner -- day11 03
-~~~
+## 拓展思考（不要求写代码）
 
-### 练习 04：联合与 undefined 综合
-
-处理成功、拒绝、错误三种支付结果。成功结果中的 receiptId 仍可能缺席，要用空值合并提供明确文字。
-
-~~~powershell
-npm run beginner -- day11 04
-~~~
-
-每题完成后可以查看对应答案，例如：
-
-~~~powershell
-npm run beginner:solution -- day11 02
-~~~
-
-## 5. 容易出错的地方
-
-- 只检查“是否有某属性”，却没有稳定的字面量判别字段。
-- 把每种状态的数据全写成可选属性，导致非法组合也能通过检查。
-- default 直接返回“未知”，让新成员悄悄漏掉。
-- 忘记一个 case 中的 return，继续落入后续分支。
-- 在 success 分支外直接使用只属于 success 的 items。
-- 用非空断言掩盖可选 receiptId；断言不会创造运行时数据。
-
-## 完成标准
-
-- 四个练习全部显示 PASS。
-- 能解释判别字段如何帮助收窄。
-- 能写出接受 never 的 assertNever。
-- 给联合新增一个成员时，知道编译错误是在提醒哪个分支缺失。
+如果以后加入 `{ status: "paused"; title: string; reason: string }`，哪些位置应该发生类型错误？为什么这些错误是在帮助你，而不是阻碍你？
 
 ## 官方资料
 
 - [Narrowing：Discriminated unions](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
 - [Narrowing：The never type](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#the-never-type)
-- [Everyday Types：Union Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types)

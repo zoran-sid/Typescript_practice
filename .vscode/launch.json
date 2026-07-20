@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "课程：运行当前文件",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/beginner/scripts/run-file.mjs",
+      "args": ["${file}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

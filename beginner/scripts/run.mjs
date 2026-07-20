@@ -9,7 +9,6 @@ const beginnerRoot = fileURLToPath(new URL("..", import.meta.url));
 const validModes = new Set(["practice", "example", "solution"]);
 const mode = process.argv[2] ?? "practice";
 const day = normalizeDay(process.argv[3] ?? "");
-const requestedExercise = process.argv[4] ?? "01";
 
 try {
   process.exitCode = await main();
@@ -21,7 +20,7 @@ try {
 
 async function main() {
   const days = discoverDays();
-  if (!validModes.has(mode) || !day) {
+  if (!validModes.has(mode) || !day || process.argv[4] !== undefined) {
     printUsage(days);
     return 1;
   }
@@ -32,75 +31,35 @@ async function main() {
   }
 
   const checkPath = path.join(beginnerRoot, "checks", `${day}.mjs`);
-  if (!existsSync(checkPath)) {
-    return courseError(`缺少检查文件 checks/${day}.mjs。`);
-  }
+  if (!existsSync(checkPath)) return courseError(`缺少检查文件 checks/${day}.mjs。`);
 
   const check = (await import(pathToFileURL(checkPath).href)).default;
-  const schemaErrors = validateCheck(check, Number(day.slice(3)));
-  if (schemaErrors.length > 0) {
+  const errors = validateCheck(check);
+  if (errors.length > 0) {
     console.error(`${displayDay(day)} 的课程检查结构不完整：`);
-    schemaErrors.forEach((message) => console.error(`  - ${message}`));
+    errors.forEach((message) => console.error(`  - ${message}`));
     console.error("这属于课程文件问题，不是你的练习答案造成的。");
     return 1;
   }
 
-  if (mode === "example") {
-    const ok = runSource({
-      source: path.join(beginnerRoot, day, "example.ts"),
-      label: `${displayDay(day)} 示例`,
-      expected: check.exampleExpected,
-      success: `示例运行完成。接下来阅读 ${day}/README.md，再开始练习。`,
-      hints: check.typeHints ?? check.hints,
-      printPass: false,
-    });
-    return ok ? 0 : 1;
-  }
-
-  const isMulti = Array.isArray(check.exercises);
-  const exercises = isMulti
-    ? [...check.exercises].sort((left, right) => left.id.localeCompare(right.id))
-    : [{ id: "01", title: "", ...check }];
-  const selection = selectExercises(exercises, requestedExercise);
-  if (!selection) {
-    console.error(`没有找到练习“${requestedExercise}”。`);
-    printExercises(exercises);
-    return 1;
-  }
-
-  let passed = 0;
-  for (const [index, exercise] of selection.entries()) {
-    if (index > 0) console.log("");
-    const suffix = isMulti ? `-${exercise.id}` : "";
-    const label = isMulti
-      ? `${displayDay(day)} · 练习 ${exercise.id}（${exercise.title}）`
-      : displayDay(day);
-    const ok = runSource({
-      source: path.join(beginnerRoot, day, `${mode}${suffix}.ts`),
-      label,
-      expected: exercise.expected,
-      success: exercise.success,
-      hints: exercise.hints,
-      typeHints: exercise.typeHints,
-      runtimeHints: exercise.runtimeHints,
-      typeOnly: exercise.typeOnly,
-      compilerOptions: exercise.compilerOptions,
-      printPass: true,
-    });
-    if (ok) passed += 1;
-  }
-
-  if (requestedExercise.trim().toLowerCase() === "all") {
-    if (passed === selection.length) {
-      const kind = mode === "solution" ? "参考答案" : "练习";
-      console.log(
-        `\nPASS ${displayDay(day)}：${selection.length} 道${kind}全部通过。`,
-      );
-    } else {
-      console.log(`\n${displayDay(day)}：${passed}/${selection.length} 道通过。`);
-    }
-  }
-  return passed === selection.length ? 0 : 1;
+  const isExample = mode === "example";
+  const source = path.join(beginnerRoot, day, `${mode}.ts`);
+  const label = isExample ? `${displayDay(day)} 示例` : `${displayDay(day)} 独立练习`;
+  return runSource({
+    source,
+    label: mode === "solution" ? `${displayDay(day)} \u53c2\u8003\u7b54\u6848` : label,
+    expected: isExample ? check.exampleExpected : check.expected,
+    success: isExample
+      ? `示例运行完成。接下来阅读 ${day}/README.md，再从空白 practice.ts 开始。`
+      : check.success,
+    hints: isExample ? [] : check.hints,
+    typeHints: isExample ? [] : check.typeHints ?? check.hints,
+    runtimeHints: isExample ? [] : check.runtimeHints ?? check.hints,
+    compilerOptions: isExample ? {} : check.compilerOptions ?? {},
+    printPass: !isExample,
+  })
+    ? 0
+    : 1;
 }
 
 function runSource(options) {
@@ -112,7 +71,6 @@ function runSource(options) {
     hints = [],
     typeHints = hints,
     runtimeHints = hints,
-    typeOnly = false,
     compilerOptions = {},
     printPass,
   } = options;
@@ -125,19 +83,12 @@ function runSource(options) {
   const diagnostics = getDiagnostics(source, compilerOptions);
   if (diagnostics.length > 0) {
     console.error(`${label} 类型检查未通过。\n`);
-    diagnostics
-      .slice(0, 3)
-      .forEach((diagnostic) => console.error(formatDiagnostic(diagnostic)));
+    diagnostics.slice(0, 3).forEach((item) => console.error(formatDiagnostic(item)));
     if (diagnostics.length > 3) {
       console.error(`还有 ${diagnostics.length - 3} 条类型提示暂未显示。`);
     }
     printHints(typeHints);
     return false;
-  }
-
-  if (typeOnly) {
-    console.log(`PASS ${label}：${success}`);
-    return true;
   }
 
   const execution = execute(source);
@@ -149,7 +100,7 @@ function runSource(options) {
   }
 
   const actual = normalizeOutput(execution.stdout);
-  if (expected && !sameLines(actual, expected)) {
+  if (expected !== undefined && !sameLines(actual, expected)) {
     console.log(`${label} 尚未通过。\n`);
     console.log("期望输出：");
     printLines(expected);
@@ -197,9 +148,7 @@ function execute(source) {
       message: "请检查是否在循环中不断输出相同内容。",
     };
   }
-  if (result.error) {
-    return { ok: false, kind: "无法启动", message: result.error.message };
-  }
+  if (result.error) return { ok: false, kind: "无法启动", message: result.error.message };
   if (result.status !== 0) {
     const detail = (result.stderr || result.stdout || "")
       .trim()
@@ -237,59 +186,29 @@ function getDiagnostics(filename, overrides) {
   return ts.getPreEmitDiagnostics(program);
 }
 
-function validateCheck(check, dayNumber) {
+function validateCheck(check) {
   const errors = [];
   if (!isRecord(check)) return ["检查文件必须默认导出对象。"];
+  if (check.exercises !== undefined) errors.push("每天只能保留一道独立练习，不能包含 exercises。");
+  if (check.title !== undefined && (typeof check.title !== "string" || !check.title.trim())) {
+    errors.push("title 如果存在，必须是非空字符串。");
+  }
+  if (!isStringArray(check.expected)) errors.push("expected 必须是字符串数组。");
+  if (typeof check.success !== "string" || !check.success.trim()) {
+    errors.push("success 必须是非空字符串。");
+  }
   if (check.exampleExpected !== undefined && !isStringArray(check.exampleExpected)) {
     errors.push("exampleExpected 必须是字符串数组。");
   }
-  const multi = Array.isArray(check.exercises);
-  if (dayNumber <= 3 && multi) errors.push("Day 00–03 应使用兼容的单练习格式。");
-  if (dayNumber >= 4 && !multi) errors.push("Day 04 以后必须提供 exercises 数组。");
-  const exercises = multi ? check.exercises : [check];
-  if (multi && (typeof check.title !== "string" || !check.title.trim())) {
-    errors.push("课程需要非空 title。");
-  }
-  if (exercises.length === 0) errors.push("至少需要一道练习。");
-
-  const ids = new Set();
-  for (const [index, exercise] of exercises.entries()) {
-    if (!isRecord(exercise)) {
-      errors.push(`练习 ${index + 1} 必须是对象。`);
-      continue;
-    }
-    const label = exercise.id ?? index + 1;
-    if (multi && (typeof exercise.id !== "string" || !/^\d{2}$/.test(exercise.id))) {
-      errors.push(`练习 ${index + 1} 的 id 必须是两位数字。`);
-    }
-    if (multi && ids.has(exercise.id)) errors.push(`练习 id ${exercise.id} 重复。`);
-    ids.add(exercise.id);
-    if (multi && (typeof exercise.title !== "string" || !exercise.title.trim())) {
-      errors.push(`练习 ${label} 缺少 title。`);
-    }
-    if (!isStringArray(exercise.expected)) {
-      errors.push(`练习 ${label} 的 expected 必须是字符串数组。`);
-    }
-    if (typeof exercise.success !== "string" || !exercise.success.trim()) {
-      errors.push(`练习 ${label} 缺少 success。`);
-    }
-    for (const key of ["hints", "typeHints", "runtimeHints"]) {
-      if (exercise[key] !== undefined && !isStringArray(exercise[key])) {
-        errors.push(`练习 ${label} 的 ${key} 必须是字符串数组。`);
-      }
+  for (const key of ["hints", "typeHints", "runtimeHints"]) {
+    if (check[key] !== undefined && !isStringArray(check[key])) {
+      errors.push(`${key} 必须是字符串数组。`);
     }
   }
-  if (multi && !ids.has("01")) errors.push("多练习课程必须包含 01。");
+  if (check.compilerOptions !== undefined && !isRecord(check.compilerOptions)) {
+    errors.push("compilerOptions 必须是对象。");
+  }
   return errors;
-}
-
-function selectExercises(exercises, input) {
-  if (input.trim().toLowerCase() === "all") return exercises;
-  const match = /^(?:exercise)?(\d{1,2})$/i.exec(input.trim());
-  if (!match) return null;
-  const id = match[1].padStart(2, "0");
-  const exercise = exercises.find((item) => item.id === id);
-  return exercise ? [exercise] : null;
 }
 
 function discoverDays() {
@@ -328,10 +247,7 @@ function normalizeOutput(output) {
 }
 
 function sameLines(actual, expected) {
-  return (
-    actual.length === expected.length &&
-    actual.every((line, index) => line === expected[index])
-  );
+  return actual.length === expected.length && actual.every((line, index) => line === expected[index]);
 }
 
 function printLines(lines) {
@@ -344,17 +260,10 @@ function printHints(hints = []) {
   hints.forEach((hint, index) => console.log(`  ${index + 1}. ${hint}`));
 }
 
-function printExercises(exercises) {
-  console.log("\n可用练习：");
-  exercises.forEach((item) => console.log(`  ${item.id}  ${item.title ?? ""}`));
-  console.log(`\n示例：npm run beginner -- ${day} 01`);
-  console.log(`批量：npm run beginner -- ${day} all`);
-}
-
 function printUsage(days) {
-  console.error("用法：npm run beginner -- day04 01");
-  console.error("批量检查：npm run beginner -- day04 all");
-  console.error("示例/答案分别使用 beginner:example 与 beginner:solution。");
+  console.error("用法：npm run beginner -- day10");
+  console.error("现在每天只有一道练习，不需要再填写题号或 all。");
+  console.error("也可以直接右击 example.ts、practice.ts 或 solution.ts，选择 Run Code。");
   printAvailableDays(days);
 }
 

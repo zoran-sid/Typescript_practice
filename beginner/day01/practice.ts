@@ -1,14 +1,4 @@
-// TODO 1: 把课程名称改为 TypeScript。
-const courseName = "TODO";
-
-// completedLessons 会变化，所以这里使用 let。
-let completedLessons = 0;
-
-// TODO 2: 把它改为真正的布尔值 true。
-const isBeginner = false;
-
-completedLessons = completedLessons + 1;
-
-const summary = `${courseName} | completed: ${completedLessons} | beginner: ${isBeginner}`;
-
-console.log(summary);
+// 请先阅读本目录 README.md 中的独立练习，再从下一行开始写完整程序。
+// 必须使用 learnerName、courseName、completedLessons、isBeginner 这四个变量名。
+// completedLessons 必须从 0 开始，并通过两次重新赋值变成 2。
+// 请自行完成声明、更新和四行输出，不要复制 example.ts。

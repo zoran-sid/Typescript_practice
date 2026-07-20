@@ -1,13 +1,4 @@
-const studyMinutes: number[] = [30, 45, 60];
-let totalMinutes = 0;
-let longestSession = 0;
-
-for (const minutes of studyMinutes) {
-  // TODO 1: 把当前 minutes 累加到 totalMinutes。
-
-  // TODO 2: 如果当前 minutes 更大，就更新 longestSession。
-}
-
-console.log(`Sessions: ${studyMinutes.length}`);
-console.log(`Total minutes: ${totalMinutes}`);
-console.log(`Longest session: ${longestSession}`);
+// 请先阅读本目录 README.md 中的独立练习，再从下一行开始写完整程序。
+// 必须使用 studyMinutes、totalMinutes、longestSession 和循环变量 minutes。
+// 请只用一个 for...of 循环完成累加与最大值判断。
+// 请自行写出数组、循环、if 和三行输出，不要复制 example.ts。

@@ -1,13 +1,14 @@
 export default {
+  title: "Day 02：课程计划统计器",
   expected: ["Total lessons: 5", "Status: Goal reached"],
-  success: "你已经能区分字符串和数字，并在运算前完成显式转换。",
+  success: "你已经能从空文件完成显式转换、数字运算和条件判断。",
   hints: [
-    "completedText 是字符串 \"3\"，plannedLessons 是数字 2。",
-    "先执行 Number(completedText)，再与 plannedLessons 相加。",
-    "比较正确后，if 分支会把 status 改为 Goal reached。",
+    "completedText 是字符串，先调用 Number(completedText)。",
+    "转换结果再与 plannedLessons 相加，不要先拼接。",
+    "status 从 Keep learning 开始，在 totalLessons >= 5 时更新。",
   ],
   typeHints: [
-    "不要用 as number 强迫 TypeScript 接受字符串；类型断言不会转换运行时的值。",
-    "本题真正需要的是 Number(...) 转换。",
+    "类型标注或 as number 不会转换运行时的字符串。",
+    "真正需要的是 Number(completedText) 的返回值。",
   ],
 };

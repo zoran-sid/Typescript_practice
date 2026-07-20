@@ -1,17 +1,15 @@
 # Day 14 参考答案说明
 
-## 练习 01
+## 解题路线
 
-courseTitle 和 lessonCount 都是 course-data.ts 的具名导出，所以在同一对花括号中导入。删除本地 lessonCount 后，入口只保留真正需要的使用代码。
+`courseTitle`、`lessonCount`、`passingScore` 和 `summarizeStudent` 都是具名值，所以放在花括号中。`formatScore` 是默认导出，放在花括号外。`Student` 只出现在类型位置，因此使用 `import type`。
 
-## 练习 02
+入口只负责组合模块：创建符合共享类型的学生和分数，然后调用模块提供的能力。路径保留 `.js`，让 Node ESM 的运行时路径与 `NodeNext` 解析保持一致。
 
-formatScore 是默认导出，passingScore 是具名导出。默认导入写在花括号之前。删除本地同名函数，否则会与导入名冲突。
+## 易错点
 
-## 练习 03
+不要复制辅助模块的实现来“绕过”导入。默认导入和具名导入的语法不同；类型导入会在编译后消失，不能在 `console.log` 中当作值使用。
 
-Student 只用于冒号后的类型位置，所以使用 import type。summarizeStudent 是运行时会调用的函数，必须使用普通值导入。共享 Student 把 track 限制为两个字面量，也避免多个文件各自维护不同定义。
+## 拓展思考参考方向
 
-## 为什么路径写 .js
-
-当前课程使用 NodeNext 模块规则。TypeScript 检查 .ts 源文件，但运行时模块说明符描述的是生成后的 JavaScript 文件。工具会在开发时把 .js 路径解析到对应 .ts；这种写法也与真正编译后的输出保持一致。
+`student` 对象和所有构造 `Student` 的 TypeScript 文件会因缺少 `email` 得到检查错误；只调用运行时函数且不使用该类型的代码未必立即报错。类型依赖用于编译期契约，值依赖会保留到运行时模块加载。

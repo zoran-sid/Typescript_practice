@@ -26,11 +26,8 @@ if (process.argv.length > 3 || (requested && !requestedDay)) {
   const failures = [];
 
   for (const day of days) {
-    for (const [mode, exercise] of [
-      ["example", ""],
-      ["solution", "all"],
-    ]) {
-      const result = run(mode, day, exercise);
+    for (const mode of ["example", "solution"]) {
+      const result = run(mode, day);
       if (result.ok) {
         console.log(`✓ ${day} ${mode}`);
       } else {
@@ -51,17 +48,14 @@ if (process.argv.length > 3 || (requested && !requestedDay)) {
   }
 }
 
-function run(mode, day, exercise) {
-  const args = [runner, mode, day];
-  if (exercise) args.push(exercise);
-  const result = spawnSync(process.execPath, args, {
+function run(mode, day) {
+  const result = spawnSync(process.execPath, [runner, mode, day], {
     cwd: path.dirname(beginnerRoot),
     encoding: "utf8",
     timeout: 120_000,
     maxBuffer: 1024 * 1024,
     windowsHide: true,
   });
-
   if (result.error?.code === "ETIMEDOUT") {
     return { ok: false, message: "验证超过 120 秒，已停止。", stdout: "", stderr: "" };
   }

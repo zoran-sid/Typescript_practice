@@ -2,35 +2,17 @@
 
 预计用时：60–90 分钟。
 
-函数可以把一段工作取名并重复使用。今天从零认识参数和返回值，并重点区分“把结果交还给调用者”和“把文字显示在终端”。
+函数把一段工作取名，使它能够被重复调用。今天会把完整账单拆成几个小函数，并重点区分“把结果交还给调用者”的 `return` 和“把内容显示出来”的 `console.log`。
 
 ## 完成目标
 
-- 能声明一个带参数类型和返回值类型的函数。
+- 声明带参数类型和返回值类型的函数。
 - 理解参数是函数的输入，`return` 是函数的输出。
-- 理解 `console.log` 只负责显示，不会代替 `return`。
-- 能让计算函数只依赖参数，避免意外修改外部变量。
+- 理解 `console.log` 只负责显示，不能代替 `return`。
+- 使用局部变量组织计算。
+- 让计算函数只依赖参数，不意外修改外部变量。
 
-## 今天暂时不学
-
-不学习回调、泛型、函数重载和类方法。它们都建立在今天的基础上。
-
-## 前置复习（8 分钟）
-
-1. `"3"` 怎样转换为数字 `3`？
-2. “至少 100”应该使用 `>` 还是 `>=`？
-3. `true && false` 的结果是什么？
-4. 为什么优惠最高的分支通常写在前面？
-
-## 60–90 分钟安排
-
-- 0–8 分钟：复习 Day 04。
-- 8–28 分钟：阅读参数、返回值和作用域。
-- 28–38 分钟：运行并改动完整示例。
-- 38–75 分钟：完成四道练习。
-- 75–90 分钟：对照答案，口头解释每个函数的输入和输出。
-
-## 1. 参数是输入
+## 参数与返回值
 
 ```ts
 function add(left: number, right: number): number {
@@ -38,25 +20,19 @@ function add(left: number, right: number): number {
 }
 ```
 
-调用 `add(2, 3)` 时，`left` 得到 `2`，`right` 得到 `3`。
+调用 `add(2, 3)` 时，两个参数分别得到 2 和 3。圆括号后的 `: number` 表示函数必须返回数字。
 
-参数名称应描述含义。`calculatePrice(quantity, unitPrice)` 比 `calculatePrice(a, b)` 更容易阅读。
-
-## 2. `return` 把结果交回去
+`return` 会把结果交回调用位置：
 
 ```ts
-function double(value: number): number {
-  return value * 2;
-}
-
-const answer = double(4);
+const answer = add(2, 3);
 ```
 
-`answer` 会得到 `8`。相比之下，`console.log(8)` 只是把 8 显示出来，调用者拿不到这个结果继续计算。
+若函数内部只写 `console.log(left + right)`，终端虽然显示 5，`answer` 却得不到可继续计算的数字。显示和返回是两个不同动作。
 
-## 3. 局部变量与外部变量
+## 局部变量与纯计算
 
-函数内部声明的变量通常只在函数内部存在。计算函数优先从参数取得数据并返回新结果：
+函数内部声明的变量通常只在函数内部存在。计算函数应优先从参数取得所需数据并返回新结果，而不是悄悄修改函数外的变量：
 
 ```ts
 function addBonus(points: number, bonus: number): number {
@@ -64,56 +40,73 @@ function addBonus(points: number, bonus: number): number {
 }
 ```
 
-这样用相同输入调用两次会得到相同结果，也不会悄悄改变外面的状态。
+相同输入会得到相同输出，这让函数更容易理解、复用和测试。
 
-## 运行完整示例
+## 拆分一项完整工作
 
-```powershell
-npm run beginner:example -- day05
+账单计算可以拆成：
+
+1. 数量与单价产生小计。
+2. 小计与会员状态产生优惠。
+3. 小计减优惠产生应付金额。
+4. 最外层代码负责显示结果。
+
+每个函数只负责一个清楚动作，函数名和参数名应表达业务含义。
+
+## 阅读完整示例
+
+打开并右击运行 `example.ts`。指出 `calculateArea` 和 `createLabel` 各自的输入、返回类型与调用结果。临时把其中一个 `return` 改成 `console.log`，观察类型错误与额外输出，再撤销。
+
+## 独立练习（从空文件开始）
+
+在 `practice.ts` 中从零完成“会员账单”。
+
+必须声明这些函数：
+
+- `calculateSubtotal(quantity: number, unitPrice: number): number`：返回数量乘单价。
+- `calculateDiscount(subtotal: number, isMember: boolean): number`：会员并且小计至少 100 时返回小计的 10%，否则返回 0。
+- `calculateAmountToPay(subtotal: number, discount: number): number`：返回小计减优惠。
+
+固定数据与名称：
+
+- `quantity` 为 3。
+- `unitPrice` 为 40。
+- `isMember` 为 `true`。
+- 调用结果依次保存为 `subtotal`、`discount`、`amountToPay`。
+
+精确期望输出：
+
+```text
+小计: 120
+优惠: 12
+应付: 108
 ```
 
-把桌面的宽、高改成其他数字；再把 `createLabel` 中的文字顺序改掉，观察“计算”和“显示格式”是两个不同函数。
+限制：
 
-## 必做练习
+- 三个函数都必须明确标注参数类型和返回值类型。
+- 计算函数内部不得调用 `console.log`。
+- 函数不得读取或修改题目中的外部变量。
+- 不得把 120、12、108 直接写入输出语句。
+- 只在所有计算完成后输出三行。
 
-```powershell
-npm run beginner -- day05 01
-npm run beginner -- day05 02
-npm run beginner -- day05 03
-npm run beginner -- day05 04
-```
+完成标准：
 
-- 01：把参数真正用于问候语。
-- 02：修复 `console.log` 与 `return` 的混淆。
-- 03：把会修改外部变量的函数改成纯计算。
-- 04：把账单拆成小计、优惠和应付金额。
+- 能指出每个函数的输入和返回值。
+- 相同参数重复调用函数会得到相同结果。
+- 右击运行 `practice.ts`，没有额外日志且三行完全一致。
 
-全部检查：
+## 常见错误
 
-```powershell
-npm run beginner -- day05 all
-```
+函数中打印了数字不等于返回数字；漏掉某个分支的 `return` 可能得到 `undefined`；把数量和单价的参数顺序调换会改变含义；读取外部变量会让函数难以复用。
 
-查看某题答案：
+## 拓展思考（不要求写代码）
 
-```powershell
-npm run beginner:solution -- day05 02
-```
+如果 `calculateSubtotal` 内部把 120 打印出来却没有 `return`，为什么后面的 `calculateDiscount(subtotal, isMember)` 仍然无法得到正确的小计？
 
-## 常见坑
+## 参考答案
 
-- 函数内部打印了正确数字，不表示函数返回了这个数字。
-- 遇到 `return` 后，本次函数调用立即结束。
-- 漏写返回路径时，函数可能得到 `undefined`。
-- 参数顺序具有含义，数量和单价不要反过来传。
-- 无意修改外部变量会让同一次调用得到不同结果。
-
-## 完成标准
-
-- 四道练习全部通过。
-- 能指出每个函数的输入、处理和输出。
-- 能解释为什么 `console.log(value * 2)` 不能替代 `return value * 2`。
-- 能把一段三步计算拆成至少两个小函数。
+完成后再阅读 `solution.ts` 与 `SOLUTION.md`，重点比较函数边界，而不只比较最终数字。
 
 ## 官方资料
 

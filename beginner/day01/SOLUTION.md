@@ -1,42 +1,17 @@
-# Day 01 参考答案解释
+# Day 01 参考答案说明
 
-## 最小答案
+这一题用四个变量完成一份学习档案。`learnerName`、`courseName` 和 `isBeginner` 在程序中不重新赋值，因此使用 `const`；`completedLessons` 会更新两次，因此使用 `let`。
 
-```ts
-const courseName = "TypeScript";
-let completedLessons = 0;
-const isBeginner = true;
-
-completedLessons = completedLessons + 1;
-
-const summary = `${courseName} | completed: ${completedLessons} | beginner: ${isBeginner}`;
-
-console.log(summary);
-```
-
-## 逐步解释
-
-`courseName` 保存一段不会重新赋值的文字，因此使用 `const`。TypeScript 从 `"TypeScript"` 推断它是 `string`。
-
-`completedLessons` 从数字 `0` 开始，稍后会被重新赋值，因此使用 `let`。TypeScript 推断它是 `number`。
-
-`isBeginner` 保存没有引号的 `true`，因此是 `boolean`。如果写成 `"true"`，它会变成 `string`。
+`"Lin"` 与 `"TypeScript"` 让 TypeScript 推断出 `string`，`0` 推断为 `number`，没有引号的 `true` 推断为 `boolean`。
 
 ```ts
 completedLessons = completedLessons + 1;
 ```
 
-这一行先读取旧值 `0`，计算 `0 + 1`，再把结果 `1` 赋回同一个变量。
+这行会读取旧值、加 1，再把结果赋回同一变量。执行两次后，值依次从 0 变成 1、再变成 2。
 
-最后使用反引号创建模板字符串。`${...}` 读取变量当时的值，生成验收需要的完整文字。
+最后四次 `console.log` 都使用模板字符串读取变量，所以输出能反映变量的真实值，而不是一段与程序状态无关的固定文字。
 
-## 为什么没有到处写类型标注
+## 拓展思考参考方向
 
-下面两种写法都正确：
-
-```ts
-const courseName: string = "TypeScript";
-const courseName = "TypeScript";
-```
-
-第二种更简洁，TypeScript 仍然能推断出 `string`。当类型已经能从初始值清楚推断时，不必为了“看起来像 TypeScript”而重复标注。
+只需要把 `courseName` 改为 `let`，因为是否需要 `let` 取决于这个变量自身会不会重新赋值。其他变量不会因为同一个程序里有变量发生变化，就自动也需要 `let`。

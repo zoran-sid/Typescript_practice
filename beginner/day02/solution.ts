@@ -1,6 +1,5 @@
 const completedText = "3";
 const plannedLessons = 2;
-
 const totalLessons = Number(completedText) + plannedLessons;
 
 let status = "Keep learning";

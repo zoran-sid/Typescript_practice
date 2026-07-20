@@ -1,21 +1,11 @@
 # Day 10 参考答案说明
 
-## 01 `typeof` 收窄
+`TicketId` 和 `TopicInput` 允许两种输入，函数必须在使用某一类型的专属能力前收窄。`formatTicketId` 用 `typeof` 确认字符串，`describeTopics` 用 `Array.isArray` 确认数组。
 
-字符串分支可以安全调用 `toUpperCase()`；离开该分支后只剩数字可能，因此添加 `#`。没有使用 `as`。
+`Contact` 是两个对象接口的联合。`"email" in contact` 为真时，参数收窄为 `EmailContact`；否则只剩 `PhoneContact`。每个分支只读取确定存在的专属属性。
 
-## 02 字面量选项
+`Priority` 只允许三个字面量。`priority === "high"` 把高优先级单独处理，其余两个合法值共享普通格式。整个答案没有用断言替代检查。
 
-答案明确处理 `small` 和 `medium`，最后剩下的合法选项只能是 `large`。每个尺寸都得到一个价格。
+## 拓展思考参考方向
 
-## 03 数组判断
-
-`Array.isArray(value)` 为真时，`value.length` 是数组项数；否则 `value` 已收窄为字符串，`length` 是字符数。
-
-## 04 属性判断
-
-`"email" in contact` 为真后，TypeScript 知道当前是 `EmailContact`；否则就是 `PhoneContact`。每个分支只访问自己确定存在的属性。
-
-```powershell
-npm run beginner:solution -- day10 04
-```
+类型断言只影响编译器，不检查也不补充运行时对象。外部数据缺少 `email` 时，读取结果仍会是 `undefined`，更深访问还可能崩溃。运行时属性检查会实际观察当前值，并在检查成功的分支中同时给程序和类型系统依据；完整外部验证会在后续课程继续学习。

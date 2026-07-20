@@ -1,9 +1,10 @@
 export default {
+  title: "Day 00：第一段完整程序",
   expected: ["Hello, TypeScript!"],
-  success: "你已经成功修改并运行了第一段 TypeScript 程序。",
+  success: "你已经从空文件写出并运行了第一段完整 TypeScript 程序。",
   hints: [
-    "打开 beginner/day00/practice.ts。",
-    "只修改双引号中的文字，不要删除 console.log(message)。",
-    "目标文字的大小写和标点必须完全一致：Hello, TypeScript!",
+    "声明变量 message，并让它保存题目指定的字符串。",
+    "使用 console.log(message) 输出变量。",
+    "逐字符核对大小写、英文标点和空格。",
   ],
 };

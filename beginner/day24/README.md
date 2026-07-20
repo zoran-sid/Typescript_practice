@@ -1,82 +1,71 @@
-# Day 24：结课项目（一）——模型与外部数据边界
+# Day 24｜结课项目（一）：模型与外部数据边界
 
-这一阶段开始把前面的知识组合起来。今天先为“学习任务与进度报告器”建立可靠的数据模型，并把读取到的 JSON 当作 `unknown` 验证，而不是用 `as` 假装它正确。
+结课项目“学习任务与进度报告器”从数据边界开始。今天要从空文件建立可靠模型，并把 JSON 解析结果当作 `unknown` 逐层验证，而不是用类型断言假装外部数据正确。
 
-## 今天能做到什么
+建议用时：60–90 分钟。
 
-- 用判别联合表达待开始、进行中、已完成三种状态。
-- 区分 TypeScript 的编译期类型与运行时数据。
-- 从 `unknown` 开始逐层验证对象、数组和字段。
-- 对无效数据返回可解释的结果，而不是让程序突然崩溃。
+## 今天会学到
 
-## 60–90 分钟安排
+- 用判别联合表达待开始、进行中、已完成状态；
+- 用类型谓词验证对象、嵌套状态和数组元素；
+- 区分编译期类型与运行时数据；
+- 保留有效任务并统计被拒绝的数据；
+- 用完整 `switch` 安全读取不同状态的字段。
 
-1. 10 分钟：不看答案，口述 `unknown` 与 `any` 的区别，并复习 `typeof null` 的陷阱。
-2. 15 分钟：运行 `example.ts`，跟着数据从 JSON 文本走到安全对象。
-3. 15 分钟：练习 01，建立不会产生矛盾状态的任务模型。
-4. 20 分钟：练习 02，补齐运行时验证。
-5. 20 分钟：练习 03，处理一批好坏混合的数据。
-6. 5–10 分钟：写下“为什么 `JSON.parse(text) as Task` 不安全”。
-
-## 核心心智模型
+## 核心讲解
 
 ```text
-JSON 文本 → JSON.parse → unknown → 逐层检查 → Task
-                                  ↘ 失败原因
+JSON 文本 → JSON.parse → unknown → 逐层检查 → StudyTask[]
+                                  ↘ 失败原因或拒绝数量
 ```
 
-`type` 和 `interface` 会在编译后消失。网络、文件、表单和本地存储中的数据不会因为你写了类型就自动变正确。因此，外部输入进入程序的第一站应该是 `unknown`。
+`type` 和 `interface` 编译后会消失，不能检查网络、文件或本地存储中的真实数据。对象检查必须同时排除 `null`；数组不仅要用 `Array.isArray`，还要验证每个元素。
 
-状态不要建模成一堆互不约束的可选属性：
+状态应使用判别联合，而不是把所有时间字段都写成可选。这样 doing 必须携带 `startedAt`，done 必须同时携带开始与完成时间，不容易产生矛盾数据。
 
-```ts
-// 容易出现 completedAt 存在但 status 仍是 todo 的矛盾数据
-type WeakTask = { status: string; startedAt?: string; completedAt?: string };
+## 独立练习（从空文件开始）
 
-type TaskState =
-  | { status: "todo" }
-  | { status: "doing"; startedAt: string }
-  | { status: "done"; startedAt: string; completedAt: string };
+在 `practice.ts` 中从零完成“任务 JSON 导入器”。
+
+必须名称：`TaskState`、`StudyTask`、`ImportResult`、`isRecord`、`isTaskState`、`isStudyTask`、`importTasks`、`describeState`。
+
+需求：
+
+1. `TaskState` 包含 todo、doing、done；doing 有 `startedAt`，done 有 `startedAt` 和 `completedAt`。
+2. `StudyTask` 含只读字符串 `id`、字符串 `title`、非负有限数字 `minutes` 和 `state`。
+3. `importTasks(text)` 捕获坏 JSON；顶层不是数组时返回失败；数组中保留通过验证的元素并计算 `rejected`。
+4. `describeState` 用 `switch` 生成 `todo`、`doing since 时间`、`done at 时间`。
+5. 固定输入包含 Plan（todo，30）、Practice（doing since 09:00，45）、Review（done at 10:30，30），以及一条 `minutes: "20"` 的坏数据；另用字符串 `{` 测试坏 JSON。
+
+精确输出：
+
+```text
+Import succeeded: 3 tasks
+Rejected: 1
+Plan: todo
+Practice: doing since 09:00
+Review: done at 10:30
+Total planned minutes: 105
+Invalid JSON: JSON format is invalid
 ```
 
-## 练习
+限制：不使用 `any`、非空断言 `!` 或未经验证的类型断言；不能只检查数组外壳，嵌套 `state` 也要逐字段验证。
 
-| 编号 | 内容 | 重点 |
-| --- | --- | --- |
-| 01 | 给三种状态生成文字摘要 | 判别联合与完整分支 |
-| 02 | 验证一条外部任务数据 | `unknown`、对象与字段检查 |
-| 03 | 导入一批混合数据 | 复用验证器、保留失败信息 |
-
-```powershell
-npm run beginner:example -- day24
-npm run beginner -- day24 01
-npm run beginner -- day24 02
-npm run beginner -- day24 03
-npm run beginner -- day24 all
-```
-
-练习卡住时先看终端提示，再看 `SOLUTION.md`；最后才运行参考答案：
-
-```powershell
-npm run beginner:solution -- day24 02
-```
+完成标准：右击运行 `practice.ts` 后输出完全一致；能解释为什么类型声明不能验证 JSON，以及判别联合如何避免矛盾状态。
 
 ## 常见错误
 
-- `JSON.parse(text) as Task` 只让编译器安静，不会检查运行时字段。
-- `typeof value === "object"` 还不够，因为 `null` 也是 `object`。
-- 验证数组时只检查了 `Array.isArray`，却忘了验证每个元素。
-- 用 `status: string`，导致拼错的状态也能进入模型。
-- 验证失败后继续把原值当成任务使用。
+- 写 `JSON.parse(text) as StudyTask[]`；
+- 忘记 `typeof null === "object"`；
+- 只检查 `Array.isArray`；
+- 用 `status: string` 接受任意拼写。
 
-## 完成标准
+## 拓展思考（不要求写代码）
 
-- 三题全部通过，且没有使用 `any`、非空断言 `!` 或未经验证的类型断言。
-- 能解释为什么判别联合比“一堆可选字段”更难产生矛盾状态。
-- 能独立写出 `value !== null && typeof value === "object"`。
+如果新增 `{ status: "paused"; reason: string }`，模型、运行时验证器和 `describeState` 分别会在哪些位置提醒你补充逻辑？
 
 ## 官方资料
 
 - [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
-- [Everyday Types：联合与类型断言](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
-- [TypeScript 类型声明只负责静态检查](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)
+- [Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
+- [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)
