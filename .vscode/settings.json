@@ -8,5 +8,10 @@
   "code-runner.ignoreSelection": true,
   "code-runner.clearPreviousOutput": true,
   "code-runner.showRunCommandInEditorContextMenu": true,
-  "code-runner.showRunCommandInExplorerContextMenu": true
+  "code-runner.showRunCommandInExplorerContextMenu": true,
+  "editor.inlineSuggest.enabled": false,
+  "github.copilot.enable": {
+    "*": false
+  },
+  "github.copilot.nextEditSuggestions.enabled": false
 }
