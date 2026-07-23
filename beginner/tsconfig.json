@@ -9,6 +9,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["day*/**/*.ts"],
-  "exclude": ["day*/practice*.ts"]
+  "include": ["day*/**/*.ts"]
 }
