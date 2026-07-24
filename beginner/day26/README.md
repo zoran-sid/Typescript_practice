@@ -24,37 +24,34 @@ TaskRepository.load() → Promise<unknown> → await → 运行时验证
 
 `catch` 到的值不保证是 `Error`，要先用 `instanceof Error`。回归测试必须覆盖成功以外的路径，否则坏数据或离线错误可能直到真实使用时才暴露。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-在 `practice.ts` 中从零完成“异步任务面板”。
+这里同时有 Promise 与状态两条数据流：调用得到 Promise，await 得到数据或抛错；成功/失败分支再 return 不同的判别联合成员。
 
-必须名称：`StudyTask`、`LoadState`、`TaskRepository`、`isRecord`、`isStudyTask`、`parseTasks`、`loadDashboard`、`render`、`MemoryTaskRepository`、`runRegressionTests`。
+## Example 代码流程图
 
-需求：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-1. 任务字段为只读 id、title、非负有限 minutes、`todo | doing | done` 状态。
-2. 仓库 `load()` 返回 `Promise<unknown>`；内存仓库可返回给定值，也可异步抛出给定错误。
-3. `parseTasks` 验证数组及每个元素；空数组合法，坏数据返回 `null`。
-4. `loadDashboard` 成功时计算总分钟，坏数据返回消息 `Task data is invalid`，捕获 Error 时保留其 message。
-5. `render` 把 loading 和 success 转成输出行。
-6. `runRegressionTests` 独立验证：正常两项、空数组、坏 minutes、仓库抛出 `offline`，返回通过数量。
-
-固定正常任务为 Async / 30 / done 与 Tests / 45 / todo。
-
-精确输出：
-
-```text
-State: loading
-State: success
-Tasks: 2
-Done: 1
-Minutes: 75
-Tests passed: 4/4
+```mermaid
+flowchart TD
+  A["先渲染 loading"] --> B
+  B["仓库异步返回 unknown"] --> C
+  C["验证为任务数组"] --> D
+  D["生成 success 状态"] --> E
+  E["渲染数量、完成数与分钟"]
 ```
 
-限制：不使用 `any`、非空断言 `!` 或 `as StudyTask[]`；不能吞掉异常后伪装成成功。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；四条测试确实检查结果，而不是无条件累加；能画出 Promise、unknown、验证器、LoadState 的顺序。
+本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 26 · 结课项目（三）独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 异步任务面板 | 闭卷迁移 |
+| [practice03](./practice03/README.md) | 异步天气面板 | 综合应用 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day26 practice02`。
 
 ## 常见错误
 
@@ -63,6 +60,48 @@ Tests passed: 4/4
 - 空数组被错误判为无效；
 - 只测试成功路径；
 - 用断言越过外部数据边界。
+
+### 错误代码示例
+
+```ts
+async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
+  try {
+    const tasks = repository.load() as unknown as StudyTask[];
+    // ❌ 既忘了 await，又用双重断言绕过外部数据验证。
+    if (!tasks.length) throw new Error("没有任务");
+    // ❌ 合法的空数组被错误当成失败。
+    return { status: "success", tasks, totalMinutes: 0 };
+  } catch (error) {
+    // ❌ catch 中的值可能是字符串、数字或其他对象，不一定有 message。
+    return { status: "failure", message: error.message };
+  }
+}
+```
+
+### 正确写法
+
+```ts
+async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
+  try {
+    // ✅ await 后仍是 unknown；异步完成不代表外部数据已经可信。
+    const value: unknown = await repository.load();
+    const tasks = parseTasks(value);
+    if (tasks === null) {
+      return { status: "failure", message: "Task data is invalid" };
+    }
+
+    // ✅ [] 能通过验证，并自然得到 totalMinutes = 0。
+    const totalMinutes = tasks.reduce((sum, task) => sum + task.minutes, 0);
+    return { status: "success", tasks, totalMinutes };
+  } catch (error: unknown) {
+    return {
+      status: "failure",
+      // ✅ 先收窄，再读取 Error 独有的 message。
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+```
 
 ## 拓展思考（不要求写代码）
 

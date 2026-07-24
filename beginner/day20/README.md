@@ -35,51 +35,28 @@ JSON 语法错误发生在解析阶段；结构错误发生在解析成功之后
 
 打开并右键运行 `example.ts`。逐个指出 `isCourse` 对外层对象、`null`、属性存在和属性类型做了哪些检查。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-请从头编写“课程资料 JSON 验证器”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-业务类型：
+```mermaid
+flowchart TD
+  A["准备合法与非法 JSON"] --> B
+  B["JSON.parse 得到 unknown"] --> C
+  C["类型守卫验证课程字段"] --> D
+  D["合法输出课程，非法输出提示"]
+```
 
-- `Lesson`：`title: string`、`completed: boolean`
-- `Profile`：`name: string`、`contact: { email: string }`、`lessons: Lesson[]`
-- `ParseResult<T>`：成功 `{ ok: true; value: T }`，失败 `{ ok: false; error: string }`
+## 独立练习导航
 
-必须实现：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- `isRecord(value: unknown): value is Record<string, unknown>`：确认非 `null` 对象。
-- `isLesson(value: unknown): value is Lesson`。
-- `isProfile(value: unknown): value is Profile`：逐层验证 name、contact.email、lessons 数组及每个元素。
-- `parseProfile(raw: string): ParseResult<Profile>`：
-  - JSON 语法错误返回 `JSON 格式错误`
-  - 结构不合格返回 `资料字段无效`
-  - 验证成功返回安全的 `Profile`
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | JSON、unknown 与运行时验证 | 主任务 |
+| [practice02](./practice02/README.md) | 课程 JSON 验证 | 闭卷迁移 |
 
-固定输入 `rawProfiles` 必须依次包含：
-
-~~~text
-{"name":"Ada","contact":{"email":"ada@example.com"},"lessons":[{"title":"变量","completed":true},{"title":"联合","completed":false}]}
-{"name":"Lin","contact":{"email":123},"lessons":[]}
-{"name":
-~~~
-
-遍历结果并精确输出：
-
-~~~text
-资料：Ada / ada@example.com / 课程：变量、联合 / 已完成：1
-失败：资料字段无效
-失败：JSON 格式错误
-~~~
-
-限制：
-
-- 不得使用 `any`、类型断言、非空断言或 `as Profile`。
-- 每个类型谓词的检查必须与承诺完全一致。
-- JSON 解析结果必须先存为 `unknown`。
-- `contact` 必须单独确认是非空对象；`lessons` 必须检查数组中的每一项。
-- 只捕获 `JSON.parse` 的语法失败，不能把字段错误混成同一原因。
-
-完成标准：右键运行后显示 PASS；能解释“编译通过”为什么不代表外部数据可信。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day20 practice02`。
 
 ## 容易出错的地方
 
@@ -89,6 +66,38 @@ JSON 语法错误发生在解析阶段；结构错误发生在解析成功之后
 - 谓词声明 `value is Profile`，实际却漏查字段。
 - 用 `as` 让编译器安静，却没有改变真实数据。
 - 用一个大 `catch` 混淆语法错误与结构错误。
+
+### 错误代码示例
+
+```ts
+const profile = JSON.parse(raw) as Profile;
+console.log(profile.contact.email.toLowerCase());
+// ❌ as Profile 没有验证 contact 或 email，真实数据缺字段时仍会崩溃。
+
+function isProfile(value: unknown): value is Profile {
+  return typeof value === "object"; // ❌ null 也满足，而且完全没检查嵌套字段。
+}
+```
+
+### 正确写法
+
+```ts
+function isProfile(value: unknown): value is Profile {
+  return (
+    isRecord(value) &&
+    typeof value.name === "string" &&
+    isRecord(value.contact) &&
+    typeof value.contact.email === "string" &&
+    Array.isArray(value.lessons) &&
+    value.lessons.every(isLesson) // ✅ 数组中的每个元素也必须通过验证。
+  );
+}
+
+const value: unknown = JSON.parse(raw);
+if (isProfile(value)) {
+  console.log(value.contact.email.toLowerCase()); // ✅ 收窄后再进入业务逻辑。
+}
+```
 
 ## 拓展思考（不要求写代码）
 

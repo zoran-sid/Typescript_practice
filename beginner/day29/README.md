@@ -18,33 +18,28 @@
 
 键重映射可以把 `ready` 系统地变成 `onReady`，同时保留对应负载。品牌类型运行时仍是字符串；它只在类型层阻止误传，格式安全必须由一个集中构造函数先验证。验证后的窄断言应只留在这个边界。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-从零完成“类型派生工具箱”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-必须名称：`FeatureConfig`、`Flags`、`ElementOf`、`Events`、`Handlers`、`userIdBrand`、`UserId`、`createUserId`、`profilePath`。
-
-需求：
-
-1. `Flags<T>` 保留 T 的全部键，把值统一变成 boolean。
-2. `ElementOf<T>` 从只读元组 `["types", "modules"] as const` 提取字面量联合，并选择 modules。
-3. `Handlers<Events>` 把 ready、failed 重映射成 `onReady`、`onFailed`，各自参数保持对应负载类型。
-4. `UserId` 是带 unique symbol 品牌的字符串；`createUserId` 只接受以 `usr_` 开头且后面非空的值，否则抛错；验证成功后只在这里使用一次窄断言。
-5. `profilePath` 只接受 UserId。
-
-精确输出：
-
-```text
-Flags: dark=true, retries=false
-Selected: modules
-Ready at 29
-Failed: invalid
-/users/usr_42
+```mermaid
+flowchart TD
+  A["从来源类型派生布尔标记"] --> B
+  B["模板字面量生成处理器名"] --> C
+  C["条件类型取得成员"] --> D
+  D["创建合法值并输出"]
 ```
 
-限制：不使用 `any`；不能把普通字符串直接断言成 UserId；品牌构造器必须先做运行时格式检查。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致且类型检查通过；能在纸上展开 Flags 和 Handlers 的最终对象形状。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 29 · 类型派生独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 界面类型派生 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day29 practice02`。
 
 ## 常见错误
 
@@ -53,6 +48,37 @@ Failed: invalid
 - 模板键没有限制为字符串；
 - 期待类型转换在运行时改造对象；
 - 到处把 string 断言成品牌值。
+
+### 错误代码示例
+
+```ts
+type ElementOf<T> = T[keyof T];
+// ❌ 对数组使用时还会混入 length、数组方法等成员类型。
+
+declare const userIdBrand: unique symbol;
+type UserId = string & { readonly [userIdBrand]: true };
+
+const id = rawInput as UserId;
+// ❌ 到处断言品牌值，任何普通字符串都能绕过格式检查。
+```
+
+### 正确写法
+
+```ts
+type ElementOf<T> = T extends readonly (infer Item)[] ? Item : never;
+// ✅ infer 只提取数组元素，不会把数组方法混进结果。
+
+declare const userIdBrand: unique symbol;
+type UserId = string & { readonly [userIdBrand]: true };
+
+function createUserId(value: string): UserId {
+  if (!value.startsWith("usr_") || value.length <= 4) {
+    throw new Error("Invalid user id");
+  }
+  // ✅ 窄断言只集中在已经完成运行时验证的构造边界。
+  return value as UserId;
+}
+```
 
 ## 拓展思考（不要求写代码）
 

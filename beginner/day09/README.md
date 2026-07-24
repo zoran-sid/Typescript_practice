@@ -60,67 +60,92 @@ interface Box {
 
 打开并右击运行 `example.ts`。在编辑器中临时尝试给 `task.id` 重新赋值，以及对 `tags` 调用 `push`，观察类型错误后撤销。注意这些保护来自类型检查。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成“项目进度摘要”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-必须声明：
-
-```text
-type ProjectId = string
+```mermaid
+flowchart TD
+  A["声明 Task 类型"] --> B
+  B["创建任务对象"] --> C
+  C["函数读取状态与可选字段"] --> D
+  D["拼接标签和摘要"] --> E
+  E["输出三行"]
 ```
 
-以及名为 `Project` 的接口，形状如下：
+## 独立练习导航
 
-- `readonly id: ProjectId`
-- `title: string`
-- `members: ReadonlyArray<string>`
-- `readonly progress: { completed: number; total: number }`
-- `note?: string`
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-固定对象 `project: Project`：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 09：项目进度摘要 | 主任务 |
+| [practice02](./practice02/README.md) | 任务卡片类型 | 闭卷迁移 |
 
-- id 为 `"P-01"`
-- title 为 `"TypeScript 练习"`
-- members 为 `["Lin", "Mei"]`
-- progress 为 `{ completed: 2, total: 5 }`
-- 不提供 note
-
-实现 `describeProject(project: Project): string`，返回四行组成的字符串。成员使用 `.join(", ")`，缺少备注时使用 `?? "无"`。
-
-精确期望输出：
-
-```text
-P-01 | TypeScript 练习
-成员: Lin, Mei
-进度: 2/5
-备注: 无
-```
-
-限制：
-
-- 函数参数必须使用命名接口 `Project`，不得重复写对象形状。
-- 不得修改项目、成员数组或进度对象。
-- 不得使用 `any`、类型断言或非空断言。
-- 只调用一次 `console.log(describeProject(project))`。
-
-完成标准：
-
-- 能说明 `type`、`interface`、`readonly`、`? `各自表达什么。
-- 编辑器会阻止重新赋值 id、progress 或向 members 中 push。
-- 右击运行 `practice.ts`，四行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day09 practice02`。
 
 ## 常见错误
 
 类型名称不是运行时变量；基础类型不要大写；`ReadonlyArray<T>` 不能通过该引用修改；可选属性读取后仍需处理 `undefined`；顶层只读不会自动深入内部属性。
 
+### 错误代码示例
+
+```ts
+interface Project {
+  readonly progress: {
+    completed: number;
+    total: number;
+  };
+  members: ReadonlyArray<string>;
+}
+
+const project: Project = {
+  progress: { completed: 2, total: 5 },
+  members: ["Lin"],
+};
+
+project.progress.completed = 3;
+// ❌ 这行竟然允许：readonly 只保护 progress 这个引用，不会自动深入对象。
+
+project.members.push("Mei");
+// ❌ ReadonlyArray 没有可修改数组的 push 方法。
+```
+
+### 正确写法
+
+```ts
+interface Project {
+  readonly progress: {
+    readonly completed: number;
+    readonly total: number;
+  };
+  members: ReadonlyArray<string>;
+}
+
+const project: Project = {
+  progress: { completed: 2, total: 5 },
+  members: ["Lin"],
+};
+
+// ✅ 需要新进度时创建新对象，而不是修改只读数据。
+const nextProject: Project = {
+  members: project.members,
+  progress: {
+    completed: project.progress.completed + 1,
+    total: project.progress.total,
+  },
+};
+```
+
 ## 拓展思考（不要求写代码）
 
 接口中 `readonly progress: { completed: number; total: number }` 为什么只阻止替换整个 `progress` 对象，却不阻止 `progress.completed = 3`，若业务要求完全只读还需要改变哪里？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 与 `SOLUTION.md`，重点检查类型设计是否表达了题目意图。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 与 `SOLUTION.md`，重点检查类型设计是否表达了题目意图。
 
 ## 官方资料
 

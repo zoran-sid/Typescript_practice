@@ -34,40 +34,32 @@ const double = (value: number): number => {
 
 打开并右键运行 `example.ts`。找出 `Formatter`、默认参数、rest 参数和 `void` 行为分别出现在哪里。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请在 `practice.ts` 中从头编写“学生成绩报告器”。
+高阶函数的数据流多一层：外部把函数值作为实参传入，它在内部成为回调参数；内部再把当前值传给回调；回调 return 的值回到高阶函数。要分清内外两层参数与 return。
 
-必须创建：
+## Example 代码流程图
 
-- `ScoreFormatter`：接收 `number`、返回 `string` 的函数类型。
-- `Reporter`：接收 `string`、返回 `void` 的函数类型。
-- `formatScore`：符合 `ScoreFormatter` 的箭头函数；60 分及以上返回“成绩：分数（通过）”，否则返回“成绩：分数（未通过）”。
-- `greetStudent(name, title?, punctuation = "!")`：缺少称呼时使用“同学”。
-- `sumScores(...scores)`：返回所有分数之和。
-- `reportScores(scores, formatter, reporter)`：逐项调用回调，并返回及格数量。
-- 固定数组 `scores`，内容为 `55、80、100`。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-用 `console.log` 作为 `Reporter`，精确输出：
+```mermaid
+flowchart TD
+  A["创建学习记录数据"] --> B
+  B["格式函数接收当前项目"] --> C
+  C["默认与 rest 参数组织文字"] --> D
+  D["void 回调输出各行"]
+```
 
-~~~text
-你好，Ada同学!
-成绩：55（未通过）
-成绩：80（通过）
-成绩：100（通过）
-总分：235
-通过数量：2
-~~~
+## 独立练习导航
 
-限制：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- 不得使用 `any` 或类型断言。
-- `formatScore` 必须写花括号并明确 `return`。
-- `reportScores` 不能把输出写死；它必须调用收到的 `formatter` 和 `reporter`。
-- `sumScores` 必须使用 rest 参数，`reportScores` 的数组参数必须是只读数组。
-- `console.log` 只负责展示，计算函数必须用 `return` 交付结果。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 函数类型、箭头函数与回调 | 主任务 |
+| [practice02](./practice02/README.md) | 学习记录格式器 | 闭卷迁移 |
 
-完成标准：右键运行后显示 PASS；能分别解释可选参数、默认参数、rest 参数与 `void`。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day12 practice02`。
 
 ## 容易出错的地方
 
@@ -76,6 +68,30 @@ const double = (value: number): number => {
 - 直接对可选参数调用字符串方法，没处理 `undefined`。
 - 把 rest 参数当作单个数字。
 - 在回调里打印正确文字，却忘记返回及格数量。
+
+### 错误代码示例
+
+```ts
+const double = (value: number): number => {
+  value * 2; // ❌ 使用花括号后不会自动返回，函数实际得到 undefined。
+};
+
+function greet(title?: string): string {
+  return title.toUpperCase(); // ❌ 可选参数可能是 undefined。
+}
+```
+
+### 正确写法
+
+```ts
+const double = (value: number): number => {
+  return value * 2; // ✅ 花括号函数体要明确 return。
+};
+
+function greet(title?: string): string {
+  return (title ?? "同学").toUpperCase(); // ✅ 先提供默认值，再调用字符串方法。
+}
+```
 
 ## 拓展思考（不要求写代码）
 

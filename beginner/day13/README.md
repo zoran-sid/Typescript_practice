@@ -38,56 +38,29 @@ const updated = {
 
 打开并右键运行 `example.ts`。观察原对象与新对象为什么能同时保留不同的主题和技能。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-请在 `practice.ts` 中从头编写“学习资料不可变更新器”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-声明 `Profile`，包含：
+```mermaid
+flowchart TD
+  A["读取原设置对象"] --> B
+  B["解构取得主题与技能"] --> C
+  C["spread 创建新设置"] --> D
+  D["rest 拆分数组"] --> E
+  E["输出原值和新值"]
+```
 
-- `readonly id: number`
-- `name: string`
-- `skills: readonly string[]`
-- `preferences: { theme: "light" | "dark"; notifications: boolean }`
-- `tasks: readonly { id: number; title: string; done: boolean }[]`
+## 独立练习导航
 
-创建固定 `original`：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- id 为 1，name 为 `Ada`
-- skills 为 `HTML、CSS`
-- preferences 为 `light` 和 `true`
-- 两项任务分别为 `复习变量`、`练习对象`，初始都未完成
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 解构、spread、rest 与不可变更新 | 主任务 |
+| [practice02](./practice02/README.md) | 主题设置不可变更新 | 闭卷迁移 |
 
-实现 `updateProfile(profile: Profile): Profile`，返回 `updated`，要求：
-
-- name 改为 `Ada Lin`
-- skills 末尾加入 `TypeScript`
-- theme 改为 `dark`，notifications 保持不变
-- 只把 id 为 2 的任务改为完成
-- 任何层级都不得修改 `original`
-
-再从 `updated.skills` 解构出 `firstSkill` 和 `remainingSkills`，精确输出：
-
-~~~text
-原姓名：Ada
-新姓名：Ada Lin
-原主题：light
-新主题：dark
-原技能：HTML、CSS
-新技能：HTML、CSS、TypeScript
-第一项：HTML
-其余：CSS、TypeScript
-原状态：false,false
-新状态：false,true
-~~~
-
-限制：
-
-- 不得使用 `any`、类型断言、非空断言、`push`、`splice` 或直接属性赋值。
-- 必须使用对象 spread、数组 spread、嵌套 spread、`map` 和数组 rest。
-- `map` 的目标分支返回新任务对象，其他分支返回原任务。
-- 输出必须同时读取 `original` 和 `updated`，证明两者没有共享修改。
-
-完成标准：右键运行后显示 PASS；能解释为什么只 spread 最外层仍不足以更新嵌套对象。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day13 practice02`。
 
 ## 容易出错的地方
 
@@ -96,6 +69,26 @@ const updated = {
 - 使用 `map` 却忘记返回值。
 - 直接修改原数组元素或调用 `push`。
 - 误以为 `readonly` 或 `as const` 会在运行时深度冻结。
+
+### 错误代码示例
+
+```ts
+const updated = { ...original };
+updated.preferences.theme = "dark";
+// ❌ spread 只复制外层；两个对象仍共享 preferences，original 也被改了。
+```
+
+### 正确写法
+
+```ts
+const updated = {
+  ...original,
+  preferences: {
+    ...original.preferences,
+    theme: "dark", // ✅ 沿着要修改的路径逐层创建新对象。
+  },
+};
+```
 
 ## 拓展思考（不要求写代码）
 

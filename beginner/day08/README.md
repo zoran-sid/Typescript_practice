@@ -49,64 +49,80 @@ const shownCity = city ?? "未填写";
 
 打开并右击运行 `example.ts`。观察缺少电话的联系人如何得到默认值，同时数字 0 和空字符串为何被保留。临时把搜索名字改成不存在的名字，先预测四行输出，再运行并恢复。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成“联系人安全摘要”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-声明 `contacts`，显式标注为具有下列形状的对象数组：
-
-- 必填 `name: string`。
-- 可选 `phone?: string`。
-- 可选 `address?: { city?: string }`。
-
-固定数据：
-
-- 第一项是 `{ name: "Lin", phone: "13800000000", address: { city: "上海" } }`。
-- 第二项是 `{ name: "Mei", address: {} }`。
-
-程序要求：
-
-1. 使用 `find` 创建 `selectedContact`，查找名字为 `"Mei"` 的联系人。
-2. 使用 `selectedContact?.name ?? "未找到"` 得到 `selectedName`。
-3. 用相同思路得到 `selectedPhone`，缺失时显示 `"未提供"`。
-4. 安全访问嵌套城市得到 `selectedCity`，缺失时显示 `"未填写"`。
-5. 声明 `score: number | undefined = 0` 和 `nickname: string | undefined = ""`。
-6. 使用 `??` 为分数提供默认值 100、为昵称提供默认值 `"匿名"`，并用 `JSON.stringify` 显示昵称。
-
-精确期望输出：
-
-```text
-联系人: Mei
-电话: 未提供
-城市: 未填写
-分数: 0
-昵称: ""
+```mermaid
+flowchart TD
+  A["读取联系人与可选字段"] --> B
+  B["可选链避免缺失访问错误"] --> C
+  C["空值合并补电话"] --> D
+  D["保留 0 与空字符串并输出"]
 ```
 
-限制：
+## 独立练习导航
 
-- 不使用非空断言 `!` 或类型断言 `as`。
-- 不使用 `||` 提供默认值。
-- 不假设 `find` 一定成功。
-- 所有结果必须从固定数据安全推导。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 08：联系人安全摘要 | 主任务 |
+| [practice02](./practice02/README.md) | 联系人缺省值 | 闭卷迁移 |
 
-- 能指出每条可选链可能在哪一层停止。
-- 0 和空字符串不会被默认值替换。
-- 右击运行 `practice.ts`，五行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day08 practice02`。
 
 ## 常见错误
 
 `?.` 不会自动提供默认文字；`??` 只处理 `null` 与 `undefined`；`||` 会误替换有效的 0 和空字符串；非空断言不会产生运行时保护。
 
+### 错误代码示例
+
+```ts
+type Contact = { address?: { city?: string } };
+
+function showContact(
+  selectedContact: Contact | undefined,
+  score: number | undefined,
+): void {
+  const displayedScore = score || 100;
+  // ❌ score 为有效的 0 时，|| 仍会错误改成 100。
+
+  const city = selectedContact!.address!.city;
+  // ❌ ! 只让编译器暂时相信值存在，运行时仍可能报错。
+
+  console.log(displayedScore, city);
+}
+```
+
+### 正确写法
+
+```ts
+type Contact = { address?: { city?: string } };
+
+function showContact(
+  selectedContact: Contact | undefined,
+  score: number | undefined,
+): void {
+  const displayedScore = score ?? 100;
+  // ✅ 只有 score 为 null 或 undefined 时才使用 100。
+
+  const city = selectedContact?.address?.city ?? "未填写";
+  // ✅ 每一层都安全访问，并在确实缺失时提供默认值。
+
+  console.log(displayedScore, city);
+}
+```
+
 ## 拓展思考（不要求写代码）
 
 若把 `score ?? 100` 改成 `score || 100`，当前分数为什么会从合法的 0 变成 100，而 `??` 不会？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 与 `SOLUTION.md`，重点对照每一层缺失值是怎样被处理的。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 与 `SOLUTION.md`，重点对照每一层缺失值是怎样被处理的。
 
 ## 官方资料
 

@@ -42,44 +42,32 @@ type FlagName = keyof typeof flags;
 
 打开并右键运行 `example.ts`。观察 `getProperty(course, "title")` 和 `getProperty(course, "lessons")` 为什么有不同的返回类型。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请从头编写“类型安全的课程取值工具”。
+对象和键分别进入 item 与 key 参数，item[key] 产生返回值。K 约束允许的键，T[K] 描述与键对应的返回类型；不要偷偷读取外部固定键。
 
-必须实现：
+## Example 代码流程图
 
-- `getProperty<Item, Key extends keyof Item>(item, key): Item[Key]`
-- `pluck<Item, Key extends keyof Item>(items, key): Item[Key][]`，使用 `map` 收集同一属性
-- `describeId<Item extends { id: number }>(item, prefix): string`
-- 固定对象 `settings = { theme: "dark", fontSize: 16, compact: false }`
-- `SettingName = keyof typeof settings`
-- `selectedSetting: SettingName = "theme"`
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-固定课程数据：
+```mermaid
+flowchart TD
+  A["带 id 的对象进入受约束函数"] --> B
+  B["keyof 限制读取键"] --> C
+  C["item[key] 返回 T[K]"] --> D
+  D["输出课程与设置字段"]
+```
 
-~~~text
-{id: 7, title: "变量", score: 80, published: true}
-{id: 8, title: "泛型", score: 95, published: false}
-~~~
+## 独立练习导航
 
-精确输出：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-~~~text
-课程#7
-标题：变量、泛型
-分数：80、95
-设置：theme=dark
-~~~
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 泛型约束、keyof、T[K] 与 typeof | 主任务 |
+| [practice02](./practice02/README.md) | 安全读取配置字段 | 闭卷迁移 |
 
-限制：
-
-- 不得使用 `any`、类型断言或非空断言。
-- `getProperty` 与 `pluck` 的返回类型必须写成 `Item[Key]` 和 `Item[Key][]`。
-- `pluck` 必须根据收到的 `key` 读取属性，不能为标题和分数写两套函数。
-- `describeId` 只约束真正需要的数字 `id`。
-- `SettingName` 必须从 `settings` 的真实值派生，不能手写字符串联合。
-
-完成标准：右键运行后显示 PASS；能解释为什么任意 `string` 不能直接安全索引对象。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day16 practice02`。
 
 ## 容易出错的地方
 
@@ -89,6 +77,28 @@ type FlagName = keyof typeof flags;
 - 返回 `Item[keyof Item]`，丢失具体键与值的关系。
 - 混淆运行时与类型位置的 `typeof`。
 - 用断言强迫外部字符串成为对象键。
+
+### 错误代码示例
+
+```ts
+function getProperty<Item>(
+  item: Item,
+  key: string,
+): Item[keyof Item] {
+  return item[key]; // ❌ string 可能不是 Item 的键，而且返回值丢失了具体键关系。
+}
+```
+
+### 正确写法
+
+```ts
+function getProperty<Item, Key extends keyof Item>(
+  item: Item,
+  key: Key,
+): Item[Key] {
+  return item[key]; // ✅ Key 只能取合法键，Item[Key] 保留该键对应的精确值类型。
+}
+```
 
 ## 拓展思考（不要求写代码）
 

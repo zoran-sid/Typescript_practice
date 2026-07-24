@@ -31,45 +31,32 @@ function assertNever(value: never): never {
 
 打开 `example.ts`，按项目根目录 README 介绍的右键方式运行。阅读每个 `case`，指出该分支里的 `state` 具体是哪一种类型。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请在 `practice.ts` 中从第一行开始编写“学习任务状态说明器”。
+判别联合参数先进入函数，再由 switch 按判别字段流入某个 case。case 内能读取该成员专属属性；return 结束本次调用并把结果交回外部。
 
-固定类型 `StudyTask` 必须包含以下五种成员：
+## Example 代码流程图
 
-- `{ status: "waiting"; title: string }`
-- `{ status: "studying"; title: string; minutes: number }`
-- `{ status: "completed"; title: string; score?: number }`
-- `{ status: "failed"; title: string; reason: string }`
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-虽然上面只有四种 `status`，`completed` 必须分别测试“有分数”和“无分数”，因此固定输入一共有五项。请实现 `assertNever(value: never): never` 和 `describeTask(task: StudyTask): string`，使用 `switch` 完成收窄，并创建名为 `tasks` 的数组：
+```mermaid
+flowchart TD
+  A["状态对象进入 describeState"] --> B
+  B["switch 读取 status"] --> C
+  C["每个 case 访问专属字段"] --> D
+  D["依次输出四种状态"]
+```
 
-~~~text
-waiting / 联合类型
-studying / 函数 / 45
-completed / 对象 / 92
-completed / 复习 / 不提供 score
-failed / 提交 / 网络中断
-~~~
+## 独立练习导航
 
-程序必须精确输出：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-~~~text
-待开始：联合类型
-学习中：函数（45 分钟）
-已完成：对象（92 分）
-已完成：复习（待评分）
-失败：提交（网络中断）
-~~~
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 判别联合、switch 与完整分支 | 主任务 |
+| [practice02](./practice02/README.md) | 加载状态渲染器 | 闭卷迁移 |
 
-限制：
-
-- 不得把成员专属字段全部改成可选属性。
-- 不得使用 `any`、类型断言或非空断言。
-- `completed` 分支必须用空值合并处理缺失分数。
-- `default` 必须把 `task` 交给 `assertNever`。
-
-完成标准：右键运行 `practice.ts` 后显示 PASS；新增一个 `paused` 成员时，能看到穷尽检查提示缺失分支。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day11 practice02`。
 
 ## 容易出错的地方
 
@@ -78,6 +65,35 @@ failed / 提交 / 网络中断
 - `default` 直接返回“未知”，让新状态悄悄漏掉。
 - 忘记 `case` 中的 `return`。
 - 用非空断言掩盖可选的 `score`。
+
+### 错误代码示例
+
+```ts
+function describeTask(task: StudyTask): string {
+  // ❌ 联合类型尚未按 status 收窄，并非每一种任务都有 score。
+  return `${task.title}：${task.score} 分`;
+}
+```
+
+### 正确写法
+
+```ts
+function describeTask(task: StudyTask): string {
+  switch (task.status) {
+    case "completed":
+      // ✅ 进入 completed 分支后才能读取 score；它仍是可选值，所以用 ?? 处理缺席。
+      return `${task.title}：${task.score ?? "待评分"}`;
+    case "waiting":
+      return `${task.title}：待开始`;
+    case "studying":
+      return `${task.title}：已学习 ${task.minutes} 分钟`;
+    case "failed":
+      return `${task.title}：${task.reason}`;
+    default:
+      return assertNever(task);
+  }
+}
+```
 
 ## 拓展思考（不要求写代码）
 

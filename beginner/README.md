@@ -1,19 +1,19 @@
 # TypeScript 零基础完整路线
 
-这条路线不假设你已经学习 JavaScript。每一天先用 `example.ts` 展示完整做法，再由你在几乎空白的 `practice.ts` 中从头写出一道完整程序。
+这条路线不假设你已经学习 JavaScript。每一天用 `example.ts` 与 Mermaid 流程图建立整体逻辑，再进入 1–3 个互相独立的 `practiceXX/` 文件夹练习。题目数量取决于难度，每题拥有自己的 README、流程图、作答文件与解题结构提示。
 
 主线是 Day 00–26，每天按 60–90 分钟设计；Day 27–32 是按需选修。
 
 ## 推荐学习流程
 
 1. 用 8–10 分钟回忆昨天、三天前和七天前的内容。
-2. 阅读当天 README 的概念与完整示例说明。
-3. 右击 `example.ts`，选择 **Run Code**，然后修改输入并预测输出。
-4. 阅读“独立练习（从空文件开始）”中的需求、固定命名和期望输出。
-5. 打开 `practice.ts`，从第一行开始写全部代码。
-6. 右击 `practice.ts` → **Run Code**，根据中文类型提示或输出差异修改。
-7. 回答 README 最后的一道拓展思考题。
-8. 实在卡住时再阅读 `SOLUTION.md` 或右击 `solution.ts`。
+2. 阅读当天 README 的概念与 Example 代码流程图。
+3. 运行 `example.ts`，把流程图每个节点对应到具体代码。
+4. 从当天导航选择一个 `practiceXX/`，阅读它自己的题目和流程图。
+5. 在该目录的 `practice.ts` 中从空白完成全部代码。
+6. 右击运行，根据中文类型提示或输出差异修改。
+7. 另一道练习必须重新打开独立目录作答，不导入上一题实现。
+8. 实在卡住时，再查看同一目录的 `solution.ts` 与 `SOLUTION.md`。
 
 ## 开启右键运行
 
@@ -24,36 +24,89 @@
 | 文件 | 自动行为 |
 | --- | --- |
 | `example.ts` | 类型检查并运行完整示例 |
-| `practice.ts` | 类型检查、运行并核对你的输出 |
-| `solution.ts` | 验证参考答案 |
+| `practiceXX/practice.ts` | 类型检查、运行并核对这一道独立练习 |
+| `practiceXX/solution.ts` | 类型检查解题结构；不会运行或显示完整答案 |
 
 如果不安装扩展，可以按 `F5`，或运行内置任务“课程：运行当前文件”。
 
-## practice.ts 的规则
+## 独立练习目录的规则
 
-- 每天只有一个 `practice.ts`。
-- 文件初始只有 3–6 行注释，没有任何起始代码。
-- 注释最多规定必要名称，例如 `tasks`、`calculateTotal`。
-- 完整输入、处理、分支、函数和输出都由你自己编写。
-- 自动检查只关心类型、运行结果和精确输出，不要求代码与答案逐字相同。
+- 每天有 1–3 个连续编号目录：`practice01/`、`practice02/`、`practice03/`。
+- 每个目录都包含 README、Mermaid 流程图、`practice.ts`、`solution.ts` 和 `SOLUTION.md`。
+- 各题使用不同文件和独立运行入口，不允许导入另一题的实现。
+- `practice.ts` 初始只有 2–8 行注释；完整代码由你从空白编写。
+- 自动检查只关心类型、运行结果和精确输出，不要求逐字复制答案。
+- Example 流程图在当天 README；每道练习还有自己的流程图。
 
+## 错误示例与解题结构怎么读
+
+- 每天 README 的“错误代码示例”是故意写错的代码，`// ❌` 会直接指出出错位置与原因；不要把它原样复制进 `practice.ts`。
+- 紧随其后的“正确写法”用 `// ✅` 对应修正同一个问题，先比较符号、类型与数据流，再运行代码。
+- 每道题的 `solution.ts` 只提供可通过类型检查的主要结构：必要类型、函数签名和控制流骨架；核心实现保留为 `TODO`，不会给出完整答案。
+- `SOLUTION.md` 解释方案一；存在多种推荐做法时会比较方案二或方案三的结构与适用场景，但同样保留关键 `TODO`。
+- 建议先独立完成，再对照错误示例定位问题，最后才打开结构提示。根据 `TODO` 自己补完后，关闭提示并重新写一次，避免“当时看懂、下次又忘”。
 ## 可选命令行方式
 
 ```powershell
 # 环境检查
 npm run beginner:doctor
 
-# 示例 / 自己的练习 / 参考答案
+# Example
 npm run beginner:example -- day10
-npm run beginner -- day10
-npm run beginner:solution -- day10
+
+# 指定一道独立练习 / 对应解题结构提示
+npm run beginner -- day10 practice01
+npm run beginner -- day10 practice02
+npm run beginner:solution -- day10 practice02
 
 # 验证一天或全部课程
 npm run beginner:verify -- day10
 npm run beginner:verify
 ```
 
-现在每天只有一道题，不再填写题号，也不再使用 `all`。
+不填写练习编号时默认运行 `practice01`；右击嵌套目录中的文件会自动识别正确的 day 与 practice 编号。
+
+## 语法符号速查：先看 `=`、`:`、`{}`、`[]`
+
+```ts
+const student = { name: "Mei", scores: [88, 92] };
+const { name } = student;
+const firstScore = student.scores[0];
+```
+
+- `const student = ...;`：变量名后用 `=`，把右边的值交给左边变量，整条语句最后用 `;`。
+- `{ name: "Mei" }`：创建对象值；内部写“属性名: 值”，不能写成“属性名 = 值”。
+- `[88, 92]`：创建数组；项目用逗号分隔，通过 `[0]` 读取第一项。
+- `const { name } = student;`：对象解构；花括号在等号左边，表示取同名属性。
+- `student.scores[0]`：先用点号读取对象属性，再用方括号读取数组项目。
+
+对象的值与类型要分开看：
+
+```ts
+const student: { name: string; scores: number[] } = {
+  name: "Mei",
+  scores: [88, 92],
+};
+```
+
+逐字符是 const → 变量名 → : → 类型 → = → { → 属性名 → : → 属性值 → , → } → ;。类型花括号里推荐“属性名: 类型;”，值花括号里写“属性名: 值,”。空数组无法推断元素类型时写 `const scores: number[] = [];`。变量、赋值、调用和 return 语句通常用分号结束；对象变量关闭花括号后写 `};`；if、for、function 的关闭花括号后通常不加分号。
+
+## 函数变量数据流：参数进，返回值出
+
+```ts
+function copyScores(source: number[]): number[] {
+  const result: number[] = [];
+  for (const score of source) {
+    result.push(score);
+  }
+  return result;
+}
+const copiedScores = copyScores(student.scores);
+```
+
+`student.scores`（实参）→ `source`（参数）→ `score`（循环局部变量）→ `result`（函数局部数组）→ return → `copiedScores`（接收变量）。参数与函数/代码块内的 const、let 只在各自作用域可用。计算函数优先从参数取数据，不偷偷依赖外部变量。数组和对象传入的是引用；直接对参数 push 会修改原数组，上例新建 result 后返回。const 只禁止重新赋值，仍允许数组 push。console.log 只显示，return 才交付结果。
+
+从 Day 05 起，每次遇到函数都沿“实参 → 参数 → 局部变量 → return → 接收变量”检查。
 
 ## 主线课程地图
 
@@ -83,14 +136,18 @@ npm run beginner:verify
 
 ```text
 dayXX/
-  README.md      概念、一道独立练习、一道拓展思考
-  example.ts     完整示例
-  practice.ts    只有命名提示，由你从零编写
-  solution.ts    唯一参考答案
-  SOLUTION.md    解题思路与拓展思考方向
+  README.md             概念、Example 流程图、练习导航
+  example.ts            完整示例
+  practice01/
+    README.md            独立题目与流程图
+    practice.ts          空白作答入口
+    solution.ts          仅含主结构与关键 TODO，不含完整答案
+    SOLUTION.md          方案结构、变量流向与易错提示
+  practice02/            另一道完全独立的题目
+  practice03/            仅较难或综合课程提供
 ```
 
-少数模块、声明文件或异步课程会保留示例所需的辅助文件，但练习入口始终只有 `practice.ts`。
+少数模块、声明文件或异步课程会在 day 根目录保留 Example 所需的辅助文件；独立练习始终从各自的 `practiceXX/practice.ts` 进入。
 
 ## 复习与资料
 

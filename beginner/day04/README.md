@@ -40,65 +40,80 @@
 
 打开并右击运行 `example.ts`。按顺序判断年龄属于哪个分支，再计算是否允许独自入场。临时把年龄改成边界值 12、25、65，分别预测结果，再运行验证并恢复。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成“订单优惠计算器”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-固定数据和名称：
-
-- `orderTotal` 为数字 `120`。
-- `isMember` 为布尔值 `true`。
-- `hasCoupon` 为布尔值 `false`。
-- `canUseMemberDiscount` 保存组合条件。
-- `discount` 从数字 0 开始。
-- `amountToPay` 保存应付金额。
-
-优惠规则必须按以下优先级实现：
-
-1. 订单满 200，优惠 40。
-2. 否则，如果是会员、订单满 100 且没有优惠券，优惠 20。
-3. 否则，如果有优惠券或订单满 80，优惠 10。
-4. 否则不优惠。
-
-程序要求：
-
-- `canUseMemberDiscount` 必须使用 `&&` 和 `!` 组合三个条件。
-- 优惠规则必须使用一个 `if / else if / else` 结构。
-- 应付金额由 `orderTotal - discount` 计算。
-- 所有输出都读取变量。
-
-精确期望输出：
-
-```text
-会员优惠可用: true
-优惠: 20
-应付: 100
+```mermaid
+flowchart TD
+  A["读取年龄"] --> B
+  B["分支决定票价"] --> C
+  C["组合年龄条件决定能否独自入场"] --> D
+  D["输出三项结果"]
 ```
 
-限制：
+## 独立练习导航
 
-- “满 200”和“满 100”都必须包含边界。
-- 不得直接把 20 或 100 写进输出。
-- 不得用多个互不相关的 `if` 让多条优惠同时叠加。
-- 不使用嵌套三元表达式。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 04：订单优惠计算器 | 主任务 |
+| [practice02](./practice02/README.md) | 电影院票价判断 | 闭卷迁移 |
 
-- 能说明当前数据为什么进入第二个分支。
-- 能解释 `&&`、`||`、`!` 在程序中的不同作用。
-- 右击运行 `practice.ts`，三行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day04 practice02`。
 
 ## 常见错误
 
 把“满 100”写成 `> 100` 会漏掉边界；把会员分支放在满 200 前面会提前停止；把 `!` 遗漏会让已经使用优惠券的人仍进入会员规则。
 
+### 错误代码示例
+
+```ts
+const orderTotal = 200;
+const isMember = true;
+const hasCoupon = false;
+let discount = 0;
+
+if (isMember && orderTotal > 100) {
+  discount = 20; // ❌ 会员分支先成立，200 元订单错误地停在这里。
+} else if (orderTotal >= 200) {
+  discount = 40;
+} else if (hasCoupon) {
+  discount = 10;
+}
+// ❌ > 100 还漏掉了恰好 100 元的边界。
+```
+
+### 正确写法
+
+```ts
+const orderTotal = 200;
+const isMember = true;
+const hasCoupon = false;
+const canUseMemberDiscount =
+  isMember && orderTotal >= 100 && !hasCoupon;
+
+let discount = 0;
+
+if (orderTotal >= 200) {
+  discount = 40; // ✅ 最高优先级规则放在最前面。
+} else if (canUseMemberDiscount) {
+  discount = 20; // ✅ 包含 100 元边界，并排除已使用优惠券的情况。
+} else if (hasCoupon || orderTotal >= 80) {
+  discount = 10;
+}
+```
+
 ## 拓展思考（不要求写代码）
 
 如果 `orderTotal` 改成 200，同时仍是会员且没有优惠券，程序为什么应该只优惠 40 而不是先优惠 40 再优惠 20，这与分支顺序有什么关系？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 和 `SOLUTION.md`，重点对照条件名称和分支优先级。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 和 `SOLUTION.md`，重点对照条件名称和分支优先级。
 
 ## 官方资料
 

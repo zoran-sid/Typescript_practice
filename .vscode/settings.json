@@ -1,6 +1,6 @@
 {
   "code-runner.executorMap": {
-    "typescript": "node \"$dir/../scripts/run-file.mjs\" \"$fullFileName\""
+    "typescript": "node \"$workspaceRoot/beginner/scripts/run-file.mjs\" \"$fullFileName\""
   },
   "code-runner.cwd": "$workspaceRoot",
   "code-runner.runInTerminal": true,

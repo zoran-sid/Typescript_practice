@@ -66,70 +66,93 @@ if ("email" in contact) {
 
 打开并右击运行 `example.ts`。指出每次调用进入 `formatId` 的哪个分支，并观察字面量类型如何限制对齐方式。临时传入非法字面量，阅读错误后撤销。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-在 `practice.ts` 中从零完成“支持工单摘要”。
+联合参数进入函数时仍可能是多个类型。收窄只在当前控制流分支内有效；每个分支最终用 return 把允许的统一结果交回调用处。
 
-必须声明这些类型：
+## Example 代码流程图
 
-- `type TicketId = string | number`
-- `type TopicInput = string | string[]`
-- `type Priority = "low" | "medium" | "high"`
-- `interface EmailContact { name: string; email: string }`
-- `interface PhoneContact { name: string; phone: string }`
-- `type Contact = EmailContact | PhoneContact`
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-必须实现这些函数：
-
-- `formatTicketId(id: TicketId): string`：字符串编号转大写，数字编号前加 `#`，都带前缀 `"编号: "`。
-- `describeTopics(topics: TopicInput): string`：数组返回 `"主题列表: "` 加逗号空格连接；字符串返回 `"主题: "` 加原值。
-- `describeContact(contact: Contact): string`：用 `"email" in contact` 返回邮箱或电话。
-- `describePriority(priority: Priority): string`：当值为 `"high"` 返回 `"优先级: high（立即处理）"`，其他值返回 `"优先级: "` 加原值。
-
-固定调用数据：
-
-- 工单编号 `"ts-10"` 和 `42`。
-- 主题 `"variables"` 和 `["variables", "arrays"]`。
-- 邮箱联系人 `{ name: "Lin", email: "a@example.com" }`。
-- 电话联系人 `{ name: "Mei", phone: "13800000000" }`。
-- 优先级 `"high"`。
-
-精确期望输出：
-
-```text
-编号: TS-10
-编号: #42
-主题: variables
-主题列表: variables, arrays
-邮箱: a@example.com
-电话: 13800000000
-优先级: high（立即处理）
+```mermaid
+flowchart TD
+  A["联合 ID 进入格式函数"] --> B
+  B["typeof 区分字符串和数字"] --> C
+  C["字面量 alignment 通过检查"] --> D
+  D["输出三个格式结果"]
 ```
 
-限制：
+## 独立练习导航
 
-- 四个函数都必须使用题目指定的命名类型。
-- 分别使用 `typeof`、`Array.isArray`、`in` 和严格相等判断收窄。
-- 不使用 `any`、`as` 或非空断言。
-- 不得把最终七行整句直接交给 `console.log`。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 10：支持工单摘要 | 主任务 |
+| [practice02](./practice02/README.md) | 工单编号格式化 | 闭卷迁移 |
 
-- 能说明每个分支进入后变量被收窄成什么类型。
-- 非法优先级会在运行前被 TypeScript 拒绝。
-- 右击运行 `practice.ts`，七行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day10 practice02`。
 
 ## 常见错误
 
 联合类型不是同时拥有两个成员的所有方法；`typeof` 返回小写文字；`Array.isArray` 比普通对象判断更精确；`as` 不会产生运行时检查；属性名拼错会让 `in` 判断失去意义。
 
+### 错误代码示例
+
+```ts
+function formatId(id: string | number): string {
+  if (typeof id === "String") {
+    return id.toUpperCase();
+    // ❌ typeof 不会返回 "String"，这里也无法把 id 收窄为 string。
+  }
+
+  return `#${id}`;
+}
+
+interface EmailContact {
+  email: string;
+}
+
+function printEmail(externalValue: unknown): void {
+  const contact = externalValue as EmailContact;
+  console.log(contact.email.toLowerCase());
+  // ❌ as 没有检查外部值；缺少 email 时运行会出错。
+}
+```
+
+### 正确写法
+
+```ts
+function formatId(id: string | number): string {
+  if (typeof id === "string") {
+    return id.toUpperCase(); // ✅ typeof 返回小写 "string"。
+  }
+
+  return `#${id}`;
+}
+
+function printEmail(externalValue: unknown): void {
+  if (
+    typeof externalValue === "object" &&
+    externalValue !== null &&
+    "email" in externalValue &&
+    typeof externalValue.email === "string"
+  ) {
+    console.log(externalValue.email.toLowerCase());
+    // ✅ 运行时逐步检查后，email 才被收窄为 string。
+  }
+}
+```
+
 ## 拓展思考（不要求写代码）
 
 如果把来自外部文件的未知值直接写成 `value as EmailContact`，当它实际没有 `email` 属性时程序为什么仍可能出错，而 `"email" in value` 这类运行时检查提供了什么额外保证？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 与 `SOLUTION.md`，逐个指出四个函数使用的收窄方法。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 与 `SOLUTION.md`，逐个指出四个函数使用的收窄方法。
 
 ## 官方资料
 

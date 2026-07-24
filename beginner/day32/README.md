@@ -20,35 +20,33 @@
 
 许多可替换依赖用普通组合更清楚：把 Formatter 作为构造器参数注入服务，依赖来源显式，也容易测试。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-从零完成“带追踪的价格服务”。
+装饰器包装后，实例通过 this 进入包装函数，实参收集进 args 再转交 target；target 的 return 值必须原样返回。漏掉任一环都会破坏签名或行为。
 
-必须名称：`tracedMethod`、`registerClass`、`withTag`、`PriceCalculator`、`Formatter`、`UppercaseFormatter`、`MessageService`。
+## Example 代码流程图
 
-需求：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-1. `tracedMethod<This, Args extends unknown[], Return>` 使用标准 `ClassMethodDecoratorContext`，调用前输出方法名并保持原签名。
-2. `registerClass` 使用标准 `ClassDecoratorContext`，类定义时输出类名。
-3. PriceCalculator 同时应用类装饰器；其 `total(quantity, unitPrice)` 应用方法装饰器并返回乘积。
-4. `withTag` 给对象增加只读字面量 tag `advanced`，保留原对象类型。
-5. UppercaseFormatter 实现 Formatter；MessageService 通过构造器组合 Formatter，`create` 返回带前缀的格式化消息。
-
-固定调用：为 new PriceCalculator 混入 tag；计算 3×8；服务处理 `TypeScript`。
-
-精确输出：
-
-```text
-注册类: PriceCalculator
-标签: advanced
-调用: total
-总价: 24
-消息: TYPESCRIPT
+```mermaid
+flowchart TD
+  A["装饰器接收 add 方法与 context"] --> B
+  B["包装函数记录调用"] --> C
+  C["target.call 保留 this 和参数"] --> D
+  D["原返回值继续返回"] --> E
+  E["输出定义、调用与结果"]
 ```
 
-限制：不使用 `any`；不写 descriptor 三参数装饰器；不启用 `experimentalDecorators`；包装方法不能丢失 this、参数或返回类型。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；能说出标准方法装饰器的两个参数，并解释这里为什么对格式器使用组合。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 32 · 标准装饰器、Mixin 与组合独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 计算器方法日志 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day32 practice02`。
 
 ## 常见错误
 
@@ -57,6 +55,44 @@
 - 用 any[] 放弃参数检查；
 - 认为装饰器会自动把新增属性加入实例类型；
 - 普通依赖也用装饰器隐藏起来。
+
+### 错误代码示例
+
+```ts
+function logged(
+  target: object,
+  key: string,
+  descriptor: PropertyDescriptor,
+): void {
+  // ❌ 这是旧版三参数装饰器签名，不能直接用于标准装饰器配置。
+  console.log(key, descriptor.value);
+}
+
+function badWrapper(target: (...args: any[]) => any) {
+  // ❌ any[] 丢掉签名；箭头函数也不会取得实例调用时的 this。
+  return (...args: any[]) => target(...args);
+}
+```
+
+### 正确写法
+
+```ts
+function logged<This, Args extends unknown[], Return>(
+  target: (this: This, ...args: Args) => Return,
+  context: ClassMethodDecoratorContext<
+    This,
+    (this: This, ...args: Args) => Return
+  >,
+): (this: This, ...args: Args) => Return {
+  const name = String(context.name);
+
+  return function (this: This, ...args: Args): Return {
+    console.log(`调用: ${name}`);
+    // ✅ 普通 function 接住实例 this，并把参数和返回值原样转交。
+    return target.call(this, ...args);
+  };
+}
+```
 
 ## 拓展思考（不要求写代码）
 

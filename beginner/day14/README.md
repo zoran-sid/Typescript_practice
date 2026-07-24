@@ -35,36 +35,28 @@ import type { Student } from "./student-types.js";
 
 打开并右键运行 `example.ts`，然后沿着四条导入路径查看 `course-data.ts`、`score-tools.ts`、`student-types.ts` 与 `student-tools.ts`。这些辅助模块不要修改。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-请把 `practice.ts` 当作一个全新的入口文件，组合已经准备好的四个模块：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-- 从 `course-data.ts` 具名导入 `courseTitle` 和 `lessonCount`。
-- 从 `score-tools.ts` 默认导入 `formatScore`，并具名导入 `passingScore`。
-- 从 `student-types.ts` 只导入类型 `Student`。
-- 从 `student-tools.ts` 具名导入 `summarizeStudent`。
-- 创建 `student: Student`：name 为 `Ada`，completed 为 `12`，track 为 `beginner`。
-- 创建只读数组 `scores`，内容为 `55、80`。
-- 先输出课程和学生摘要，再逐项调用 `formatScore`，最后输出及格线。
+```mermaid
+flowchart TD
+  A["从多个模块 import 值与类型"] --> B
+  B["创建 Student 值"] --> C
+  C["调用格式化与汇总函数"] --> D
+  D["输出组合结果"]
+```
 
-必须精确输出：
+## 独立练习导航
 
-~~~text
-课程：TypeScript 零基础课（21 课）
-Ada：完成 12 课（beginner）
-55：未通过
-80：通过
-及格线：60
-~~~
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-限制：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 现代 ES Modules 与类型导入 | 主任务 |
+| [practice02](./practice02/README.md) | 课程模块组合 | 闭卷迁移 |
 
-- 不得修改任何辅助模块，也不得复制它们的常量、函数或 `Student` 类型。
-- 相对导入路径必须保留 `.js` 扩展名。
-- `Student` 必须使用 `import type`；运行时值使用普通 `import`。
-- 不得使用 `any`、类型断言或本地同名占位声明。
-
-完成标准：右键运行 `practice.ts` 后显示 PASS；能指出五个导入中哪些会存在于运行时代码里。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day14 practice02`。
 
 ## 容易出错的地方
 
@@ -73,6 +65,27 @@ Ada：完成 12 课（beginner）
 - 使用 `import type` 后尝试把类型当作运行时值输出。
 - 删除 `NodeNext` 相对路径中的 `.js`。
 - 复制共享类型，导致以后只更新其中一份。
+
+### 错误代码示例
+
+```ts
+import { formatScore } from "./score-tools.js";
+// ❌ formatScore 是默认导出，默认导入不能放在花括号里。
+
+import type { Student } from "./student-types.js";
+console.log(Student); // ❌ 类型导入会在编译后消失，不能当运行时值使用。
+```
+
+### 正确写法
+
+```ts
+import formatScore, { passingScore } from "./score-tools.js";
+// ✅ 默认导入写在花括号外，具名导入写在花括号内。
+
+import type { Student } from "./student-types.js";
+const student: Student = { name: "Ada", completed: 12, track: "beginner" };
+console.log(formatScore(passingScore), student.name); // ✅ Student 只用于类型位置。
+```
 
 ## 拓展思考（不要求写代码）
 

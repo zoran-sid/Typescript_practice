@@ -23,35 +23,29 @@ JSON 文本 → JSON.parse → unknown → 逐层检查 → StudyTask[]
 
 状态应使用判别联合，而不是把所有时间字段都写成可选。这样 doing 必须携带 `startedAt`，done 必须同时携带开始与完成时间，不容易产生矛盾数据。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成“任务 JSON 导入器”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-必须名称：`TaskState`、`StudyTask`、`ImportResult`、`isRecord`、`isTaskState`、`isStudyTask`、`importTasks`、`describeState`。
-
-需求：
-
-1. `TaskState` 包含 todo、doing、done；doing 有 `startedAt`，done 有 `startedAt` 和 `completedAt`。
-2. `StudyTask` 含只读字符串 `id`、字符串 `title`、非负有限数字 `minutes` 和 `state`。
-3. `importTasks(text)` 捕获坏 JSON；顶层不是数组时返回失败；数组中保留通过验证的元素并计算 `rejected`。
-4. `describeState` 用 `switch` 生成 `todo`、`doing since 时间`、`done at 时间`。
-5. 固定输入包含 Plan（todo，30）、Practice（doing since 09:00，45）、Review（done at 10:30，30），以及一条 `minutes: "20"` 的坏数据；另用字符串 `{` 测试坏 JSON。
-
-精确输出：
-
-```text
-Import succeeded: 3 tasks
-Rejected: 1
-Plan: todo
-Practice: doing since 09:00
-Review: done at 10:30
-Total planned minutes: 105
-Invalid JSON: JSON format is invalid
+```mermaid
+flowchart TD
+  A["外部任务数据进入导入器"] --> B
+  B["unknown 逐项验证为 Task"] --> C
+  C["拒绝无效项"] --> D
+  D["描述首项状态并统计分钟"]
 ```
 
-限制：不使用 `any`、非空断言 `!` 或未经验证的类型断言；不能只检查数组外壳，嵌套 `state` 也要逐字段验证。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；能解释为什么类型声明不能验证 JSON，以及判别联合如何避免矛盾状态。
+本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 24 · 结课项目（一）独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 任务导入边界 | 闭卷迁移 |
+| [practice03](./practice03/README.md) | 订单 JSON 导入边界 | 综合应用 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day24 practice02`。
 
 ## 常见错误
 
@@ -59,6 +53,43 @@ Invalid JSON: JSON format is invalid
 - 忘记 `typeof null === "object"`；
 - 只检查 `Array.isArray`；
 - 用 `status: string` 接受任意拼写。
+
+### 错误代码示例
+
+```ts
+type StudyTask = {
+  id: string;
+  minutes: number;
+  status: "todo" | "done";
+};
+
+const tasks = JSON.parse(text) as StudyTask[];
+// ❌ 类型断言不会检查运行时数据；null、错误字段和错误状态都可能混进来。
+console.log(tasks[0].minutes.toFixed(0));
+```
+
+### 正确写法
+
+```ts
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // ✅ typeof null 也是 "object"，所以必须先排除 null。
+  return value !== null && typeof value === "object";
+}
+
+function isStudyTask(value: unknown): value is StudyTask {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.minutes === "number" &&
+    Number.isFinite(value.minutes) &&
+    (value.status === "todo" || value.status === "done")
+  );
+}
+
+const parsed: unknown = JSON.parse(text);
+// ✅ 数组外形和每一个元素都通过后，才得到可信的 StudyTask[]。
+const tasks = Array.isArray(parsed) && parsed.every(isStudyTask) ? parsed : [];
+```
 
 ## 拓展思考（不要求写代码）
 

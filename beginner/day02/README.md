@@ -60,54 +60,66 @@ if (total >= 5) {
 
 打开并右击运行 `example.ts`。按照“文字单价 → 数字单价 → 总价 → 比较 → 状态”的顺序逐行跟踪。可以临时改变判断阈值，先预测状态，再运行验证并恢复。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成一个课程计划统计器。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-固定数据和名称：
-
-- `completedText` 保存字符串 `"3"`。
-- `plannedLessons` 保存数字 `2`。
-- `totalLessons` 保存转换并相加后的结果。
-- `status` 初始保存 `"Keep learning"`。
-
-程序要求：
-
-1. 只对 `completedText` 调用 `Number(...)`，再与 `plannedLessons` 做数字加法。
-2. 当 `totalLessons >= 5` 时，用 `if` 把 `status` 更新为 `"Goal reached"`。
-3. 使用变量输出总课数和最终状态。
-
-精确期望输出：
-
-```text
-Total lessons: 5
-Status: Goal reached
+```mermaid
+flowchart TD
+  A["读取价格文本与数量"] --> B
+  B["Number 转成数字"] --> C
+  C["相乘得到总价"] --> D
+  D["比较阈值设置状态"] --> E
+  E["输出价格与状态"]
 ```
 
-限制：
+## 独立练习导航
 
-- 不得把 `completedText` 的初始值改成数字。
-- 不得写 `Number(completedText + plannedLessons)`。
-- 不得把数字 5 或最终状态直接写进输出语句。
-- 不得通过降低判断阈值来迁就错误结果。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 02：课程计划统计器 | 主任务 |
+| [practice02](./practice02/README.md) | 批量订单金额 | 闭卷迁移 |
 
-- 能解释转换与加法的执行顺序。
-- `totalLessons` 的运行时值是数字 5。
-- 右击运行 `practice.ts`，两行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day02 practice02`。
 
 ## 常见错误
 
 删除 `Number` 会再次发生拼接；把 `: number` 写在变量后只是在声明期望类型，不会转换值；若状态没有更新，应先检查总数是否真的是 5。
 
+### 错误代码示例
+
+```ts
+const completedText = "3";
+const plannedLessons = 2;
+
+const totalLessons = completedText + plannedLessons;
+// ❌ 字符串参与 + 运算，结果是 "32"，不是数字 5。
+
+const converted: number = completedText;
+// ❌ 类型标注只提出要求，不能把 string 自动转换成 number。
+```
+
+### 正确写法
+
+```ts
+const completedText = "3";
+const plannedLessons = 2;
+
+const completed = Number(completedText); // ✅ 先在运行时转换。
+const totalLessons = completed + plannedLessons; // ✅ 3 + 2 得到数字 5。
+```
+
 ## 拓展思考（不要求写代码）
 
 为什么 `Number(completedText + plannedLessons)` 最终也是 `number` 类型，TypeScript 却无法仅凭类型判断结果 32 不符合课程总数的业务含义？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 和 `SOLUTION.md`，重点比较括号放置位置和实际执行顺序。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 和 `SOLUTION.md`，重点比较括号放置位置和实际执行顺序。
 
 ## 官方资料
 

@@ -71,56 +71,75 @@ if (minutes > longestSession) {
 
 打开并右击运行 `example.ts`。用纸逐轮记录 `temperature`、`totalTemperature` 与 `highestTemperature` 的变化。临时增加一个温度后先计算预期，再运行验证并恢复。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-在 `practice.ts` 中从零完成“学习时长报告”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-固定数据和名称：
-
-- `studyMinutes` 是数字数组 `[30, 45, 60, 20]`。
-- `totalMinutes` 是从 0 开始的累加变量。
-- `longestSession` 是从 0 开始的最长记录。
-- 循环中的当前元素命名为 `minutes`。
-
-程序要求：
-
-1. 使用一个 `for...of` 循环处理整个数组。
-2. 每轮把 `minutes` 累加到 `totalMinutes`。
-3. 只有 `minutes > longestSession` 时才更新最长记录。
-4. 使用 `.length`、总计变量和最长变量生成三行输出。
-
-精确期望输出：
-
-```text
-Sessions: 4
-Total minutes: 155
-Longest session: 60
+```mermaid
+flowchart TD
+  A["创建温度数组"] --> B
+  B["for...of 逐项读取"] --> C
+  C["累加总和并更新最高值"] --> D
+  D["输出数量、总和、最高值"]
 ```
 
-限制：
+## 独立练习导航
 
-- 不得手工把四个数字逐个相加。
-- 不得把 4、155 或 60 直接写进输出。
-- 不得使用尚未学习的 `reduce`、`Math.max`。
-- 循环必须使用 `for...of`。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 03：学习时长报告 | 主任务 |
+| [practice02](./practice02/README.md) | 温度观测报告 | 闭卷迁移 |
 
-- 能手工说明四轮中两个统计变量的变化。
-- 修改数组内容后，统计会随数据自动变化。
-- 右击运行 `practice.ts` 后，三行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day03 practice02`。
 
 ## 常见错误
 
 `totalMinutes = minutes` 会丢掉旧总计；每轮都给 `longestSession` 赋值只会保留最后一项；`.length` 是数量而不是最后索引。
 
+### 错误代码示例
+
+```ts
+const studyMinutes = [30, 45, 20];
+let totalMinutes = 0;
+let longestSession = 0;
+
+for (const minutes of studyMinutes) {
+  totalMinutes = minutes; // ❌ 覆盖旧总计，最终只剩 20。
+  longestSession = minutes; // ❌ 无条件覆盖，得到的是最后一项。
+}
+
+console.log(studyMinutes[studyMinutes.length]); // ❌ 越界，结果是 undefined。
+```
+
+### 正确写法
+
+```ts
+const studyMinutes = [30, 45, 20];
+let totalMinutes = 0;
+let longestSession = 0;
+
+for (const minutes of studyMinutes) {
+  totalMinutes = totalMinutes + minutes; // ✅ 旧总计加上当前项。
+
+  if (minutes > longestSession) {
+    longestSession = minutes; // ✅ 只在当前项更大时更新。
+  }
+}
+
+console.log(studyMinutes[studyMinutes.length - 1]); // ✅ 最后索引是数量减 1。
+```
+
 ## 拓展思考（不要求写代码）
 
 如果同样的“找最大值”程序处理的是全为负数的冬季温度，`longestSession` 这种从 0 开始的初始化方式为什么会得到错误结果，初始值更适合从哪里取得？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 与 `SOLUTION.md`，重点对照循环每一轮如何更新状态。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 与 `SOLUTION.md`，重点对照循环每一轮如何更新状态。
 
 ## 官方资料
 

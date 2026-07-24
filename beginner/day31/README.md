@@ -19,31 +19,33 @@
 
 bigint 字面量以 `n` 结尾，不能与 number 直接混算。原生 `JSON.stringify` 不支持 bigint，进入 JSON 前通常转换成字符串，并在读取边界明确转换回来。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-从零完成“惰性序列与大整数”程序。
+generator 调用先返回迭代器，不立刻跑完整函数。每次 next() 从上次暂停位置继续；yield 暂时把值交出，return 才永久结束。
 
-必须名称：`evenNumbers`、`createCountdown`、`currentId`、`nextId`、`jsonText`。
+## Example 代码流程图
 
-需求：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-1. `evenNumbers(start, end)` 是 `Generator<number, void, unknown>`，逐个检查闭区间，只 yield 偶数；用 1 到 6。
-2. `createCountdown(start)` 返回 `Iterable<number>`，内部手写 `[Symbol.iterator]` 和 `next()`；第一次产出 start，到 1 后结束；用 3。
-3. `currentId` 为 `9_007_199_254_740_993n`，用 bigint 的 1 递增。
-4. 把 nextId 转成字符串后放入 `{ id }` 再 JSON.stringify。
-
-精确输出：
-
-```text
-偶数: 2, 4, 6
-倒计时: 3, 2, 1
-下一个编号: 9007199254740994
-JSON: {"id":"9007199254740994"}
+```mermaid
+flowchart TD
+  A["调用 range generator"] --> B
+  B["每次 next 运行到 yield"] --> C
+  C["倒计时 generator 产生序列"] --> D
+  D["bigint 完成大整数运算"] --> E
+  E["输出三类结果"]
 ```
 
-限制：不使用 `any`；偶数生成器不能先创建完整结果数组；不能混合 number 与 bigint 运算，也不能直接 stringify bigint。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；能画出 iterable → iterator → next → result 的关系，并解释惰性执行。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 31 · 迭代器、生成器与 bigint 独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 数字序列生成器 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day31 practice02`。
 
 ## 常见错误
 
@@ -52,6 +54,36 @@ JSON: {"id":"9007199254740994"}
 - 把 yield 当普通 return；
 - 写 `currentId + 1`；
 - 直接 `JSON.stringify(nextId)`。
+
+### 错误代码示例
+
+```ts
+function* countdown(start: number): Generator<number> {
+  let current = start;
+  while (current >= 1) {
+    current -= 1;
+    yield current; // ❌ 先递减再 yield，第一次少 1，最后还会产出 0。
+  }
+}
+
+const nextId = 9_007_199_254_740_993n + 1;
+// ❌ bigint 不能和 number 直接混算。
+JSON.stringify({ id: nextId }); // ❌ 原生 JSON 不能直接序列化 bigint。
+```
+
+### 正确写法
+
+```ts
+function* countdown(start: number): Generator<number, void, unknown> {
+  for (let current = start; current >= 1; current -= 1) {
+    yield current; // ✅ 先交出当前值，下一轮再递减。
+  }
+}
+
+const nextId = 9_007_199_254_740_993n + 1n; // ✅ 两边都是 bigint。
+const json = JSON.stringify({ id: nextId.toString() });
+// ✅ 进入 JSON 边界前明确转为字符串，读取时再按约定恢复。
+```
 
 ## 拓展思考（不要求写代码）
 

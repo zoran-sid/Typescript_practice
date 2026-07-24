@@ -19,35 +19,33 @@
 
 显式 `this` 参数只用于类型检查，不是运行时第一个实参；可以通过 `.call(context, ...)` 提供调用者。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-从零完成一个“高级函数工具箱”。
+可变参数元组把一组实参收集进 args，包装器再用 ...args 展开给原函数，原函数 return 的 Result 继续由包装器 return。显式 this 走独立的调用者路径。
 
-必须名称：`ProgressPair`、`progress`、`invoke`、`normalize`、`CourseContext`、`describe`。
+## Example 代码流程图
 
-需求：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-1. `progress([true, false, true, true])` 返回只读元组 `[3, 4]`。
-2. `invoke` 使用 `Args extends unknown[]` 与 `Result`，分别调用数字乘法和标题拼接函数。
-3. `normalize` 提供字符串重载和只读字符串数组重载；都执行 trim + 小写，返回类型分别是 string 和 string[]。
-4. `describe` 有显式 `this: CourseContext` 和 prefix 参数，通过 `.call` 输出课程说明。
-
-精确输出：
-
-```text
-Progress: 3/4
-Total: 36
-Day 28
-types
-modules, generics
-Elective Day 28: Advanced functions
+```mermaid
+flowchart TD
+  A["元组保存名称与分钟"] --> B
+  B["通用调用器转发参数"] --> C
+  C["重载规范化输入"] --> D
+  D["call 提供显式 this"] --> E
+  E["输出四种结果"]
 ```
 
-固定输入：乘法 12×3；标题函数接收 `"Day "`、28；normalize 输入 `"  TYPES "` 及 `[" Modules ", " GENERICS "]`；上下文 title 为 Advanced functions、day 为 28。
+## 独立练习导航
 
-限制：不使用 `any`、类型断言或普通数组冒充元组；实现签名必须覆盖两个重载。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；能指出每个泛型参数连接了哪些位置，并说明 `this` 参数为何不出现在运行时实参数组中。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 28 · 高级函数独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 高级函数调用器 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day28 practice02`。
 
 ## 常见错误
 
@@ -55,6 +53,46 @@ Elective Day 28: Advanced functions
 - 包装器写成 `any[]` 丢失关系；
 - 只写重载签名却没有兼容实现；
 - 把显式 this 当成普通第一个参数。
+
+### 错误代码示例
+
+```ts
+type Progress = (number | boolean)[];
+const progress: Progress = [3, true, 99];
+// ❌ 普通数组没有固定长度，也没有保证第二项一定是 total。
+
+function invoke(fn: (...args: any[]) => any, ...args: any[]): any {
+  // ❌ any[] 丢掉了参数顺序、参数类型和返回类型之间的关系。
+  return fn(...args);
+}
+
+function describe(context: CourseContext, prefix: string): string {
+  // ❌ 这把 context 变成普通实参，并没有描述调用者 this。
+  return `${prefix}: ${context.title}`;
+}
+```
+
+### 正确写法
+
+```ts
+type Progress = readonly [completed: number, total: number];
+const progress: Progress = [3, 5]; // ✅ 长度和两个位置的意义都固定。
+
+function invoke<Args extends unknown[], Result>(
+  fn: (...args: Args) => Result,
+  ...args: Args
+): Result {
+  // ✅ 同一个 Args 同时约束函数和实参，Result 原样返回。
+  return fn(...args);
+}
+
+function describe(this: CourseContext, prefix: string): string {
+  return `${prefix}: ${this.title}`;
+}
+
+// ✅ 显式 this 不是第一个普通实参，而是由 call 提供调用者。
+console.log(describe.call({ title: "Functions", day: 28 }, "Day 28"));
+```
 
 ## 拓展思考（不要求写代码）
 

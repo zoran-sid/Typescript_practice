@@ -67,56 +67,62 @@ const summary = `课程: ${courseName}`;
 
 打开并右击运行 `example.ts`。先预测 `completedLessons` 增加前后的值，再对照输出。可以临时把数字赋值改成字符串，观察 TypeScript 怎样在运行前指出错误；实验后撤销并保存。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-请在 `practice.ts` 的说明注释后，从第一条变量声明开始完成“学习档案”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-固定数据和名称：
-
-- `learnerName` 保存字符串 `"Lin"`。
-- `courseName` 保存字符串 `"TypeScript"`。
-- `completedLessons` 从数字 `0` 开始。
-- `isBeginner` 保存布尔值 `true`。
-
-程序要求：
-
-1. 对不需要重新赋值的数据使用 `const`。
-2. 对 `completedLessons` 使用 `let`，并用“旧值加 1”的方式连续更新两次。
-3. 使用变量和模板字符串输出四行，不要把最终结果整行写死。
-
-精确期望输出：
-
-```text
-学习者: Lin
-课程: TypeScript
-已完成: 2
-初学者: true
+```mermaid
+flowchart TD
+  A["声明姓名、完成数和布尔值"] --> B
+  B["用 let 更新完成数"] --> C
+  C["模板字符串插入变量"] --> D
+  D["输出两条进度"]
 ```
 
-限制：
+## 独立练习导航
 
-- `true` 不得加引号。
-- 数字 `0`、`1`、`2` 不得写成字符串。
-- 不得直接声明 `completedLessons = 2`。
-- 除要求的四行外不要产生其他输出。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 01：学习档案 | 主任务 |
+| [practice02](./practice02/README.md) | 学习进度卡 | 闭卷迁移 |
 
-- 能解释四个变量各自的类型。
-- 能说明为什么只有 `completedLessons` 使用 `let`。
-- 右击运行 `practice.ts` 后，四行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day01 practice02`。
 
 ## 常见错误
 
 把反引号写成普通引号会让 `${变量名}` 原样显示；把 `true` 放进引号会改变类型；用 `const` 声明需要更新的变量会产生重新赋值错误。
 
+### 错误代码示例
+
+```ts
+const completedLessons = 0;
+completedLessons = completedLessons + 1; // ❌ const 变量不能重新赋值。
+
+const isBeginner = "true"; // ❌ 这是 string，不是 boolean。
+console.log("已完成: ${completedLessons}"); // ❌ 普通引号不会插入变量。
+```
+
+### 正确写法
+
+```ts
+let completedLessons = 0;
+completedLessons = completedLessons + 1; // ✅ 会变化的绑定使用 let。
+
+const isBeginner = true; // ✅ 布尔值不加引号。
+console.log(`已完成: ${completedLessons}`); // ✅ 模板字符串使用反引号。
+```
+
 ## 拓展思考（不要求写代码）
 
 如果课程名称也要在程序运行过程中从 `"TypeScript"` 改成 `"JavaScript"`，应只把哪一个变量从 `const` 改成 `let`，为什么其他变量不需要跟着改变？
 
-## 参考答案
+## 解题结构提示
 
-完成后再查看 `solution.ts` 与 `SOLUTION.md`。先比较自己的变量选择和更新过程，再比较输出格式。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录查看 `solution.ts` 与 `SOLUTION.md`。先比较自己的变量选择和更新过程，再比较输出格式。
 
 ## 官方资料
 

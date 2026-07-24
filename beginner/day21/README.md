@@ -25,41 +25,33 @@ const [lesson, progress] = await Promise.all([
 
 打开并右键运行 `example.ts`。画出 `Promise.all` 的成功路径和通知请求的失败路径，并指出每个 `await` 后变量的类型。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请从头编写“并行课程加载器”。
+调用 async 函数先得到 Promise；函数内部 return 的 T 会成为 Promise<T> 的成功值；调用处 await 后才得到 T。异常会让 Promise 拒绝并沿 await 进入 catch。
 
-必须创建：
+## Example 代码流程图
 
-- `LessonRequest`：`title: string`，可选 `shouldFail?: boolean`。
-- `fetchLesson(request: LessonRequest): Promise<string>`：
-  - 先 `await Promise.resolve()` 模拟异步边界。
-  - `shouldFail` 为真时抛出 `Error("网络不可用")`。
-  - 否则返回课程标题。
-- `loadLessons(titles: readonly string[]): Promise<string[]>`：
-  - 使用 `map` 为每个标题创建 Promise。
-  - 使用 `Promise.all` 一起等待并返回结果。
-- `errorMessage(error: unknown): string`：安全读取错误文字。
-- `main(): Promise<void>`：加载固定标题 `变量、函数、联合`，然后单独请求一个会失败的“通知”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-精确输出：
+```mermaid
+flowchart TD
+  A["启动两个异步请求"] --> B
+  B["Promise.all 并行等待"] --> C
+  C["成功值组合成结果"] --> D
+  D["失败 Promise 进入 catch"] --> E
+  E["输出成功与错误"]
+```
 
-~~~text
-完成数量：3
-课程：变量、函数、联合
-失败：网络不可用
-~~~
+## 独立练习导航
 
-限制：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- 不得使用 `any`、类型断言、非空断言或 `forEach(async ...)`。
-- 三个正常请求必须先通过 `map` 创建，再统一交给 `Promise.all`。
-- `main` 必须 `await loadLessons`，不能把 Promise 当作字符串数组。
-- 失败请求必须被 `try/catch` 等待并处理，不得留下未处理的 rejected Promise。
-- `catch` 值保持 `unknown`，不得把失败伪装成成功课程。
-- 文件末尾必须等待 `main()` 完成。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Promise、async/await 与异步错误 | 主任务 |
+| [practice02](./practice02/README.md) | 并行内容加载 | 闭卷迁移 |
 
-完成标准：右键运行后显示 PASS；能解释 `Promise<T>` 与 `T`、并行与串行、`map + Promise.all` 与异步 `forEach` 的区别。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day21 practice02`。
 
 ## 容易出错的地方
 
@@ -69,6 +61,28 @@ const [lesson, progress] = await Promise.all([
 - 调用 async 函数却既不等待也不返回。
 - 捕获后返回假数据，把失败伪装成成功。
 - 忘记 `await` 也会把拒绝重新抛出。
+
+### 错误代码示例
+
+```ts
+const lesson: string = fetchText("课程");
+// ❌ async 函数返回 Promise<string>，不是已经完成的 string。
+
+["课程", "进度"].forEach(async (name) => {
+  await fetchText(name);
+});
+console.log("全部完成"); // ❌ forEach 不收集 Promise，这一行会提前执行。
+```
+
+### 正确写法
+
+```ts
+const lesson: string = await fetchText("课程"); // ✅ await 后才得到成功值。
+
+const requests = ["课程", "进度"].map((name) => fetchText(name));
+await Promise.all(requests); // ✅ map 收集所有 Promise，再统一等待。
+console.log("全部完成");
+```
 
 ## 拓展思考（不要求写代码）
 

@@ -17,36 +17,32 @@ TypeScript 总在某个运行环境中执行。浏览器提供 DOM、事件和 `
 
 请求客户端即使写成 TypeScript，也无法保证服务器响应。先 `await` 得到 `unknown`，再验证对象与字段。命令行解析也不要在业务函数内部读取全局 `process.argv`；让 `parseArgs(args)` 接收普通字符串数组，更容易测试。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-从零完成一个“课程搜索入口”，同时处理事件、请求和 CLI 参数。
+边界适配函数把事件、响应或 CLI 参数转成普通值；纯业务函数只接收这些普通参数。这样变量来源清楚，也能用假数据单独测试。
 
-必须名称：`InputEventLike`、`readQuery`、`JsonClient`、`Lesson`、`isRecord`、`loadLesson`、`Options`、`valueAfter`、`parseArgs`。
+## Example 代码流程图
 
-需求：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-1. `readQuery` 读取可为空的 `currentTarget.value`，去掉两端空格；缺失时返回空字符串。
-2. `JsonClient.get(path)` 返回 `Promise<unknown>`；`loadLesson` 请求 `/lesson`，只接受字符串 title 和有限数字 minutes，无效时返回 `null`。
-3. `parseArgs` 读取 `--day` 与 `--mode` 后一项；day 必须是非负整数，否则默认 0；mode 只有 `example` 时取 example，否则为 practice。
-4. 使用与 README 对应的两个假客户端及两组参数输出结果，不依赖真实 DOM、网络或 `process`。
-
-精确输出：
-
-```text
-Query: typescript
-Missing: empty
-Valid: DOM/35
-Invalid: rejected
-Day: 27
-Mode: example
-Defaults: 0/practice
+```mermaid
+flowchart TD
+  A["模拟浏览器输入事件"] --> B
+  B["请求适配器读取 unknown 响应"] --> C
+  C["CLI 参数解析 day"] --> D
+  D["三个边界结果分别输出"]
 ```
 
-固定输入：事件值为 `"  typescript  "` 和 null；好响应 `{ title: "DOM", minutes: 35 }`，坏响应的 minutes 为字符串；参数为 `["--day", "27", "--mode", "example"]` 和 `[]`。
+## 独立练习导航
 
-限制：不使用 `any`、类型断言、非空断言；不访问真实 `document`、网络或 `process.argv`。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；三个边界逻辑都是可独立测试的普通函数。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 27 · 运行环境边界独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 搜索与命令行边界 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day27 practice02`。
 
 ## 常见错误
 
@@ -54,6 +50,51 @@ Defaults: 0/practice
 - 把响应断言成 Lesson 而没有验证；
 - 忘记标志后的数组项可能不存在；
 - 把全局环境藏进业务函数。
+
+### 错误代码示例
+
+```ts
+async function loadLesson(): Promise<Lesson> {
+  const response = await fetch("/lesson");
+  // ❌ 类型断言不会验证服务器实际返回的字段。
+  return (await response.json()) as Lesson;
+}
+
+function parseDay(): number {
+  // ❌ 纯业务逻辑偷偷依赖全局 process.argv，难以单独测试。
+  return Number(process.argv[process.argv.indexOf("--day") + 1]);
+}
+```
+
+### 正确写法
+
+```ts
+interface JsonClient {
+  get(path: string): Promise<unknown>;
+}
+
+async function loadLesson(client: JsonClient): Promise<Lesson | null> {
+  const value = await client.get("/lesson");
+  // ✅ 响应先保持 unknown，并在边界逐字段验证。
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    !("title" in value) ||
+    typeof value.title !== "string"
+  ) {
+    return null;
+  }
+  return { title: value.title };
+}
+
+function parseDay(args: readonly string[]): number | undefined {
+  const index = args.indexOf("--day");
+  const raw = index < 0 ? undefined : args[index + 1];
+  const day = raw === undefined ? Number.NaN : Number(raw);
+  // ✅ 环境入口负责传入 args，函数只处理普通数据。
+  return Number.isInteger(day) && day >= 0 ? day : undefined;
+}
+```
 
 ## 拓展思考（不要求写代码）
 

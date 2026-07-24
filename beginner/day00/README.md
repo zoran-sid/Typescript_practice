@@ -52,46 +52,58 @@ Hello from the Day 00 example!
 
 可以临时修改示例中的文字，保存并再次运行，确认“源代码改变，输出也会改变”。实验结束后恢复原内容。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-打开 `practice.ts`。文件中只有说明注释；请从下一行开始亲手输入完整程序。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-需求：
-
-1. 声明一个名为 `message` 的变量。
-2. 让它保存字符串 `"Hello, TypeScript!"`。
-3. 使用 `console.log` 输出这个变量。
-
-精确期望输出：
-
-```text
-Hello, TypeScript!
+```mermaid
+flowchart TD
+  A["创建 message 字符串"] --> B
+  B["把变量传给 console.log"] --> C
+  C["终端显示问候语"]
 ```
 
-限制：
+## 独立练习导航
 
-- 不要把输出拆成多行。
-- 大小写、英文逗号、空格和感叹号必须完全一致。
-- 输出必须来自变量 `message`。
-- 不要修改 `example.ts` 或检查文件来让练习通过。
+本日共有 1 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 00：第一段完整程序 | 主任务 |
 
-- 代码由你从变量声明开始完整输入。
-- 保存后没有 TypeScript 错误。
-- 右击运行 `practice.ts`，实际输出与期望输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day00 practice01`。
 
 ## 常见故障
 
-输出没有变化时，先确认已经保存文件。找不到文件时，确认打开的是 `beginner/day00/practice.ts`。看起来相同却不通过时，逐字符比较英文标点、大小写与空格。
+输出没有变化时，先确认已经保存文件。找不到文件时，确认打开的是 `beginner/day00/practice01/practice.ts`。看起来相同却不通过时，逐字符比较英文标点、大小写与空格。
+
+### 错误代码示例
+
+```ts
+const message = "hello, Typescript?";
+
+// ❌ 类型虽然是 string，但大小写和结尾标点都不符合要求。
+console.log(message);
+```
+
+### 正确写法
+
+```ts
+const message = "Hello, TypeScript!";
+
+// ✅ 程序会逐字符输出变量中的准确内容。
+console.log(message);
+```
 
 ## 拓展思考（不要求写代码）
 
 如果程序通过了 TypeScript 类型检查，却把感叹号误写成问号，为什么 TypeScript 不会替你发现这个错误？
 
-## 参考答案
+## 解题结构提示
 
-独立完成并核对输出后，再阅读 `solution.ts` 和 `SOLUTION.md`。参考答案用于复盘，不是练习模板。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+独立完成并核对输出后，再进入对应的 `practiceXX` 目录阅读 `solution.ts` 和 `SOLUTION.md`。结构提示用于复盘，不是可复制答案。
 
 ## 官方资料
 

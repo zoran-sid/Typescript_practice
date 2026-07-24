@@ -41,55 +41,28 @@ const labels = {
 
 打开并右键运行 `example.ts`。指出 `ArticlePatch`、`ArticlePreview`、`Status` 与 `statusLabels` 分别由哪个已有类型或值派生。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-请从头编写“文章更新与公开摘要”。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-先声明：
+```mermaid
+flowchart TD
+  A["基础文章类型派生更新类型"] --> B
+  B["用 satisfies 检查状态表"] --> C
+  C["不可变合并更新文章"] --> D
+  D["输出旧值、新值与状态"]
+```
 
-- `statuses = ["draft", "published", "archived"] as const`
-- `Status = (typeof statuses)[number]`
-- `Article`：包含只读数字 `id`，以及 `title`、`summary`、`published`、`status`
-- `ArticlePatch = Partial<Pick<Article, "title" | "summary" | "published" | "status">>`
-- `ArticlePreview = Pick<Article, "id" | "title" | "status">`
-- `PublicArticle = Omit<Article, "summary">`
-- `statusLabels`，用 `satisfies Record<Status, string>` 精确覆盖三种状态
+## 独立练习导航
 
-实现：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- `updateArticle(article, patch): Article`：使用 spread 返回新文章。
-- `toPublicArticle(article): PublicArticle`：在运行时真正排除 `summary`，不能只改类型。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Utility Types、as const 与 satisfies | 主任务 |
+| [practice02](./practice02/README.md) | 内容发布配置 | 闭卷迁移 |
 
-固定 `original`：
-
-~~~text
-id=1
-title=旧标题
-summary=内部学习记录
-published=false
-status=draft
-~~~
-
-用补丁把标题改成 `TypeScript 工具类型`、published 改为 `true`、status 改为 `published`，并创建 `updated`、`preview` 和 `publicArticle`。精确输出：
-
-~~~text
-原标题：旧标题
-新标题：TypeScript 工具类型
-原状态：draft
-新状态：published=已发布
-公开字段：id,title,published,status
-可用状态：draft、published、archived
-~~~
-
-限制：
-
-- 不得使用 `any`、类型断言、非空断言或直接修改 `original`。
-- 四个派生类型不得复制粘贴完整字段定义。
-- 状态联合必须来自 `statuses`，标签表必须使用 `satisfies Record<Status, string>`。
-- `toPublicArticle` 必须通过对象解构与 rest 真正移除运行时字段。
-- 输出新标题时必须读取 `ArticlePreview`，公开字段必须读取 `publicArticle`。
-
-完成标准：右键运行后显示 PASS；能解释类型层的 `Omit` 与运行时移除字段为何是两件事。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day17 practice02`。
 
 ## 容易出错的地方
 
@@ -99,6 +72,31 @@ status=draft
 - 把 `as const` 当作运行时深冻结。
 - 用 `as Record<...>` 掩盖漏键，而不是使用 `satisfies`。
 - 派生数组成员联合时忘记 `[number]`。
+
+### 错误代码示例
+
+```ts
+type PublicArticle = Omit<Article, "summary">;
+const publicArticle: PublicArticle = article;
+// ❌ 类型允许赋值不代表运行时删除了 summary；对象里仍然有这个字段。
+
+const labels = {
+  draft: "草稿",
+} as Record<Status, string>; // ❌ 断言掩盖了 published、archived 等漏键。
+```
+
+### 正确写法
+
+```ts
+const { summary: _privateSummary, ...publicArticle } = article;
+// ✅ 解构 rest 真正在运行时创建不含 summary 的对象。
+
+const labels = {
+  draft: "草稿",
+  published: "已发布",
+  archived: "已归档",
+} satisfies Record<Status, string>; // ✅ 漏键或值类型错误都会被检查。
+```
 
 ## 拓展思考（不要求写代码）
 

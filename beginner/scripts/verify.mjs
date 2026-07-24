@@ -3,97 +3,13 @@ import { readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-
-const beginnerRoot = fileURLToPath(new URL("..", import.meta.url));
-const runner = fileURLToPath(new URL("./run.mjs", import.meta.url));
-const requested = process.argv[2] ?? "";
-const allDays = discoverDays();
-const requestedDay = requested ? normalizeDay(requested) : "";
-
-if (process.argv.length > 3 || (requested && !requestedDay)) {
-  console.error("用法：npm run beginner:verify");
-  console.error("只验证一天：npm run beginner:verify -- day10");
-  process.exitCode = 1;
-} else if (allDays.length === 0) {
-  console.error("没有发现 day00–day99 格式的课程目录。");
-  process.exitCode = 1;
-} else if (requestedDay && !allDays.includes(requestedDay)) {
-  console.error(`没有找到 ${requestedDay} 的课程目录。`);
-  console.error(`当前课程：${allDays[0]} 至 ${allDays.at(-1)}。`);
-  process.exitCode = 1;
-} else {
-  const days = requestedDay ? [requestedDay] : allDays;
-  const failures = [];
-
-  for (const day of days) {
-    for (const mode of ["example", "solution"]) {
-      const result = run(mode, day);
-      if (result.ok) {
-        console.log(`✓ ${day} ${mode}`);
-      } else {
-        console.error(`\n✗ ${day} ${mode}`);
-        if (result.message) console.error(result.message);
-        if (result.stdout.trim()) console.error(result.stdout.trimEnd());
-        if (result.stderr.trim()) console.error(result.stderr.trimEnd());
-        failures.push(`${day} ${mode}`);
-      }
-    }
-  }
-
-  if (failures.length > 0) {
-    console.error(`\nFAIL：${failures.length} 项未通过：${failures.join("、")}。`);
-    process.exitCode = 1;
-  } else {
-    console.log(`\nPASS：${formatRange(days)} 的示例和参考答案全部通过。`);
-  }
-}
-
-function run(mode, day) {
-  const result = spawnSync(process.execPath, [runner, mode, day], {
-    cwd: path.dirname(beginnerRoot),
-    encoding: "utf8",
-    timeout: 120_000,
-    maxBuffer: 1024 * 1024,
-    windowsHide: true,
-  });
-  if (result.error?.code === "ETIMEDOUT") {
-    return { ok: false, message: "验证超过 120 秒，已停止。", stdout: "", stderr: "" };
-  }
-  if (result.error?.code === "ENOBUFS") {
-    return { ok: false, message: "验证输出超过限制，已停止。", stdout: "", stderr: "" };
-  }
-  if (result.error) {
-    return { ok: false, message: result.error.message, stdout: "", stderr: "" };
-  }
-  return {
-    ok: result.status === 0,
-    message: result.status === 0 ? "" : `子进程退出码：${result.status ?? "未知"}`,
-    stdout: result.stdout ?? "",
-    stderr: result.stderr ?? "",
-  };
-}
-
-function discoverDays() {
-  try {
-    return readdirSync(beginnerRoot, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && /^day\d{2}$/.test(entry.name))
-      .map((entry) => entry.name)
-      .sort();
-  } catch {
-    return [];
-  }
-}
-
-function normalizeDay(input) {
-  const match = /^(?:day)?(\d{1,2})$/i.exec(input.trim());
-  return match ? `day${match[1].padStart(2, "0")}` : "";
-}
-
-function formatRange(days) {
-  if (days.length === 1) return displayDay(days[0]);
-  return `${displayDay(days[0])}–${days.at(-1).slice(3)}`;
-}
-
-function displayDay(day) {
-  return day.replace("day", "Day ");
-}
+const beginnerRoot=fileURLToPath(new URL("..",import.meta.url)),runner=fileURLToPath(new URL("./run.mjs",import.meta.url));
+const requested=process.argv[2]??"",allDays=discoverDays(),requestedDay=requested?normalizeDay(requested):"";
+if(process.argv.length>3||(requested&&!requestedDay)){console.error("用法：npm run beginner:verify [-- day10]");process.exitCode=1;}
+else if(requestedDay&&!allDays.includes(requestedDay)){console.error(`没有找到 ${requestedDay}。`);process.exitCode=1;}
+else{const days=requestedDay?[requestedDay]:allDays,failures=[];for(const day of days){const targets=[["example",""]];for(const id of discoverExercises(day))targets.push(["solution",id]);for(const [mode,id] of targets){const result=run(mode,day,id);const label=`${day} ${id||mode}`;if(result.ok)console.log(`✓ ${label}`);else{console.error(`\n✗ ${label}`);if(result.message)console.error(result.message);if(result.stdout.trim())console.error(result.stdout.trimEnd());if(result.stderr.trim())console.error(result.stderr.trimEnd());failures.push(label);}}}if(failures.length){console.error(`\nFAIL：${failures.length} 项未通过：${failures.join("、")}。`);process.exitCode=1;}else console.log(`\nPASS：${formatRange(days)} 的 example 与全部独立练习解题结构均通过检查；结构仍保留 TODO。`);}
+function run(mode,day,id){const args=[runner,mode,day];if(id)args.push(id);const result=spawnSync(process.execPath,args,{cwd:path.dirname(beginnerRoot),encoding:"utf8",timeout:120000,maxBuffer:1024*1024,windowsHide:true});if(result.error)return{ok:false,message:result.error.message,stdout:"",stderr:""};return{ok:result.status===0,message:result.status===0?"":`子进程退出码：${result.status??"未知"}`,stdout:result.stdout??"",stderr:result.stderr??""};}
+function discoverDays(){return readdirSync(beginnerRoot,{withFileTypes:true}).filter((e)=>e.isDirectory()&&/^day\d{2}$/.test(e.name)).map((e)=>e.name).sort();}
+function discoverExercises(day){return readdirSync(path.join(beginnerRoot,day),{withFileTypes:true}).filter((e)=>e.isDirectory()&&/^practice\d{2}$/.test(e.name)).map((e)=>e.name).sort();}
+function normalizeDay(input){const m=/^(?:day)?(\d{1,2})$/i.exec(input.trim());return m?`day${m[1].padStart(2,"0")}`:"";}
+function formatRange(days){return days.length===1?days[0].replace("day","Day "):`Day ${days[0].slice(3)}–${days.at(-1).slice(3)}`;}

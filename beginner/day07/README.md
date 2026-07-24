@@ -45,60 +45,81 @@ const found = numbers.find((number) => number === 2);
 
 打开并右击运行 `example.ts`。依次找出 `map` 产生的新价格、`filter` 保留的价格，以及 `find` 返回的第一项。临时改变阈值，先预测三个结果再运行并恢复。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-在 `practice.ts` 中从零完成“订单数组报告”。
+数组方法会在内部重复调用回调。每次调用时，当前数组项进入回调参数；回调局部变量在本轮结束后不可用；return 的结果由 map/filter 收集。不要把回调参数误当成外部变量。
 
-创建 `orders`，固定为四个对象：
+## Example 代码流程图
 
-| id | amount | status |
-| --- | ---: | --- |
-| A1 | 40 | done |
-| B2 | 80 | pending |
-| C3 | 60 | done |
-| D4 | 120 | pending |
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-程序要求：
-
-1. 使用 `filter` 创建 `completedOrders`，只保留 `status === "done"` 的订单。
-2. 使用 `map` 创建 `completedIds`，把已完成订单转换为编号字符串。
-3. 使用 `find` 创建 `firstLargeOrder`，寻找第一笔 `amount >= 100` 的订单。
-4. 使用 `for...of` 累加 `completedOrders` 的金额到 `completedTotal`。
-5. 创建 `firstLargeId`，初始为 `"未找到"`；只有查找结果不是 `undefined` 时才改成该订单编号。
-6. 使用 `.join(", ")` 连接已完成编号并输出报告。
-
-精确期望输出：
-
-```text
-已完成订单: A1, C3
-完成总额: 100
-第一笔大额订单: D4
+```mermaid
+flowchart TD
+  A["价格数组进入 map"] --> B
+  B["计算九折新数组"] --> C
+  C["filter 找出低价项"] --> D
+  D["find 找到首个高价项"] --> E
+  E["输出三个结果"]
 ```
 
-限制：
+## 独立练习导航
 
-- 筛选、转换和查找必须分别使用 `filter`、`map`、`find`。
-- 不得假设 `find` 一定成功。
-- 不得直接把编号列表、总额或 D4 写入输出。
-- 不得修改原数组中的对象。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
-完成标准：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 07：订单数组报告 | 主任务 |
+| [practice02](./practice02/README.md) | 商品折扣筛选 | 闭卷迁移 |
 
-- 能用一句话区分三个数组方法。
-- 能解释每个回调返回的内容。
-- 右击运行 `practice.ts`，三行输出完全一致。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day07 practice02`。
 
 ## 常见错误
 
 `map` 用于转换而不是筛选；带花括号的箭头回调漏写 `return` 会产生 `undefined`；`find` 只返回一项而且可能找不到；`filter` 回调必须返回布尔结果。
 
+### 错误代码示例
+
+```ts
+const orders = [
+  { id: "A1", amount: 40 },
+  { id: "B2", amount: 120 },
+];
+
+const ids = orders.map((order) => {
+  order.id; // ❌ 使用花括号后漏写 return，每一项都会变成 undefined。
+});
+
+const largeOrder = orders.find((order) => order.amount >= 100);
+console.log(largeOrder.id); // ❌ find 可能返回 undefined，不能直接读取 id。
+```
+
+### 正确写法
+
+```ts
+const orders = [
+  { id: "A1", amount: 40 },
+  { id: "B2", amount: 120 },
+];
+
+const ids = orders.map((order) => order.id);
+// ✅ 单表达式箭头函数会隐式返回 order.id。
+
+const largeOrder = orders.find((order) => order.amount >= 100);
+
+if (largeOrder !== undefined) {
+  console.log(largeOrder.id); // ✅ 收窄后才能确定对象存在。
+}
+```
+
 ## 拓展思考（不要求写代码）
 
 如果先把所有订单 `map` 成只包含编号的字符串，再尝试筛选 `status === "done"`，为什么已经无法完成筛选，这说明数组操作的顺序会怎样影响后续可用信息？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 和 `SOLUTION.md`，重点对照三个数组方法各自保存的中间结果。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 和 `SOLUTION.md`，重点对照三个数组方法各自保存的中间结果。
 
 ## 官方资料
 

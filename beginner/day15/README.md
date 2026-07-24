@@ -35,43 +35,33 @@ function makePair<Left, Right>(left: Left, right: Right): [Left, Right] {
 
 打开并右键运行 `example.ts`。在编辑器中悬停观察 `firstName`、`firstScore` 与 `course.value` 的推断类型。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请在 `practice.ts` 中从头编写一个小型“泛型工具箱”，必须包含：
+泛型函数的运行时数据流与普通函数相同；类型参数只在检查阶段连接输入与输出。实参帮助推断 T，参数按 T 使用，return 仍交回调用处，T 本身不是运行时变量。
 
-- `lastOrFallback<Item>(items, fallback): Item`：返回最后一项；空数组返回同类型回退值。
-- `Box<Value>`：包含 `label: string` 和 `value: Value`。
-- `makeBox<Value>(label, value): Box<Value>`：保留标签和值。
-- `repeat<Item>(value, count): Item[]`：创建含 `count` 个相同值的新数组。
-- `makePair<Left, Right>(left, right): [Left, Right]`：保持输入顺序。
+## Example 代码流程图
 
-使用以下固定调用：
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-- `lastOrFallback(["变量", "泛型"], "无")`
-- `lastOrFallback([], 0)`
-- `makeBox("课程", "TypeScript")`
-- `repeat(7, 3)`
-- `makePair("level", 3)`
+```mermaid
+flowchart TD
+  A["字符串或数字数组进入泛型函数"] --> B
+  B["T 从实参推断"] --> C
+  C["返回首项并保持具体类型"] --> D
+  D["泛型对象保存标签"] --> E
+  E["输出结果"]
+```
 
-精确输出：
+## 独立练习导航
 
-~~~text
-最后主题：泛型
-空分数：0
-盒子：课程=TypeScript
-重复：7+7+7
-配对：level=3
-~~~
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-限制：
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 泛型基础与输入输出关系 | 主任务 |
+| [practice02](./practice02/README.md) | 泛型首项读取 | 闭卷迁移 |
 
-- 不得使用 `any`、`unknown`、类型断言或非空断言。
-- 每个类型参数必须至少出现在两个有关系的位置。
-- `lastOrFallback` 必须安全处理空数组，不能直接断言最后一项存在。
-- `repeat` 必须根据 `count` 生成数组，不能写死三项。
-- `makePair` 的返回类型与返回值顺序都必须是 `[Left, Right]`。
-
-完成标准：右键运行后显示 PASS；能用一句话解释每个泛型函数保存了什么类型关系。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day15 practice02`。
 
 ## 容易出错的地方
 
@@ -81,6 +71,36 @@ function makePair<Left, Right>(left: Left, right: Right): [Left, Right] {
 - 以为 `Item` 自动拥有任意属性。
 - 通过 `as Item` 伪造一个运行时并不存在的值。
 - 忘记空数组可能没有最后一项。
+
+### 错误代码示例
+
+```ts
+function first<Item>(items: readonly Item[]): Item {
+  // ❌ 空数组的第 0 项是 undefined，断言只是隐藏风险，不会创造 Item。
+  return items[0] as Item;
+}
+
+function firstWithAny(items: any[]): any {
+  return items[0]; // ❌ any 切断了“输入元素类型 = 返回类型”的关系。
+}
+```
+
+### 正确写法
+
+```ts
+function firstOrUndefined<Item>(
+  items: readonly Item[],
+): Item | undefined {
+  return items[0]; // ✅ 返回类型如实表达空数组的可能性。
+}
+
+function firstOrFallback<Item>(
+  items: readonly Item[],
+  fallback: Item,
+): Item {
+  return items[0] ?? fallback; // ✅ 调用者提供真实回退值，函数才能保证返回 Item。
+}
+```
 
 ## 拓展思考（不要求写代码）
 

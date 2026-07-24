@@ -41,35 +41,33 @@ type Result<T> =
 
 打开并右键运行 `example.ts`。区分 `parsePort` 抛出的异常与 `savePort` 返回的失败结果，并找出捕获 `unknown` 的边界。
 
-## 独立练习（从空文件开始）
+## 函数变量追踪
 
-请从头编写“端口解析与保存器”。
+成功路径通过 return 交回值；失败路径通过 throw 中断函数，直到外层 catch 接住 error。catch 中的 error 是新的局部变量，并保持 unknown 直到收窄。
 
-必须创建：
+## Example 代码流程图
 
-- 泛型判别联合 `Result<T>`，成功成员为 `{ ok: true; value: T }`，失败成员为 `{ ok: false; error: string }`。
-- `parsePort(text: string): number`：使用 `Number` 转换；若结果不是 1 到 65535 的整数，抛出 `RangeError("端口必须是 1 到 65535 的整数")`。
-- `savePort(port: number): Result<number>`：端口为 13 时返回失败 `端口 13 不可用`，其他端口返回成功值。
-- `errorMessage(error: unknown): string`：`Error` 实例返回 `message`，否则返回“未知错误”。
-- 固定输入 `inputs = ["3000", "13", "abc"]`。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-逐项处理：先解析，再保存；保存失败是普通结果，不要抛异常。解析失败在外层捕获。精确输出：
+```mermaid
+flowchart TD
+  A["文本端口进入解析函数"] --> B
+  B["合法值 return 端口"] --> C
+  C["非法值 throw Error"] --> D
+  D["调用处捕获 unknown"] --> E
+  E["输出成功与失败"]
+```
 
-~~~text
-已保存端口：3000
-保存失败：端口 13 不可用
-解析失败：端口必须是 1 到 65535 的整数
-~~~
+## 独立练习导航
 
-限制：
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
 
-- 不得使用 `any`、类型断言、抛字符串或空 `catch`。
-- `parsePort` 必须验证整数与范围，非法时不得返回伪造默认值。
-- `savePort` 不得为预期的端口占用抛异常。
-- `catch` 参数保持 `unknown`，只通过 `errorMessage` 安全取得文字。
-- 成功与失败分支必须通过 `ok` 收窄，不能用非空断言读取字段。
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | 错误不是字符串：throw、unknown 与 Result | 主任务 |
+| [practice02](./practice02/README.md) | 端口配置校验 | 闭卷迁移 |
 
-完成标准：右键运行后显示 PASS；能说明为什么“格式非法”和“端口不可用”选择了不同失败通道。
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day19 practice02`。
 
 ## 容易出错的地方
 
@@ -78,6 +76,28 @@ type Result<T> =
 - 捕获后返回看似正常的假数据，调用者无法分辨失败。
 - 未检查 `Number` 得到的 `NaN`、小数或越界值。
 - 底层与上层重复输出同一错误。
+
+### 错误代码示例
+
+```ts
+try {
+  throw "端口错误"; // ❌ 抛字符串没有标准 Error 的名称和堆栈信息。
+} catch (error: any) {
+  console.log(error.message); // ❌ any 允许读取并不存在的属性，结果可能是 undefined。
+}
+```
+
+### 正确写法
+
+```ts
+try {
+  throw new RangeError("端口错误"); // ✅ 抛出标准错误对象并保留堆栈。
+} catch (error: unknown) {
+  // ✅ 捕获值先保持 unknown，经过真实检查后再读取 message。
+  const message = error instanceof Error ? error.message : "未知错误";
+  console.log(message);
+}
+```
 
 ## 拓展思考（不要求写代码）
 

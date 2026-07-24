@@ -66,58 +66,134 @@ alias.done = true;
 
 打开并右击运行 `example.ts`。找出书本对象的三个属性和函数参数形状。临时新增一个作者属性，并观察对象与参数形状是否都需要它；实验后恢复。
 
-## 独立练习（从空文件开始）
+## 全局循环与独立函数：两种写法的数据流
 
-在 `practice.ts` 中从零完成“学习任务副本与成绩报告”。
+同一段“循环读取分数并 push 到新数组”的逻辑，可以直接写在文件顶层，也可以封装进函数。两种写法都正确，区别在于变量的作用域、复用方式和调用者能看到多少细节。
 
-创建 `originalTask`，固定结构如下：
+### 写法一：在全局代码中循环
 
-- `title` 为 `"完成对象练习"`。
-- `done` 为 `false`。
-- `student` 是嵌套对象，包含 `name: "Mei"` 和 `city: "成都"`。
-- `scores` 是数字数组 `[88, 92, 90]`。
+```ts
+const copiedScores: number[] = [];
 
-程序要求：
-
-1. 创建空数字数组 `copiedScores`，使用 `for...of` 把原数组的每个分数 `push` 进去。
-2. 创建新对象 `copiedTask`，逐项读取原对象的值；`student` 必须是新对象，`scores` 使用 `copiedScores`。
-3. 只把 `copiedTask.done` 修改为 `true`。
-4. 实现 `calculateAverage(record: { scores: number[] }): number`，用循环计算平均分。
-5. 输出原任务与副本状态、嵌套学生资料和平均分。
-
-精确期望输出：
-
-```text
-原任务完成: false
-副本完成: true
-学生: Mei（成都）
-平均分: 90
+for (const score of originalTask.scores) {
+  copiedScores.push(score);
+}
 ```
 
-限制：
+这里的变量关系是：
 
-- 不得写 `const copiedTask = originalTask`。
-- 不使用尚未学习的对象或数组展开语法。
-- 平均分必须根据数组循环计算，不得直接写 90。
-- 函数必须从参数读取分数，不得读取外部 `originalTask`。
+- `copiedScores` 在循环外声明，后面的文件代码仍然可以读取它。
+- `score` 在 `for` 的花括号内声明，只代表当前一轮的分数；循环外不能使用它。
+- 每一轮都直接修改外部的 `copiedScores`。这很直观，但如果别处也要复制数组，就会重复整段循环。
+- `const copiedScores` 仍然可以 `push`，因为变量一直指向同一个数组；不能做的是把它重新赋值成另一个数组。
 
-完成标准：
+### 写法二：封装为可复用函数
 
-- 修改副本后，原对象仍保持 `false`。
-- 能画出原对象和副本各自指向的嵌套对象与数组。
-- 右击运行 `practice.ts`，四行输出完全一致。
+```ts
+function copyScores(source: number[]): number[] {
+  const result: number[] = [];
+
+  for (const score of source) {
+    result.push(score);
+  }
+
+  return result;
+}
+
+const copiedScores = copyScores(originalTask.scores);
+```
+
+逐步追踪这次调用：
+
+1. `originalTask.scores` 是调用处传入的实参。
+2. 函数开始执行后，这个数组引用由局部参数 `source` 接收；参数名不必和外部变量名相同。
+3. `result` 是函数内部新建的局部数组，`score` 是每轮循环的局部变量。函数外不能直接访问它们。
+4. `result.push(score)` 修改的是新数组，不是 `source` 指向的原数组；若写成 `source.push(...)`，反而会修改调用者的原分数。
+5. `return result;` 把新数组交回调用位置，外部再用 `copiedScores` 接住它。只调用函数但不接返回值，结果不会自动出现在某个外部变量中。
+
+函数版把“怎样复制”藏在一个有名字的功能里。相同函数可以接收别的数字数组，也能单独测试。今天先亲手完成全局版，再重构成函数版，输出不应改变。
+
+## Example 代码流程图
+
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
+
+```mermaid
+flowchart TD
+  A["创建 book 对象"] --> B
+  B["book 作为实参进入 describeBook"] --> C
+  C["根据 available 生成状态"] --> D
+  D["组合多行字符串并输出"]
+```
+
+## 独立练习导航
+
+本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 06：学习任务副本与成绩报告 | 主任务 |
+| [practice02](./practice02/README.md) | 图书借阅卡 | 闭卷迁移 |
+| [practice03](./practice03/README.md) | 购物车深复制函数 | 综合应用 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day06 practice02`。
 
 ## 常见错误
 
 `const copy = original` 不会复制对象；只复制顶层但复用 `student` 或 `scores`，仍会共享嵌套引用；属性拼写和大小写必须一致。
 
+### 错误代码示例
+
+```ts
+const student { name = "Lin" };
+// ❌ 变量名后缺少 =；对象属性的名称和值之间应使用 :。
+```
+
+即使对象语法写对，下面的写法仍没有复制数据：
+
+```ts
+const originalTask = {
+  student: { name: "Lin" },
+  scores: [88, 92],
+};
+
+const copiedTask = originalTask;
+copiedTask.scores.push(100);
+// ❌ 两个变量指向同一个对象，原任务的 scores 也被修改。
+```
+
+### 正确写法
+
+```ts
+const student = { name: "Lin" };
+// ✅ = 把右侧对象赋给变量；对象内部用 : 连接属性名和值；语句以 ; 结束。
+
+const originalTask = {
+  student,
+  scores: [88, 92],
+};
+const copiedScores: number[] = [];
+
+for (const score of originalTask.scores) {
+  copiedScores.push(score); // ✅ 逐项加入显式创建的新数组。
+}
+
+const copiedTask = {
+  student: { name: originalTask.student.name }, // ✅ 新的嵌套对象。
+  scores: copiedScores, // ✅ 与原对象使用不同的数组。
+};
+
+copiedTask.scores.push(100); // ✅ 只修改副本的数组。
+```
+
 ## 拓展思考（不要求写代码）
 
 如果 `copiedTask.student` 直接使用 `originalTask.student`，随后修改副本学生的城市，为什么原任务中的城市也会变化，而本题单独创建嵌套对象后不会？
 
-## 参考答案
+## 解题结构提示
 
-完成后再阅读 `solution.ts` 与 `SOLUTION.md`，并尝试画出两套对象结构。
+`solution.ts` 与 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+
+完成后再进入对应的 `practiceXX` 目录阅读 `solution.ts` 与 `SOLUTION.md`，并尝试画出两套对象结构。
 
 ## 官方资料
 

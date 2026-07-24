@@ -22,32 +22,29 @@
 
 同名 interface 会合并，适合扩展外部声明；type alias 不会这样合并。`enum` 常见于旧代码，新代码通常可用 `as const` 对象加字面量联合，既直观又符合 ES 模块习惯。
 
-## 独立练习（从空文件开始）
+## Example 代码流程图
 
-只编辑 `practice.ts`，从零完成“旧模块兼容入口”；不要修改 `score.js` 或 `score.d.ts`。
+运行 `example.ts` 前先沿图预测执行顺序；运行后再把每个节点对应到代码行。
 
-必须名称：`LessonInfo`、`LegacyStatus`、`ModernStatus`、`normalizeStatus`。还要从 `./score.js` 导入 `score`。
-
-需求：
-
-1. 阅读两个 score 文件，给 `[10, 20, 30]` 求和，并用 number 接收结果。
-2. 写两段同名 `LessonInfo` interface：第一段 title，第二段 minutes；创建 Declarations / 35 对象。
-3. 写 `LegacyStatus` 数字枚举 Draft、Published。
-4. 写现代 `ModernStatus` 常量对象与同名字面量联合类型，值为 draft、published。
-5. `normalizeStatus` 同时接受旧枚举和现代状态，并统一返回 ModernStatus。
-
-精确输出：
-
-```text
-Score: 60
-Declarations: 35 minutes
-Legacy: published
-Modern: draft
+```mermaid
+flowchart TD
+  A["从旧 JS 导入真实函数与版本"] --> B
+  B["d.ts 提供类型"] --> C
+  C["声明合并扩展模型"] --> D
+  D["现代状态单独建模"] --> E
+  E["输出运行结果"]
 ```
 
-限制：不使用 `any`、类型断言或 namespace；不要修改辅助模块来迎合调用代码。
+## 独立练习导航
 
-完成标准：右击运行 `practice.ts` 后输出完全一致；能指出 `.js`、`.d.ts`、`.ts` 中哪些代码会在运行时执行，以及声明错误会造成什么风险。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+
+| 目录 | 场景 | 类型 |
+| --- | --- | --- |
+| [practice01](./practice01/README.md) | Day 30 · 声明文件与旧代码独立综合题 | 主任务 |
+| [practice02](./practice02/README.md) | 旧模块声明适配 | 闭卷迁移 |
+
+右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day30 practice02`。
 
 ## 常见错误
 
@@ -56,6 +53,30 @@ Modern: draft
 - 期待 type alias 像 interface 一样合并；
 - 新模块继续用 namespace 组织代码；
 - 用断言掩盖错误声明。
+
+### 错误代码示例
+
+```ts
+// score.js 的真实实现返回 number：
+export function score(values) {
+  return values.reduce((sum, value) => sum + value, 0);
+}
+
+// score.d.ts 却这样声明：
+export declare function score(values: number[]): string;
+// ❌ 声明让编译器相信了错误的返回类型，却不会改变真实 JS。
+```
+
+### 正确写法
+
+```ts
+// score.d.ts 必须忠实描述 score.js 已存在的参数与返回值：
+export declare function score(values: readonly number[]): number;
+
+// ✅ .d.ts 只提供类型；运行时仍由 score.js 提供真正实现。
+import { score } from "./score.js";
+console.log(score([10, 20]).toFixed(0));
+```
 
 ## 拓展思考（不要求写代码）
 
