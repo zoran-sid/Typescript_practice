@@ -1,4 +1,4 @@
-// 先阅读本目录 README.md 的“独立练习（从空文件开始）”。
+// 先阅读题目文档 ../../docs/day32/practice01/README.md 的“独立练习（从空文件开始）”。
 // 这是 Practice 01；它与其他 practice 文件夹完全独立。
 // 请使用 TypeScript 5+ 标准装饰器语义从零编写程序，不要复制 example.ts。
 // 必须名称：tracedMethod、registerClass、withTag、PriceCalculator、Formatter、UppercaseFormatter、MessageService。

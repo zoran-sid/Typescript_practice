@@ -52,4 +52,4 @@
 - 当前练习文件可直接右击 **Run Code**。
 - 命令行备用方式是 `npm run beginner -- day10 practice02`。
 
-拓展思考题不追求唯一答案。先给出自己的理由，再查看 `SOLUTION.md` 的参考方向；理由比结论更重要。
+拓展思考题不追求唯一答案。先给出自己的理由，再查看 `docs/dayXX/practiceXX/SOLUTION.md` 的参考方向；理由比结论更重要。

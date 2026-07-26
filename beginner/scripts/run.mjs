@@ -52,7 +52,7 @@ async function main() {
       source: path.join(beginnerRoot, day, "example.ts"),
       label: `${displayDay(day)} Example`,
       expected: check.exampleExpected,
-      success: `Example 运行完成。请回到 ${day}/README.md 查看流程图，再选择独立 practice 目录。`,
+      success: `Example 运行完成。请回到 docs/${day}/README.md 查看流程图，再选择独立 practice 文档。`,
       printPass: false,
     }) ? 0 : 1;
   }

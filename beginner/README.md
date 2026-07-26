@@ -1,23 +1,23 @@
 # TypeScript 零基础完整路线
 
-这条路线不假设你已经学习 JavaScript。每一天用 `example.ts` 与 Mermaid 流程图建立整体逻辑，再进入 1–3 个互相独立的 `practiceXX/` 文件夹练习。题目数量取决于难度，每题拥有自己的 README、流程图、作答文件与解题结构提示。
+这条路线不假设你已经学习 JavaScript。所有逐日 Markdown 集中在 `docs/dayXX/`，适合用 MD 阅读工具连续浏览；可运行代码仍放在 `dayXX/`。每一天先用 `example.ts` 与 Mermaid 流程图建立整体逻辑，再完成 1–3 道互相独立的练习。题目数量取决于难度，每题都有自己的场景背景、需求、流程图、作答文件与解题结构提示。
 
-主线是 Day 00–26，每天按 60–90 分钟设计；Day 27–32 是按需选修。
+主线是 Day 00–26，每天按 60–90 分钟设计；Day 27–32 是按需选修。阅读入口是 [docs/README.md](./docs/README.md)。
 
 ## 推荐学习流程
 
 1. 用 8–10 分钟回忆昨天、三天前和七天前的内容。
-2. 阅读当天 README 的概念与 Example 代码流程图。
-3. 运行 `example.ts`，把流程图每个节点对应到具体代码。
-4. 从当天导航选择一个 `practiceXX/`，阅读它自己的题目和流程图。
-5. 在该目录的 `practice.ts` 中从空白完成全部代码。
+2. 从 `docs/README.md` 打开 `docs/dayXX/README.md`，阅读概念与 Example 代码流程图。
+3. 运行代码目录 `dayXX/example.ts`，把流程图每个节点对应到具体代码。
+4. 从当天文档导航选择一个 `docs/dayXX/practiceXX/README.md`，先理解场景、需求和流程图。
+5. 在对应代码目录 `dayXX/practiceXX/practice.ts` 中从空白完成全部代码。
 6. 右击运行，根据中文类型提示或输出差异修改。
 7. 另一道练习必须重新打开独立目录作答，不导入上一题实现。
-8. 实在卡住时，再查看同一目录的 `solution.ts` 与 `SOLUTION.md`。
+8. 实在卡住时，再查看代码目录中的 `solution.ts` 与文档目录中的 `SOLUTION.md`。
 
 ## 开启右键运行
 
-项目包含 `.vscode` 配置。用 VS Code/Cursor 打开项目根目录后，安装编辑器推荐的 **Code Runner** 扩展。官方扩展支持在编辑器或文件列表中右击并选择 **Run Code**。
+项目包含 `.vscode` 配置。必须用 VS Code/Cursor 打开整个项目根目录，不要只打开某个 day 或 practice 子目录；然后安装编辑器推荐的 **Code Runner** 扩展。在编辑器或文件列表中右击 TypeScript 文件并选择 **Run Code** 即可。
 
 右键以下文件时会自动选择正确模式：
 
@@ -31,19 +31,20 @@
 
 ## 独立练习目录的规则
 
-- 每天有 1–3 个连续编号目录：`practice01/`、`practice02/`、`practice03/`。
-- 每个目录都包含 README、Mermaid 流程图、`practice.ts`、`solution.ts` 和 `SOLUTION.md`。
+- 每天有 1–3 个连续编号代码目录：`dayXX/practice01/`、`practice02/`、`practice03/`。
+- 每道题的背景、需求、Mermaid 流程图与方案说明集中在 `docs/dayXX/practiceXX/`。
+- 每道题的 `practice.ts` 与 `solution.ts` 留在对应的 `dayXX/practiceXX/`，便于右击运行。
 - 各题使用不同文件和独立运行入口，不允许导入另一题的实现。
 - `practice.ts` 初始只有 2–8 行注释；完整代码由你从空白编写。
 - 自动检查只关心类型、运行结果和精确输出，不要求逐字复制答案。
-- Example 流程图在当天 README；每道练习还有自己的流程图。
+- Example 流程图在 `docs/dayXX/README.md`；每道练习还有自己的独立流程图。
 
 ## 错误示例与解题结构怎么读
 
 - 每天 README 的“错误代码示例”是故意写错的代码，`// ❌` 会直接指出出错位置与原因；不要把它原样复制进 `practice.ts`。
 - 紧随其后的“正确写法”用 `// ✅` 对应修正同一个问题，先比较符号、类型与数据流，再运行代码。
-- 每道题的 `solution.ts` 只提供可通过类型检查的主要结构：必要类型、函数签名和控制流骨架；核心实现保留为 `TODO`，不会给出完整答案。
-- `SOLUTION.md` 解释方案一；存在多种推荐做法时会比较方案二或方案三的结构与适用场景，但同样保留关键 `TODO`。
+- 代码目录中的 `solution.ts` 只提供可通过类型检查的主要结构：必要类型、函数签名和控制流骨架；核心实现保留为 `TODO`，不会给出完整答案。
+- 文档目录中的 `SOLUTION.md` 解释方案一；存在多种推荐做法时会比较方案二或方案三的结构与适用场景，但同样保留关键 `TODO`。
 - 建议先独立完成，再对照错误示例定位问题，最后才打开结构提示。根据 `TODO` 自己补完后，关闭提示并重新写一次，避免“当时看懂、下次又忘”。
 ## 可选命令行方式
 
@@ -132,23 +133,30 @@ const copiedScores = copyScores(student.scores);
 | 31 | Iterable、Iterator、Generator、Symbol、bigint | 处理惰性序列或协议 |
 | 32 | TypeScript 5+ 标准装饰器与对象 Mixin | 框架或库明确依赖时 |
 
-## 每日文件结构
+## 文档与代码目录结构
 
 ```text
-dayXX/
-  README.md             概念、Example 流程图、练习导航
-  example.ts            完整示例
-  practice01/
-    README.md            独立题目与流程图
-    practice.ts          空白作答入口
-    solution.ts          仅含主结构与关键 TODO，不含完整答案
-    SOLUTION.md          方案结构、变量流向与易错提示
-  practice02/            另一道完全独立的题目
-  practice03/            仅较难或综合课程提供
+beginner/
+  docs/                         集中式 Markdown 阅读目录
+    README.md                   Day 00–32 总导航
+    dayXX/
+      README.md                 概念、Example 流程图、练习导航
+      practice01/
+        README.md               场景背景、独立需求与流程图
+        SOLUTION.md             方案结构、变量流向与易错提示
+      practice02/               另一道完全独立的题目文档
+      practice03/               仅较难或综合课程提供
+
+  dayXX/                        可运行代码目录
+    example.ts                  完整示例
+    practice01/
+      practice.ts               空白作答入口
+      solution.ts               仅含主结构与关键 TODO，不含完整答案
+    practice02/
+    practice03/
 ```
 
-少数模块、声明文件或异步课程会在 day 根目录保留 Example 所需的辅助文件；独立练习始终从各自的 `practiceXX/practice.ts` 进入。
-
+文档目录与代码目录使用完全相同的 Day/Practice 编号。少数模块、声明文件或异步课程会在代码 day 根目录保留 Example 所需的辅助文件；独立练习始终从各自的 `dayXX/practiceXX/practice.ts` 进入。
 ## 复习与资料
 
 详细复习方式见 [REVIEW.md](./REVIEW.md)。课程顺序以零基础认知负担为优先，并参考 TypeScript 官方资料：

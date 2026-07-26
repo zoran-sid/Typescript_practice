@@ -1,4 +1,4 @@
-// 先阅读本目录 README.md 的“独立练习（从空文件开始）”。
+// 先阅读题目文档 ../../docs/day27/practice01/README.md 的“独立练习（从空文件开始）”。
 // 这是 Practice 01；它与其他 practice 文件夹完全独立。
 // 请从零编写课程搜索入口，不要复制 example.ts，也不要访问真实 DOM 或网络。
 // 必须名称：InputEventLike、readQuery、JsonClient、Lesson、isRecord、loadLesson、Options、valueAfter、parseArgs。

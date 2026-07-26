@@ -1,8 +1,8 @@
 {
   "code-runner.executorMap": {
-    "typescript": "node \"$workspaceRoot/beginner/scripts/run-file.mjs\" \"$fullFileName\""
+    "typescript": "node \"$workspaceRoot/beginner/scripts/run-file.mjs\" $fullFileName"
   },
-  "code-runner.cwd": "$workspaceRoot",
+  "code-runner.fileDirectoryAsCwd": false,
   "code-runner.runInTerminal": true,
   "code-runner.saveFileBeforeRun": true,
   "code-runner.ignoreSelection": true,

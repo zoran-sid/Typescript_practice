@@ -5,14 +5,14 @@
 ## 最方便的学习方式：右键运行
 
 1. 第一次在项目根目录运行 `npm install`。
-2. 用 VS Code 或 Cursor 打开整个 `F:\typescript_practice` 文件夹并安装推荐的 **Code Runner**。
-3. 打开当天 `README.md`，先沿 Example Mermaid 流程图预测执行顺序。
-4. 右击当天 `example.ts`，选择 **Run Code**，再把流程图节点对应到代码行。
-5. 从当天导航进入 `practice01/`、`practice02/` 或 `practice03/`。
-6. 阅读练习自己的 README 与流程图，在该目录的空白 `practice.ts` 中独立完成。
-7. 右击 `practice.ts` 自动进行类型检查、运行并核对输出。
+2. 用 VS Code 或 Cursor 打开整个 `F:\typescript_practice` 文件夹并安装推荐的 **Code Runner**；不要只打开某个 day 或 practice 子文件夹。
+3. 从 [每日文档中心](./beginner/docs/README.md) 选择当天课程，先沿 Example Mermaid 流程图预测执行顺序。
+4. 右击对应代码目录中的 `beginner/dayXX/example.ts`，选择 **Run Code**，再把流程图节点对应到代码行。
+5. 从当天文档导航进入 `practice01`、`practice02` 或 `practice03` 的独立题目。
+6. 阅读 `beginner/docs/dayXX/practiceXX/README.md` 的背景、需求与流程图。
+7. 在对应的 `beginner/dayXX/practiceXX/practice.ts` 中独立完成代码，再右击运行并核对输出。
 
-每道题都有自己的目录、题目、作答文件和参考答案。练习之间不导入代码，也不共享实现；完成一题不代表另一题自动完成。
+每道题都有自己的文档目录、代码目录、作答文件和结构提示。练习之间不导入代码，也不共享实现；完成一题不代表另一题自动完成。
 
 ## 练习文件不会提供实现
 
@@ -34,8 +34,9 @@ npm test
 
 ## 课程导航
 
+- [每日文档中心](./beginner/docs/README.md)
 - [完整课程说明](./beginner/README.md)
 - [间隔复习方法](./beginner/REVIEW.md)
 - [学习进度表](./beginner/PROGRESS.md)
 
-初始练习运行失败是正常现象。独立尝试后，再查看同一 `practiceXX` 目录中的 `solution.ts` 与 `SOLUTION.md`。
+初始练习运行失败是正常现象。独立尝试后，再查看代码目录中的 `solution.ts`，以及文档目录 `beginner/docs/dayXX/practiceXX/SOLUTION.md` 中的方案说明。
