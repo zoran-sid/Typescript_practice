@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["new 创建实例"] --> B
-  B["constructor 保存字段"] --> C
-  C["方法读取或更新 this"] --> D
-  D["输出实例结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+new StudyCounter(...) ──> types / modules 两个独立实例
+   └── addMinutes ──> 各自的 this.minutes
+两个实例 ──> Dashboard ──> 汇总摘要
+message ──> MessageFormatter.format ──> 格式文字
+                         └── detachedFormat 仍绑定实例
+实例结果 + 汇总 + 格式文字 ──> 输出
 ```
 
 请从头编写“学习计数与面板”：

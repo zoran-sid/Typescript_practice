@@ -14,14 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["宽和高进入 calculateArea"] --> B
-  B["相乘并 return 面积"] --> C
-  C["createLabel 生成文字"] --> D
-  D["console.log 输出标签"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+width + height
+   │
+   └── calculateArea ──> deskArea
+                              │
+                              └── createLabel ──> label
+                                                        │
+                                                        └── console.log ──> 输出
 ```
 
 ## 必须练到的能力

@@ -14,14 +14,17 @@
 
 学习平台正在把旧存储中的任务迁移到新面板，导入层收到的是类型未知的外部数组，数组项可能缺字段或带有不合法状态。若无效项混入业务模型，首项状态展示和总分钟数都会失真。你需要只接纳通过逐字段验证的任务，并交付成功数量、第一项描述和可信的计划时长。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["外部任务数据进入导入器"] --> B
-  B["unknown 逐项验证为 Task"] --> C
-  C["拒绝无效项"] --> D
-  D["描述首项状态并统计分钟"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+text ──> importTasks ──> parsed: unknown
+                         └── every(isStudyTask)
+                                ├── isRecord
+                                └── isTaskState
+全部合法 ──> result.tasks ──> describeState + minutes 合计
+任一非法/坏 JSON ──> result.message
 ```
 
 ## 必须练到的能力

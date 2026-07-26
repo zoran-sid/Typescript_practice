@@ -14,15 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取原设置对象"] --> B
-  B["解构取得主题与技能"] --> C
-  C["spread 创建新设置"] --> D
-  D["rest 拆分数组"] --> E
-  E["输出原值和新值"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+original
+   ├── 解构 ──> theme + skills
+   └── createUpdatedProfile
+          ├── 对象 spread ──> updated
+          └── 数组 rest ──> 剩余 skills
+
+original + updated + 剩余 skills ──> 对照输出
 ```
 
 ## 必须练到的能力

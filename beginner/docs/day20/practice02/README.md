@@ -14,14 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["准备合法与非法 JSON"] --> B
-  B["JSON.parse 得到 unknown"] --> C
-  C["类型守卫验证课程字段"] --> D
-  D["合法输出课程，非法输出提示"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+rawCourses
+   └── JSON.parse ──> unknown
+                         └── isCourse
+                                ├── 对象与字段检查
+                                └── topics.every(...)
+验证通过 ──> Course 字段输出
+验证失败 ──> 非法数据提示
 ```
 
 ## 必须练到的能力

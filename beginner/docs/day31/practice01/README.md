@@ -14,14 +14,16 @@
 
 后台任务服务要按需生成数字序列和倒计时，还要创建超过 JavaScript 安全整数范围的唯一编号并写入 JSON。输入边界包括给定闭区间、倒计时起点和大整数当前值；若提前创建完整序列会浪费内存，混用 `number` 又会让编号丢失精度，直接序列化 `bigint` 还会失败。你需要交付惰性产生的两组序列、精确递增后的编号，以及可以安全传输的 JSON 文本。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建迭代器或 generator"] --> B
-  B["next 继续执行"] --> C
-  C["yield 暂停并交出值"] --> D
-  D["done 表示结束"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+起始数字 ──> createCountdown ──> generator
+                                   └── 每次 next ──> yield 值 / done
+currentId + increment ──> nextId: bigint
+nextId ──> toString ──> JSON.stringify ──> jsonText
+迭代结果 + bigint JSON ──> 输出
 ```
 
 从零完成“惰性序列与大整数”程序。

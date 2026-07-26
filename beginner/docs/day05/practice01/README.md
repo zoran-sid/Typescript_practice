@@ -14,14 +14,16 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["实参进入参数"] --> B
-  B["函数完成计算"] --> C
-  C["return 交回结果"] --> D
-  D["调用处接住并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+quantity + unitPrice ──> calculateSubtotal ──> subtotal
+isMember + subtotal ──> calculateDiscount ──> discount
+subtotal + discount ──> calculateAmountToPay ──> amountToPay
+
+subtotal + discount + amountToPay ──> 账单输出
 ```
 
 在 `practice.ts` 中从零完成“会员账单”。

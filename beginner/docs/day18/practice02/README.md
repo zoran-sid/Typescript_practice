@@ -14,14 +14,16 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["new 创建学习 Session"] --> B
-  B["方法读取 minutes 与 topic"] --> C
-  C["Dashboard 接收多个实例"] --> D
-  D["输出单项和汇总"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+new StudyCounter(topic) ──> types / modules
+   └── addMinutes ──> 当前实例 minutes
+types ───────────────┐
+modules ─────────────┴──> Dashboard ──> totalMinutes / summary
+单项摘要 + 总分钟 ──> 输出
 ```
 
 ## 必须练到的能力

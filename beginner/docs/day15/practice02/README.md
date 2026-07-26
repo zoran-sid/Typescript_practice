@@ -14,15 +14,16 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["字符串或数字数组进入泛型函数"] --> B
-  B["T 从实参推断"] --> C
-  C["返回首项并保持具体类型"] --> D
-  D["泛型对象保存标签"] --> E
-  E["输出结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+names: string[] ──> firstOrUndefined<string> ──> firstName
+scores: number[] ──> firstOrUndefined<number> ──> firstScore
+value + label ──> labelValue<T> ──> LabeledValue<T>
+
+firstName + firstScore + course ──> 输出
 ```
 
 ## 必须练到的能力

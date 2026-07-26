@@ -14,15 +14,17 @@
 
 学习平台的任务面板通过异步仓库加载数据，但仓库边界只承诺返回 `unknown`，也可能因离线直接抛出错误。若面板跳过验证或吞掉异常，坏任务会被显示成成功状态，用户也无法判断数据是否真的加载完成。你需要交付清晰的 loading、success 或 failure 状态、可信统计，以及覆盖正常、空数据、坏数据和离线情况的回归测试结果。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["进入 loading 状态"] --> B
-  B["await 仓库数据"] --> C
-  C["验证 unknown"] --> D
-  D["返回 success 或 failure"] --> E
-  E["渲染并测试"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+TaskRepository.load() ──> Promise<unknown> ──> await value
+                                             └── parseTasks
+                                                   ├── 合法 ──> success(tasks)
+                                                   └── 非法 ──> failure(message)
+Promise 抛错 ──────────────────────────────────────────────> failure(message)
+LoadState ──> render ──> 输出行 + 回归测试
 ```
 
 在 `practice.ts` 中从零完成“异步任务面板”。

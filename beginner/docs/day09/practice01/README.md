@@ -14,14 +14,19 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["声明对象类型"] --> B
-  B["创建符合类型的值"] --> C
-  C["函数读取只读与可选字段"] --> D
-  D["输出摘要"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+Project 类型规则
+   │
+   └── 检查 project 对象
+             ├── readonly id
+             ├── progress 数据
+             └── 可选 note
+                    │
+                    └── describeProject ──> 项目摘要输出
 ```
 
 在 `practice.ts` 中从零完成“项目进度摘要”。

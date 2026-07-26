@@ -14,14 +14,20 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["状态对象进入 describeState"] --> B
-  B["switch 读取 status"] --> C
-  C["每个 case 访问专属字段"] --> D
-  D["依次输出四种状态"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+states
+   └── for...of ──> 当前 state
+                         └── describeLoadState
+                                └── switch(state.status)
+                                       ├── idle
+                                       ├── loading
+                                       ├── success
+                                       └── error
+每个分支的专属字段 ──> 描述输出
 ```
 
 ## 必须练到的能力

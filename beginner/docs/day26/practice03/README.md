@@ -14,15 +14,17 @@
 
 校园活动页需要从第三方天气仓库异步读取城市和温度，但外部响应可能正确，也可能缺字段或提供错误类型。若界面不验证响应就渲染，活动负责人会看到错误天气并据此作出安排。你需要让面板先显示 loading，再对合法数据输出城市与温度，对无效数据输出明确的 failure 信息。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["渲染 loading"] --> B
-  B["await 仓库返回 unknown"] --> C
-  C["验证 city 与 temperature"] --> D
-  D["返回 success 或 failure"] --> E
-  E["渲染两种最终状态"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+MemoryWeatherRepository.load() ──> Promise<unknown>
+                                          └── await ──> isWeather
+                                                         ├── 合法 ──> success
+                                                         └── 非法 ──> failure
+Promise 抛错 ─────────────────────────────────────────────────> failure
+success / failure ──> render ──> 天气面板输出
 ```
 
 ## 要求

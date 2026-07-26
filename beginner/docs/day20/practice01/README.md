@@ -14,14 +14,19 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["JSON 文本进入程序"] --> B
-  B["解析为 unknown"] --> C
-  C["类型守卫逐层验证"] --> D
-  D["合法数据进入业务逻辑"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+rawProfiles
+   └── JSON.parse ──> unknown
+                         └── isProfile
+                                ├── isRecord
+                                └── lessons.every(isLesson)
+验证结果 ──> parseProfile
+              ├── ok:true ──> Profile ──> 业务输出
+              └── ok:false ──> message ──> 错误输出
 ```
 
 请从头编写“课程资料 JSON 验证器”。

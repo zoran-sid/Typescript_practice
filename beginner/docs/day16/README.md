@@ -2,11 +2,11 @@
 
 预计用时：75–90 分钟。
 
-普通泛型只能使用所有类型都具备的能力。今天学习声明“至少要有什么属性”，并从已有对象安全地取得键和值类型。
+上一天的泛型能接收不同类型，但函数不能凭空认为这些类型都有 `id` 或其他字段。今天先给参数加一条进入函数的条件：“传进来的对象至少要有这些字段”。然后再让 TypeScript 根据对象实际拥有的键，检查你读的字段是否存在、返回值是什么类型。
 
 ## 核心讲解
 
-函数确实需要 `id` 时，把要求写进约束：
+如果函数内部要读取 `item.id`，就必须先把“对象至少有一个数字 `id`”写进类型条件。这个条件叫泛型约束：
 
 ~~~ts
 function describeId<Item extends { id: number }>(item: Item): string {
@@ -14,9 +14,15 @@ function describeId<Item extends { id: number }>(item: Item): string {
 }
 ~~~
 
-这里的 `extends` 表示 `Item` 至少拥有数字 `id`，调用者仍可有更多属性。不要写成宽泛的 `object` 后再断言。
+这里的 `extends` 可以先理解成入场条件：
 
-`keyof` 会从对象类型产生属性名联合。让键参数约束在这个联合中，再用索引访问类型描述返回值：
+- `{ id: 12, name: "Ada" }` 可以传入，因为它有数字 `id`；多出的 `name` 不受影响。
+- `{ name: "Ada" }` 不能传入，因为函数随后要读取的 `id` 不存在。
+- `{ id: "12" }` 也不能传入，因为 `id` 类型不是 `number`。
+
+只写 `Item extends object` 只能说明它是对象，不能保证 `item.id` 存在。用类型断言硬说“它有 `id`”也不会在运行时补出这个字段。
+
+接下来解决“按字段名读取值”。`keyof Item` 会列出 `Item` 允许的所有属性名。让参数 `key` 只能从这些名字中选择，就能阻止调用者传入不存在的字段：
 
 ~~~ts
 function getProperty<Item, Key extends keyof Item>(
@@ -27,24 +33,66 @@ function getProperty<Item, Key extends keyof Item>(
 }
 ~~~
 
-具体 `Key` 决定具体返回类型，所以读取 `name` 得到字符串，读取 `age` 得到数字。`Item[keyof Item]` 会丢失这层精确关系。
+这段函数里有两条关系：
 
-类型位置的 `typeof` 可以从现有值取得静态类型：
+1. `Key extends keyof Item`：`key` 必须是 `item` 真正拥有的键。
+2. `Item[Key]`：返回类型就是这个具体键对应的值类型。
+
+例如一个课程对象有 `title: string` 和 `lessons: number`：
+
+| 传入的 `key` | 本次 `Key` | `item[key]` 的类型 |
+| --- | --- | --- |
+| `"title"` | `"title"` | `string` |
+| `"lessons"` | `"lessons"` | `number` |
+
+同理，如果对象有数字属性 `age`，传入 `"age"` 时返回类型就是 `number`；具体键和值类型会保持对应。
+
+如果返回类型写成 `Item[keyof Item]`，结果会变成“所有字段值类型的合集”，读取 `title` 时也只能得到 `string | number`，具体键和值的对应关系就丢了。
+
+有时类型要跟着一个现有对象变化。写在类型位置的 `typeof` 可以取得这个值的静态类型，再让 `keyof` 取出它的属性名：
 
 ~~~ts
 const flags = { search: true, comments: false };
 type FlagName = keyof typeof flags;
 ~~~
 
-它不同于运行时 `typeof value`。`keyof` 和类型位置的 `typeof` 都不会产生可供输出的运行时值。
+上面的步骤是：`typeof flags` 先得到类似 `{ search: boolean; comments: boolean }` 的对象类型，`keyof` 再得到 `"search" | "comments"`。因此 `FlagName` 只能是这两个名字之一。
+
+两种 `typeof` 不要混在一起：
+
+| 写在哪里 | 作用 | 会得到什么 |
+| --- | --- | --- |
+| 普通代码中的 `typeof value` | 程序运行时检查值 | `"string"`、`"number"`、`"object"` 等字符串 |
+| 类型位置的 `typeof flags` | TypeScript 检查时读取已有值的类型 | 一个类型，不能直接输出 |
+
+`keyof` 也只在类型检查阶段工作。它不会像 `Object.keys()` 那样在运行时生成键数组。
 
 ## 阅读示例
 
-打开并右键运行 `example.ts`。观察 `getProperty(course, "title")` 和 `getProperty(course, "lessons")` 为什么有不同的返回类型。
+打开并右键运行 `example.ts`。分别找到 `getProperty(course, "title")` 和 `getProperty(course, "lessons")`：对象参数相同，但键参数不同，所以 TypeScript 选中的 `Key` 不同，最终返回类型也不同。把鼠标悬停在接收结果的变量上核对。
 
 ## 函数变量追踪
 
-对象和键分别进入 item 与 key 参数，item[key] 产生返回值。K 约束允许的键，T[K] 描述与键对应的返回类型；不要偷偷读取外部固定键。
+按一次 `getProperty(course, "title")` 调用追踪：
+
+1. `course` 进入参数 `item`，TypeScript 记住它的完整对象类型。
+2. `"title"` 进入参数 `key`，并先通过 `keyof` 的合法键检查。
+3. `item[key]` 在运行时读取课程对象的 `title` 值。
+4. `Item[Key]` 在检查时说明这个返回值是 `title` 对应的类型。
+5. `return` 把实际值交回调用处。
+
+函数要读取的是传进来的 `key`，不要在内部改读某个写死的外部键；否则类型关系看似正确，运行行为却不是调用者要求的字段。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+ID=7
+标题：TypeScript
+课数：21
+设置：theme=dark
+```
 
 ## Example 代码流程图
 

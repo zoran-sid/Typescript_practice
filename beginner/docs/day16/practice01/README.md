@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["对象与 key 进入函数"] --> B
-  B["keyof 限制合法键"] --> C
-  C["item[key] 读取值"] --> D
-  D["T[K] 保留返回类型"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+courses/settings + 合法 key
+   ├── getProperty<Item, Key> ──> Item[Key]
+   └── pluck<Item, Key> ──> 多个 Item[Key]
+带 id 的对象 ──> describeId(泛型约束) ──> id 描述
+settings ──> keyof typeof settings ──> SettingName ──> selectedSetting
+各条精确类型结果 ──> 输出
 ```
 
 请从头编写“类型安全的课程取值工具”。

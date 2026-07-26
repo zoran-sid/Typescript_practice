@@ -6,7 +6,7 @@
 
 1. 从下表进入当天课程文档，先看概念、常见错误示例与 Example 流程图。
 2. 打开对应代码 `beginner/dayXX/example.ts`，右击 **Run Code**。
-3. 从当天文档选择一道 Practice，先读场景背景、需求、流程图和预期输出。
+3. 从当天文档选择一道 Practice，先读场景背景、需求、变量关联数据流和预期输出。
 4. 打开对应代码 `beginner/dayXX/practiceXX/practice.ts` 独立作答。
 5. 卡住时先看常见错误；最后才查看代码目录的 `solution.ts` 和本资料库中的 `SOLUTION.md`。
 

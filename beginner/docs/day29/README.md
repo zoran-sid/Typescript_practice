@@ -1,6 +1,8 @@
 # Day 29（选修）｜从现有类型生成新类型
 
-这一专题更接近库作者和复杂框架代码。只有当许多类型存在稳定、重复的转换规则时，才值得自定义映射类型、条件类型和模板字面量类型；日常业务优先使用清楚的内置工具类型。
+假设注册表单保存 `email` 和 `age`，另一个“用户碰过哪些输入框”的状态也要有相同的键，但每个值都是布尔值。如果以后表单增加字段，希望触碰状态自动跟着增加，而不是手写第二份类型。这就是“从现有类型生成新类型”要解决的问题。
+
+这一专题常见于库和复杂框架。先看每次转换的输入类型和输出类型，再认识映射类型、条件类型、`infer` 和模板字面量类型。日常业务能用 `Record`、`Awaited` 等内置工具类型时，优先用更短、更容易读的写法。
 
 建议用时：60–90 分钟。
 
@@ -14,9 +16,63 @@
 
 ## 核心讲解
 
-映射类型 `[Key in keyof T]` 逐个产生属性；条件类型 `T extends readonly (infer Item)[] ? Item : never` 从数组结构中提取元素。它们只在类型检查阶段工作，不会生成运行时循环。
+先用表单字段看映射类型怎样逐个处理对象的键：
 
-键重映射可以把 `ready` 系统地变成 `onReady`，同时保留对应负载。品牌类型运行时仍是字符串；它只在类型层阻止误传，格式安全必须由一个集中构造函数先验证。验证后的窄断言应只留在这个边界。
+```ts
+type FormValues = {
+  email: string;
+  age: number;
+};
+
+type Touched<T> = {
+  [Key in keyof T]: boolean;
+};
+
+type FormTouched = Touched<FormValues>;
+// 得到：{ email: boolean; age: boolean }
+```
+
+`keyof FormValues` 先得到 `"email" | "age"`。`Key in ...` 再依次拿到这两个键，并把每个键的值都写成 `boolean`。这里保留了原键名，只改变每个键对应的值类型。
+
+如果新类型还要改键名，就在 `as` 后写出新名字：
+
+```ts
+type Getters<T> = {
+  [Key in keyof T as `get${Capitalize<string & Key>}`]: () => T[Key];
+};
+```
+
+`Key` 先拿到旧键；`as ...` 再把 `email` 变成 `getEmail`，把 `age` 变成 `getAge`。这一步叫键重映射。`T[Key]` 则保留每个旧键原来对应的值类型。
+
+再把示例中的其他转换逐个算出来：
+
+| 原来的类型 | 使用的转换 | 得到的新类型 |
+| --- | --- | --- |
+| `FormValues` 的键 `email`、`age` | `Touched<FormValues>` 逐个读取键，把值改成 `boolean` | `{ email: boolean; age: boolean }` |
+| `readonly ["types", "modules", "async"]` | `ElementOf<...>` 提取数组元素 | `"types" | "modules" | "async"` |
+| 字符串字面量 `"ready"` | `HandlerName<"ready">` 添加 `on` 并大写开头 | `"onReady"` |
+| `Promise<string>` | 提取 Promise 内部的值 | `string` |
+
+`[Key in keyof T]` 可以读成：“把 `T` 的每个键轮流放进 `Key`，为每个键生成一个属性。”这是映射类型。`T extends readonly (infer Item)[] ? Item : never` 可以读成：“如果 `T` 是只读数组，就把元素类型临时命名为 `Item` 并返回它；否则返回 `never`。”这是条件类型，`infer` 负责给待提取的部分起临时名字。
+
+这些转换只帮助 TypeScript 检查代码，不会在运行时循环，也不会真的改造对象。要把 `ready` 变成运行时字符串 `onReady`，仍然要有 JavaScript 代码执行字符串转换。
+
+品牌类型解决的是另一种误传：`UserId` 和其他 id 在运行时都可能只是字符串，结构类型原本分不出它们。集中使用 `createUserId` 检查 `usr_` 格式，检查通过后再做一次窄断言；其他地方只接收 `UserId`。如果到处写 `rawInput as UserId`，品牌就失去了保护作用。
+
+## 类型值怎样追踪
+
+这里追踪的是编译器计算出的类型关系。例如 `topics` 新增一个字面量后，`Topic` 会自动包含它；`FormValues` 新增字段后，`Touched<FormValues>` 会要求同名布尔字段。代码运行时只会看到普通数组、对象和字符串，看不到 `Touched`、`ElementOf` 或 `infer`。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+Flags: true/false
+Topic: modules
+Handler: onReady
+Title: Advanced types
+```
 
 ## Example 代码流程图
 

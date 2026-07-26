@@ -2,7 +2,7 @@
 
 预计用时：60–90 分钟。
 
-一个值有时允许多种类型，例如编号可能是字符串或数字。联合类型表示“当前值是其中一种”，使用某个类型独有的能力前，代码必须先确认它现在是哪一种。这个确认过程叫类型收窄。
+同一个工单编号可能来自两处：系统生成的是数字 `42`，人工录入的是字符串 `"A42"`。函数要同时接收这两种数据，但不能还没判断就调用字符串专用方法。代码先检查当前到底是哪一种，再使用对应方法；这个“先排除其他可能”的过程叫类型收窄。
 
 ## 完成目标
 
@@ -20,7 +20,9 @@
 type Id = string | number;
 ```
 
-这不表示值同时是字符串和数字，而表示某一次运行中它可能是其中一种。只能直接使用所有成员都拥有的能力；调用字符串专属的 `toUpperCase` 前，必须先确认当前是字符串。
+竖线 `|` 可以读成“或者”。`string | number` 表示：这一次收到的值要么是字符串，要么是数字，不会同时是两种。
+
+还没判断时，TypeScript 只允许使用两种类型都支持的操作。`toUpperCase` 只有字符串能用，所以必须先确认当前值是字符串。
 
 ## `typeof` 收窄基础类型
 
@@ -34,7 +36,14 @@ function formatId(id: string | number): string {
 }
 ```
 
-在 `if` 分支中，TypeScript 知道 `id` 是字符串；剩余分支中只可能是数字。`typeof` 的结果使用小写 `"string"`、`"number"`。
+假设调用 `formatId("a42")`：
+
+1. 参数 `id` 先接到字符串 `"a42"`。
+2. `typeof id === "string"` 得到 `true`。
+3. 进入 `if`，这时 TypeScript 已排除数字，所以允许调用 `toUpperCase()`。
+4. 函数返回 `"A42"`。
+
+如果调用 `formatId(42)`，条件是 `false`，程序跳过字符串分支，最后返回 `"#42"`。`typeof` 的结果固定使用小写 `"string"`、`"number"`。
 
 ## 字面量联合限制选项
 
@@ -42,13 +51,15 @@ function formatId(id: string | number): string {
 type Priority = "low" | "medium" | "high";
 ```
 
-普通 `string` 可以是任意文字，字面量联合只允许列出的三个值。编辑器会提供自动补全并阻止拼写错误。使用 `priority === "high"` 后，分支中的值也会被收窄为这个具体字面量。
+普通 `string` 可以放任何文字；`Priority` 只允许 `"low"`、`"medium"`、`"high"` 三个准确值。写成 `"hight"` 会在运行前被 TypeScript 拦住，编辑器也能给出这三个候选项。
+
+判断 `priority === "high"` 后，当前分支里只剩 `"high"` 这一种可能，这也是类型收窄。
 
 ## 数组与对象收窄
 
-`Array.isArray(value)` 是判断数组的可靠方式。数组在 JavaScript 中也属于对象，因此不要只写 `typeof value === "object"` 来区分。
+`typeof []` 的结果也是 `"object"`，所以只检查 `typeof value === "object"` 不能分清数组和普通对象。要判断数组，使用 `Array.isArray(value)`。
 
-对于对象联合，可以检查专属属性：
+两个对象外形不同时，可以找出只属于其中一种的属性，再用 `in` 检查：
 
 ```ts
 if ("email" in contact) {
@@ -56,11 +67,13 @@ if ("email" in contact) {
 }
 ```
 
-进入分支后，TypeScript 知道当前对象拥有 `email`。
+如果 `"email" in contact` 是 `true`，TypeScript 就能确定当前对象拥有 `email`，分支内才可以安全读取它。
 
 ## 类型断言不是验证
 
-`value as string` 只让编译器暂时相信你的判断，不会把数字转换成字符串，也不会检查运行时数据。能够通过 `typeof`、`Array.isArray`、相等判断或 `in` 收窄时，不应使用断言逃避检查。
+`value as string` 表示“请编译器暂时把它看成字符串”。这是类型断言，不会执行检查，也不会把运行时的数字变成字符串；如果判断错了，程序仍可能报错。对象类型也一样：`value as EmailContact` 不会检查 `email` 属性是否真的存在。
+
+能够用 `typeof`、`Array.isArray`、相等判断或 `in` 真正检查数据时，就先检查，再让 TypeScript 缩小可能范围，不要用 `as` 跳过判断。
 
 ## 阅读完整示例
 
@@ -68,7 +81,17 @@ if ("email" in contact) {
 
 ## 函数变量追踪
 
-联合参数进入函数时仍可能是多个类型。收窄只在当前控制流分支内有效；每个分支最终用 return 把允许的统一结果交回调用处。
+联合参数刚进入函数时，TypeScript 还不知道这次收到的是哪一种类型。`if` 判断只会让当前分支里的类型变得明确；离开这条分支后，仍要按剩余可能处理。每条路线最后都用 `return` 把结果交回调用处。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+TS-10
+#42
+对齐方式: center
+```
 
 ## Example 代码流程图
 
@@ -95,7 +118,7 @@ flowchart TD
 
 ## 常见错误
 
-联合类型不是同时拥有两个成员的所有方法；`typeof` 返回小写文字；`Array.isArray` 比普通对象判断更精确；`as` 不会产生运行时检查；属性名拼错会让 `in` 判断失去意义。
+联合值无法调用某个类型专用的方法时，先写运行时判断。`typeof` 判断始终用小写 `"string"`、`"number"`；数组使用 `Array.isArray`。用了 `as` 后类型错误消失，不表示外部数据已经通过验证。使用 `in` 时，属性名必须和对象中的真实字段完全一致。
 
 ### 错误代码示例
 
@@ -146,7 +169,7 @@ function printEmail(externalValue: unknown): void {
 
 ## 拓展思考（不要求写代码）
 
-如果把来自外部文件的未知值直接写成 `value as EmailContact`，当它实际没有 `email` 属性时程序为什么仍可能出错，而 `"email" in value` 这类运行时检查提供了什么额外保证？
+如果外部值是 `null`、数字或字符串，直接执行 `"email" in value` 也可能报错。应先用 `value !== null && typeof value === "object"` 确认它是非空对象，再检查 `"email" in value`。这两步分别排除了什么风险？
 
 ## 解题结构提示
 

@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["从基础类型派生视图"] --> B
-  B["satisfies 检查结构"] --> C
-  C["保留字面量推断"] --> D
-  D["输出受约束数据"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+statuses as const ──> Status 联合 ──> statusLabels
+Article
+   ├── Partial ──> ArticlePatch ──> updateArticle ──> updated
+   ├── Pick ──> ArticlePreview ──> preview
+   └── Omit ──> PublicArticle ──> publicArticle
+派生对象 + 状态文字 ──> 输出
 ```
 
 请从头编写“文章更新与公开摘要”。

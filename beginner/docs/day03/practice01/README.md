@@ -14,14 +14,18 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建数字数组"] --> B
-  B["for...of 逐项读取"] --> C
-  C["累加并更新最大值"] --> D
-  D["输出统计"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+studyMinutes
+   │
+   └── for...of 每轮取出 minutes
+          ├── 累加 ──> totalMinutes
+          └── 比较并更新 ──> longestSession
+
+数组长度 + totalMinutes + longestSession ──> 统计输出
 ```
 
 在 `practice.ts` 中从零完成“学习时长报告”。

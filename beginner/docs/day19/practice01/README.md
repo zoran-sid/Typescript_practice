@@ -14,14 +14,18 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["输入进入可能失败的函数"] --> B
-  B["成功 return 值"] --> C
-  C["失败 throw 或返回 Result"] --> D
-  D["调用处分别处理"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+inputs
+   └── parsePort
+          ├── 合法 ──> port ──> savePort ──> Result
+          │                              ├── ok:true ──> value
+          │                              └── ok:false ──> error
+          └── 非法 ──> throw ──> catch unknown ──> errorMessage
+两种失败通道 ──> 输出
 ```
 
 请从头编写“端口解析与保存器”。

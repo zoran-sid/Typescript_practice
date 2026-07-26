@@ -2,7 +2,7 @@
 
 预计用时：75–90 分钟。
 
-程序需要记住信息。姓名和课程是文字，完成数量是数字，“是否为初学者”是真或假。TypeScript 会帮助我们说明并检查这些值的类型。
+程序会先把数据记下来，后面再读取或修改。例如姓名是 `"Lin"`，完成课数是 `2`，“是不是初学者”是 `true`。变量负责给数据起名字，类型负责说明这个位置能放哪一类数据。
 
 ## 完成后你会做到
 
@@ -21,7 +21,16 @@
 const courseName = "TypeScript";
 ```
 
-`"TypeScript"` 是值，`courseName` 是方便代码重复使用它的变量名，`string` 是这类值的类型。
+可以把这一行从右往左读：
+
+| 部分 | 含义 |
+| --- | --- |
+| `"TypeScript"` | 真正保存的值 |
+| `=` | 把右侧的值交给左侧变量 |
+| `courseName` | 以后读取这个值时使用的名字 |
+| `const` | 这个变量之后不能重新赋值 |
+
+`"TypeScript"` 属于文字，所以它的类型是 `string`。
 
 三个最常用的基础类型是：
 
@@ -33,14 +42,23 @@ const courseName = "TypeScript";
 
 ## `const`、`let` 与赋值
 
-默认优先使用 `const`。只有变量稍后确实需要重新赋值时才使用 `let`：
+先问自己一句：“这个变量之后会不会换成另一个值？”不会就用 `const`，会就用 `let`：
 
 ```ts
 let completedLessons = 0;
 completedLessons = completedLessons + 1;
 ```
 
-等号右边先读取旧值并计算，新的结果再赋回左边变量。若变量使用 `const`，TypeScript 会阻止重新赋值。
+第二行不是在说“左边等于右边”。程序按这个顺序做：
+
+| 步骤 | `completedLessons` 的值 |
+| --- | --- |
+| 声明完成 | `0` |
+| 读取旧值 | 取出 `0` |
+| 计算 `0 + 1` | 得到 `1` |
+| 把结果赋回变量 | 变量变成 `1` |
+
+如果这里使用 `const`，最后一步会被 TypeScript 拦住，因为 `const` 变量不能换成另一个值。
 
 ## 类型标注与类型推断
 
@@ -51,21 +69,32 @@ const learnerName: string = "Lin";
 const courseName = "TypeScript";
 ```
 
-第一行明确写了类型标注，第二行由 TypeScript 根据初始值推断。初始值已经很清楚时，不必重复标注明显类型。基础类型名称应使用小写 `string`、`number`、`boolean`。
+第一行在变量名后明确写了 `: string`，这叫类型标注。第二行没有写，TypeScript 看到右侧是文字，也能判断它是 `string`，这叫类型推断。
+
+初始值已经很清楚时，可以让 TypeScript 推断。基础类型名称固定写成小写 `string`、`number`、`boolean`。
 
 ## 模板字符串
 
-反引号创建模板字符串，`${...}` 会插入变量当前的值：
+反引号创建模板字符串。`${...}` 不是普通文字：程序会先取出花括号里的变量值，再把它放进整段文字中。
 
 ```ts
 const summary = `课程: ${courseName}`;
 ```
 
-反引号不是单引号。它通常位于键盘左上角、数字 1 左侧。
+如果 `courseName` 是 `"TypeScript"`，`summary` 最后就是 `"课程: TypeScript"`。反引号不是单引号，它通常位于键盘左上角、数字 1 左侧。
 
 ## 阅读完整示例
 
 打开并右击运行 `example.ts`。先预测 `completedLessons` 增加前后的值，再对照输出。可以临时把数字赋值改成字符串，观察 TypeScript 怎样在运行前指出错误；实验后撤销并保存。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+Ada completed 1 lesson. Beginner: true
+Zoran completed 2 and Lesson Beginner is: true
+```
 
 ## Example 代码流程图
 
@@ -92,7 +121,7 @@ flowchart TD
 
 ## 常见错误
 
-把反引号写成普通引号会让 `${变量名}` 原样显示；把 `true` 放进引号会改变类型；用 `const` 声明需要更新的变量会产生重新赋值错误。
+模板字符串中插入变量的通用形式是 `${变量名}`。如果 `${completedLessons}` 原样出现在终端，先检查外层是不是反引号。看到 `"true"` 时要注意：引号会让它变成文字，不再是布尔值。变量需要从 0 更新到 1，就不能用 `const`。
 
 ### 错误代码示例
 

@@ -1,6 +1,8 @@
 # Day 26｜结课项目（三）：异步加载、状态与测试
 
-主线最后一天要把任务报告器接到异步仓库。你将从空文件写出外部数据验证、加载状态、错误收窄、渲染和四条回归测试，完成一条从 Promise 到界面的可靠数据流。
+任务面板打开时，数据还没回来，所以先显示 `loading`。仓库稍后可能返回任务数组，也可能返回格式错误的数据，还可能直接加载失败。界面要把这三种结果分开处理，不能在等待期间假装已经有任务。
+
+今天把任务报告器接到异步仓库。你会从空文件写出外部数据验证、加载状态、错误处理、渲染和四条回归测试，逐步跟踪一个 `Promise` 最后怎样变成成功或失败界面。
 
 建议用时：60–90 分钟。
 
@@ -20,13 +22,39 @@ TaskRepository.load() → Promise<unknown> → await → 运行时验证
                                             └─ failure：可读错误消息
 ```
 
-不要用 `isLoading`、`data?`、`error?` 三个可互相矛盾的字段。判别联合让每个状态只携带合法数据。异步不会让类型断言变成验证：网络或文件结果仍应从 `unknown` 开始。
+先按时间顺序看一次加载：
 
-`catch` 到的值不保证是 `Error`，要先用 `instanceof Error`。回归测试必须覆盖成功以外的路径，否则坏数据或离线错误可能直到真实使用时才暴露。
+| 时刻 | 手里的值 | 程序做什么 |
+| --- | --- | --- |
+| 请求开始前 | `{ status: "loading" }` | 渲染正在加载 |
+| 调用仓库后 | `Promise<unknown>` | 等待，不读取任务字段 |
+| `await` 成功后 | `unknown` | 用 `parseTasks` 检查数据 |
+| 验证通过 | `{ status: "success", tasks, totalMinutes }` | 渲染任务数量和分钟 |
+| 验证失败或仓库抛错 | `{ status: "failure", message }` | 渲染错误消息 |
+
+如果改用 `isLoading`、`data?`、`error?` 三个互不约束的字段，就可能得到“仍在加载，但同时有数据和错误”的矛盾对象。用 `status` 区分三种对象后，`loading` 不带任务，`success` 一定有任务，`failure` 一定有消息。这组写法的正式名称是“判别联合”。
+
+异步只改变“什么时候得到结果”，不会证明外部数据正确。`await repository.load()` 完成后仍然是 `unknown`，必须运行时验证。合法的空数组 `[]` 表示“加载成功，但现在没有任务”，总分钟自然是 `0`，不应当当作失败。
+
+`catch` 接到的值也不保证是 `Error`，因为 JavaScript 可以抛出字符串或其他值。先用 `instanceof Error` 检查 `error`，成功后才能读 `error.message`；否则使用约定好的备用消息。测试要覆盖任务成功、空数组、坏数据和异步抛错，四条路径各自失败时才容易定位。
 
 ## 函数变量追踪
 
-这里同时有 Promise 与状态两条数据流：调用得到 Promise，await 得到数据或抛错；成功/失败分支再 return 不同的判别联合成员。
+这里有两条相连的数据流。第一条是异步值：`repository.load()` 返回 `Promise<unknown>`，`await` 后得到 `value`，或者跳进 `catch`。第二条是界面状态：`value` 验证通过后返回 `success`，验证失败或捕获错误后返回 `failure`。调用处用 `finalState` 接住最终状态，再交给 `render`。
+
+`Promise`、`value`、`tasks`、`finalState` 不是四份相同数据。它们分别表示“尚未完成的操作”“未验证结果”“已验证任务”“界面要显示的状态”。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+State: loading
+State: success
+Tasks: 2
+Done: 1
+Minutes: 75
+```
 
 ## Example 代码流程图
 

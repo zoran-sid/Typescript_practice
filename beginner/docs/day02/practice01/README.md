@@ -14,15 +14,19 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取数字文本"] --> B
-  B["Number 转成数字"] --> C
-  C["完成运算"] --> D
-  D["if 判断阈值"] --> E
-  E["输出结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+completedText
+   │
+   └── Number(...) ──> completed ──┐
+plannedLessons ────────────────────┼──> 加法 ──> totalLessons
+                                  │                 │
+                                  │                 ├── 比较目标 ──> reachedGoal
+                                  │                 └── if ──> status
+                                  └────────────────────────────> 输出
 ```
 
 在 `practice.ts` 中从零完成一个课程计划统计器。

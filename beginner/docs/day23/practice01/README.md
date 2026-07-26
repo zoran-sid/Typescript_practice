@@ -14,14 +14,16 @@
 
 课程管理后台正在启用严格 TypeScript 配置，页面会接收课程搜索结果、可能为空的成绩列表、可选主题设置和来源不明的待计算值。若直接读取缺失项或把可选属性错误地赋为 `undefined`，严格检查会报警，运行时也可能出现不可预测的显示。你需要把这些不确定输入安全转换为明确文本，并在不修改原偏好的前提下产出新的设置对象。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取第一条诊断"] --> B
-  B["定位配置或源码根因"] --> C
-  C["只修复根因"] --> D
-  D["重新运行类型检查"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+courses + keyword ──> findCourse ──> string | undefined ──> showCourse
+scores[0] ──> undefined 检查 ──> showFirst
+preferences ──> clearTheme ──> cleared ──> theme 是否仍存在
+unknown value ──> typeof ──> double ──> number | undefined
+四条严格模式结果 ──> 输出
 ```
 
 在 `practice.ts` 中从零完成“严格配置下的安全读取”程序。

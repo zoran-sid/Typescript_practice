@@ -14,14 +14,20 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["状态进入 switch"] --> B
-  B["读取判别字段"] --> C
-  C["进入唯一 case"] --> D
-  D["return 对应文字"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+tasks
+   └── for...of ──> 当前 task
+                         └── describeTask
+                                └── switch(task.status)
+                                       ├── waiting
+                                       ├── studying
+                                       ├── completed
+                                       └── failed
+每个 case 的文字 ──> 逐行输出
 ```
 
 请在 `practice.ts` 中从第一行开始编写“学习任务状态说明器”。

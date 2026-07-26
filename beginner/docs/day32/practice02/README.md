@@ -14,15 +14,16 @@
 
 内部计算器准备接入统一的可观测日志，团队希望记录类的用途和每次方法调用，但不能改变原有加法行为。输入边界是被包装的方法、实例上下文和参数元组；若装饰器返回的函数没有完整转发它们，结果或类型都会被破坏。你需要交付类定义日志、类别标签、方法调用日志和原样返回的计算结果。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["装饰器接收 add 方法与 context"] --> B
-  B["包装函数记录调用"] --> C
-  C["target.call 保留 this 和参数"] --> D
-  D["原返回值继续返回"] --> E
-  E["输出定义、调用与结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+Calculator.add + context ──> loggedMethod
+   └── 包装器记录调用 ──> target.call(this, ...args) ──> 原结果
+Calculator 类 ──> announceClass ──> 定义日志
+new Calculator ──> withCategory ──> calculator + category
+定义日志 + 调用日志 + 结果 ──> 输出
 ```
 
 ## 必须练到的能力

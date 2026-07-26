@@ -14,14 +14,17 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["带 id 的对象进入受约束函数"] --> B
-  B["keyof 限制读取键"] --> C
-  C["item[key] 返回 T[K]"] --> D
-  D["输出课程与设置字段"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+course + 合法 key ──> getProperty ──> 对应字段值 T[K]
+带 id 的 course ──> describeId ──> id 描述
+settings
+   └── keyof typeof settings ──> SettingName
+                                      └── selectedSetting
+三个结果 ──> 输出
 ```
 
 ## 必须练到的能力

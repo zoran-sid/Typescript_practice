@@ -43,6 +43,13 @@ for (const day of expectedDays) {
   if (countText(dayReadme, "```mermaid") !== 1 || !dayReadme.includes("flowchart TD")) {
     errors.push(`docs/${day}/README.md 必须有且只有一个 Example Mermaid 流程图。`);
   }
+  const exampleOutput = readSection(dayReadme, "## Example 实际输出");
+  if (
+    countText(dayReadme, "## Example 实际输出") !== 1 ||
+    !exampleOutput.includes("```text")
+  ) {
+    errors.push(`docs/${day}/README.md 必须有且只有一个 Example 实际输出文本块。`);
+  }
 
   const badExample = readSection(dayReadme, "### 错误代码示例");
   const goodExample = readSection(dayReadme, "### 正确写法");
@@ -98,11 +105,14 @@ for (const day of expectedDays) {
     const practiceReadmePath = path.join(docPracticeDir, "README.md");
     if (existsSync(practiceReadmePath)) {
       const practiceReadme = readFileSync(practiceReadmePath, "utf8");
+      const dataFlow = readSection(practiceReadme, "## 数据流");
       if (
-        countText(practiceReadme, "```mermaid") !== 1 ||
-        !practiceReadme.includes("flowchart TD")
+        countText(practiceReadme, "## 数据流") !== 1 ||
+        !dataFlow.includes("```text") ||
+        !dataFlow.includes("──>") ||
+        practiceReadme.includes("```mermaid")
       ) {
-        errors.push(`docs/${day}/${id}/README.md 必须有且只有一个 Mermaid 流程图。`);
+        errors.push(`docs/${day}/${id}/README.md 必须有且只有一个变量关系清楚的数据流文本块。`);
       }
       const background = readSection(practiceReadme, "## 场景背景").trim();
       if (countText(practiceReadme, "## 场景背景") !== 1 || background.length < 30) {
@@ -215,7 +225,7 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    "PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有场景背景、流程图、空白作答入口、TODO 解题结构和匹配检查。",
+    "PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有场景背景、关联数据流、空白作答入口、TODO 解题结构和匹配检查。",
   );
 }
 

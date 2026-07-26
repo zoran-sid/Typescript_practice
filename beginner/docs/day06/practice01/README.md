@@ -14,14 +14,18 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建嵌套对象"] --> B
-  B["复制数组或对象"] --> C
-  C["函数从参数读取数据"] --> D
-  D["修改副本并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+originalTask.scores
+   ├── 顶层 for...of + push ──> scoresFromGlobalLoop
+   └── copyScores(...) ──> copiedScores ──┐
+                                          └── 组成 copiedTask
+copiedTask.scores ──> calculateAverage ──> averageScore
+
+originalTask 与 copiedTask ──> 修改副本后比较输出
 ```
 
 在 `practice.ts` 中从零完成“学习任务副本与成绩报告”。

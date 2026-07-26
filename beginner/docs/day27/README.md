@@ -1,6 +1,8 @@
 # Day 27（选修）｜浏览器、请求与命令行边界
 
-TypeScript 总在某个运行环境中执行。浏览器提供 DOM、事件和 `fetch`，Node.js 提供命令行与文件系统。类型声明描述环境 API，却不会创造运行时能力；外部输入仍要验证。
+同一份 TypeScript 放到不同地方运行，能用的东西不一样。网页里的输入框由浏览器提供；命令行参数和文件系统由 Node.js 提供。代码中写得出 `document`，不代表当前运行的 Node 进程真的有 `document`。
+
+今天分别处理三个入口：浏览器输入事件、请求返回值和命令行参数。每个入口先把环境提供的数据转成普通值，再交给业务函数，这样才能在 Node 中用假数据单独测试。
 
 建议用时：60–90 分钟。
 
@@ -13,13 +15,35 @@ TypeScript 总在某个运行环境中执行。浏览器提供 DOM、事件和 `
 
 ## 核心讲解
 
-真实浏览器事件可用 `HTMLInputElement` 和 `event.currentTarget`，但课程在 Node 中运行，不能直接执行 `document`。独立练习用最小结构模拟事件，把可测试业务逻辑与真实 DOM 绑定分开。
+先按来源分开看：
 
-请求客户端即使写成 TypeScript，也无法保证服务器响应。先 `await` 得到 `unknown`，再验证对象与字段。命令行解析也不要在业务函数内部读取全局 `process.argv`；让 `parseArgs(args)` 接收普通字符串数组，更容易测试。
+| 数据从哪里来 | 入口拿到什么 | 转成什么普通值 | 失败时怎样处理 |
+| --- | --- | --- | --- |
+| 浏览器输入框 | `event.currentTarget` | 去掉首尾空格的搜索文字 | 目标不是输入框时不调用搜索 |
+| 请求客户端 | `Promise<unknown>` | 验证后的课程标题 | 字段不对就返回失败或抛出明确错误 |
+| Node 命令行 | `readonly string[]` | 合法的 day 数字 | 缺标志、缺值或不是整数时返回 `undefined` |
+
+真实网页中，事件目标可以用 `HTMLInputElement` 检查，再读取它的 `value`。本课程的示例最终由 Node 运行，所以不直接操作 `document`；浏览器绑定留在最外层，搜索逻辑只接收普通字符串。
+
+请求代码写成 TypeScript，也不能约束另一台服务器实际返回什么。`await client.get("/lesson")` 后先得到 `unknown`，确认它是非空对象并且 `title` 是字符串，才返回标题。`await` 只负责等待异步操作完成，不负责验证响应内容。
+
+命令行也一样。给 `parseDay` 传入 `["--day", "27"]`，结果是 `27`；传入 `["--day"]`，标志后面没有值，结果应是 `undefined`。函数自己不读取全局 `process.argv`，测试就能直接传入这两组数据。更通用的解析器也可以写成 `parseArgs(args)`；重点都是让环境入口把参数数组传进来。
 
 ## 函数变量追踪
 
-边界适配函数把事件、响应或 CLI 参数转成普通值；纯业务函数只接收这些普通参数。这样变量来源清楚，也能用假数据单独测试。
+三个入口的变量路线分别是：`event → currentTarget → value → query`；`client.get() → Promise → await 后的 value → title`；`args → index → raw → day`。每一步只做一次转换，也都保留失败分支。
+
+“边界适配函数”是这些入口函数的正式名称。它们负责认识浏览器、请求客户端或 Node；后面的纯业务函数只认识字符串、数字和普通对象。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+Browser handler: typed
+Fetched title: Runtime boundaries
+CLI day: 27
+```
 
 ## Example 代码流程图
 

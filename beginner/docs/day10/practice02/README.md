@@ -14,14 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["联合 ID 进入格式函数"] --> B
-  B["typeof 区分字符串和数字"] --> C
-  C["字面量 alignment 通过检查"] --> D
-  D["输出三个格式结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+Id: string | number
+   └── typeof
+          ├── string ──> 大写
+          └── number ──> 加编号前缀
+                    └── formatId 结果
+Alignment ──> 字面量分支 ──> describeAlignment
+两个结果 ──> 输出
 ```
 
 ## 必须练到的能力

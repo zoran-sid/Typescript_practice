@@ -14,14 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["声明姓名、完成数和布尔值"] --> B
-  B["用 let 更新完成数"] --> C
-  C["模板字符串插入变量"] --> D
-  D["输出两条进度"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+learnerName ───────┐
+completedLessons ──┼──> firstSummary ──> 第一次输出
+isBeginner ────────┘
+
+studentName ───────┐
+completedLesson ───┼──> secondSummary ──> 第二次输出
+isBeginner2 ───────┘
 ```
 
 ## 必须练到的能力

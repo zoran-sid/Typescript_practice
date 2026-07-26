@@ -14,14 +14,18 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取联系人与可选字段"] --> B
-  B["可选链避免缺失访问错误"] --> C
-  C["空值合并补电话"] --> D
-  D["保留 0 与空字符串并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+contacts
+   └── find ──> selectedContact
+                    ├── ?.name ?? 后备值 ──> selectedName
+                    └── ?.phone ?? 后备值 ──> phone
+score ──> ?? ──> displayedScore
+nickname ──> ?? ──> displayedNickname
+四个显示值 ──> 输出
 ```
 
 ## 必须练到的能力

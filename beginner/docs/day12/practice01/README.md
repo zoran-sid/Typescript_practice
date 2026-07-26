@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["声明函数类型"] --> B
-  B["把函数作为参数传入"] --> C
-  C["回调处理当前值"] --> D
-  D["返回或输出报告"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+scores
+   ├── sumScores(...scores) ──> 总分
+   └── reportScores(scores, formatter, reporter)
+          └── 每个 score ──> formatScore 回调 ──> 格式文字
+                                                   └── reporter 回调 ──> 逐行输出
+studentName + 默认标点 ──> greetStudent ──> 问候输出
 ```
 
 请在 `practice.ts` 中从头编写“学生成绩报告器”。

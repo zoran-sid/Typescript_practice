@@ -14,14 +14,17 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建 book 对象"] --> B
-  B["book 作为实参进入 describeBook"] --> C
-  C["根据 available 生成状态"] --> D
-  D["组合多行字符串并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+book
+   ├── title ───────────┐
+   ├── author.name ─────┼──> describeBook(book)
+   └── available ──> 状态文字 ─┘
+                              │
+                              └── description ──> 输出
 ```
 
 ## 必须练到的能力

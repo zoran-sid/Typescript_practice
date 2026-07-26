@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["联合值进入函数"] --> B
-  B["检查 typeof 或判别字段"] --> C
-  C["收窄到具体成员"] --> D
-  D["生成并输出结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+TicketId ──> formatTicketId ──> 格式化编号
+TopicInput ──> Array.isArray 收窄 ──> describeTopics ──> 主题文字
+Contact ──> in 检查专属字段 ──> describeContact ──> 联系方式
+Priority ──> 字面量分支 ──> describePriority ──> 优先级文字
+
+四条结果 ──> 输出
 ```
 
 在 `practice.ts` 中从零完成“支持工单摘要”。

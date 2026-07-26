@@ -14,14 +14,16 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["声明 message"] --> B
-  B["保存字符串"] --> C
-  C["调用 console.log"] --> D
-  D["核对输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+"Hello, TypeScript Practice!"
+   │
+   └── 赋值 ──> message
+                    │
+                    └── console.log(message) ──> 终端输出
 ```
 
 打开 `practice.ts`。文件中只有说明注释；请从下一行开始亲手输入完整程序。

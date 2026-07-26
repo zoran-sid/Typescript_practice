@@ -14,14 +14,19 @@
 
 学习计划平台允许用户从外部文件导入任务，因此入口收到的只是未经信任的 JSON 文本，其中可能有语法错误、错误字段类型或互相矛盾的嵌套状态。若只相信 TypeScript 类型声明而不做运行时验证，坏数据会污染任务面板和分钟统计。你需要产出可信任务、拒绝数量、状态说明与总计划时间，并为无法解析的文本返回明确失败信息。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["接收外部 unknown"] --> B
-  B["解析并逐字段验证"] --> C
-  C["构建可信模型"] --> D
-  D["描述状态并统计"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+incomingText
+   └── importTasks ──> JSON.parse ──> parsed: unknown
+                                └── 数组每一项 ──> isStudyTask
+                                                     ├── isRecord
+                                                     └── isTaskState
+合法项 ──> tasks ──> describeState / 分钟合计
+非法项 ──> rejected
+坏 JSON ──> message
 ```
 
 在 `practice.ts` 中从零完成“任务 JSON 导入器”。

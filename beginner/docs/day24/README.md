@@ -1,6 +1,8 @@
 # Day 24｜结课项目（一）：模型与外部数据边界
 
-结课项目“学习任务与进度报告器”从数据边界开始。今天要从空文件建立可靠模型，并把 JSON 解析结果当作 `unknown` 逐层验证，而不是用类型断言假装外部数据正确。
+结课项目要从一段 JSON 导入学习任务。即使文件名叫“任务数据”，里面仍可能出现 `null`、缺少 `title` 的对象、负数分钟，或者拼错的状态。程序必须先检查，检查通过后才能把它当作任务使用。
+
+今天先建立任务模型，再把 `JSON.parse` 的结果保留为 `unknown`。你会从最外层数组开始，一层一层检查对象、字段和状态。检查结束后，再按题目选择一种汇总方式：整批数据必须全部通过，或者保留有效项并统计被拒绝的数量。
 
 建议用时：60–90 分钟。
 
@@ -9,7 +11,7 @@
 - 用判别联合表达待开始、进行中、已完成状态；
 - 用类型谓词验证对象、嵌套状态和数组元素；
 - 区分编译期类型与运行时数据；
-- 保留有效任务并统计被拒绝的数据；
+- 比较“整批通过才导入”和“保留有效项并统计拒绝项”两种汇总策略；
 - 用完整 `switch` 安全读取不同状态的字段。
 
 ## 核心讲解
@@ -19,9 +21,31 @@ JSON 文本 → JSON.parse → unknown → 逐层检查 → StudyTask[]
                                   ↘ 失败原因或拒绝数量
 ```
 
-`type` 和 `interface` 编译后会消失，不能检查网络、文件或本地存储中的真实数据。对象检查必须同时排除 `null`；数组不仅要用 `Array.isArray`，还要验证每个元素。
+先分清两件事：JSON 语法正确，只表示文本能被解析；它不表示字段符合 `StudyTask`。`type` 和 `interface` 在编译后会消失，因此不会在程序运行时替你检查文件、网络或本地存储中的内容。
 
-状态应使用判别联合，而不是把所有时间字段都写成可选。这样 doing 必须携带 `startedAt`，done 必须同时携带开始与完成时间，不容易产生矛盾数据。
+一次可靠导入按下面的顺序进行：
+
+1. `JSON.parse` 成功后，把结果放进 `parsed: unknown`。
+2. 用 `Array.isArray(parsed)` 确认最外层是数组。
+3. 对数组中的每一项检查：它不是 `null`，并且确实是对象。
+4. 检查 `id`、`title`、`minutes` 和 `state`；其中 `minutes` 还要是有限且不小于 `0` 的数字。
+5. 逐项验证后，再按当前题目的策略汇总：Example 和 practice02 只有所有元素都通过才返回 `StudyTask[]`；practice01 则保留通过的项目，并统计 `rejected`。
+
+状态也要按实际可能出现的形状拆开：`todo` 不需要时间；`doing` 必须有 `startedAt`；`done` 必须同时有 `startedAt` 和 `completedAt`。`status` 是区分这三种对象的字段，所以正式名称叫“判别字段”，整组类型叫“判别联合”。当代码判断 `state.status === "doing"` 后，TypeScript 才知道这一分支一定能读取 `startedAt`。
+
+## 变量与数据追踪
+
+`text` 是原始 JSON 字符串；`parsed` 是解析后但尚未确认的 `unknown`；验证函数再让每一项得到 `true` 或 `false`。Example 和 practice02 使用整批策略：全部通过后，`result.tasks` 才是可信的 `StudyTask[]`；否则进入失败分支读取 `message`。practice01 使用部分接收策略：合法项进入 `tasks`，不合法项只增加 `rejected`。两种策略都必须先验证，之后才能安全读取 `minutes`。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+Import succeeded: 2 tasks
+First: Validate data (doing since 09:00)
+Total planned minutes: 105
+```
 
 ## Example 代码流程图
 

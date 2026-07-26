@@ -12,15 +12,19 @@
 
 客服要为顾客 Lin 的购物车制作一份试算副本，原购物车中已有两件价格分别为 10 和 20 的商品。试算时会在副本中追加一件商品并重新计算总价，但正式购物车的商品数量不能变化。最终摘要需要同时展示原件与副本的数量、副本总价和顾客姓名，以证明复制是独立的。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建原购物车对象"] --> B
-  B["copyPrices 新建局部数组"] --> C
-  C["for...of 与 push 复制价格"] --> D
-  D["创建独立副本并追加价格"] --> E
-  E["计算副本总价并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+originalCart.prices
+   │
+   └── copyPrices
+          └── for...of + push ──> 新 prices 数组 ──> copiedCart
+                                                        │
+                                                        ├── push 新价格
+                                                        └── totalPrices ──> 副本总价
+originalCart + copiedCart ──> 比较输出
 ```
 
 ## 要求

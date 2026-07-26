@@ -2,11 +2,11 @@
 
 预计用时：60–80 分钟。
 
-程序变大后，需要把数据、函数和类型分到不同文件。现代 JavaScript 使用 ES Modules，也就是 `export` 和 `import`。今天只练习日常项目最常用的具名导入、默认导入和类型导入。
+一个文件写得太长时，可以把数据、函数和类型分到不同文件。提供内容的文件用 `export` 标出“外部可以使用什么”，需要内容的文件再用 `import` 取进来。今天只练习三种常见情况：按名字导入、导入一个默认值，以及只导入类型。
 
 ## 核心讲解
 
-具名导出可以在一个文件提供多个成员，导入时使用花括号：
+先看“按名字取内容”（具名导入）。一个文件可以导出多个成员；另一个文件必须在 `{}` 中写出对应名字：
 
 ~~~ts
 export const courseTitle = "TypeScript";
@@ -15,25 +15,59 @@ export const lessonCount = 21;
 import { courseTitle, lessonCount } from "./course-data.js";
 ~~~
 
-默认导出每个模块最多一个，导入时不放在花括号中。默认导入和具名导入也能来自同一个模块：
+上面的导入可以这样读：从 `course-data.js` 取出名为 `courseTitle` 和 `lessonCount` 的两个值。名字拼错或源文件没有导出它们，TypeScript 就会报错。
+
+另一个写法是默认导出。一个模块最多有一个默认导出，所以导入它时不写 `{}`，本地名称可以自己决定。默认导入和具名导入也能写在同一行：
 
 ~~~ts
 import formatScore, { passingScore } from "./score-tools.js";
 ~~~
 
-只需要类型时明确写 `import type`：
+三种导入方式放在一起看：
+
+| 需要什么 | 写法特征 | 运行时是否需要真实值 |
+| --- | --- | --- |
+| 具名导出值 | 名字放在 `{}` 中 | 需要 |
+| 默认导出值 | 默认名称写在 `{}` 外 | 需要 |
+| 只用于类型检查 | 使用 `import type` | 不需要，编译后会移除 |
+
+如果 `Student` 只用来标注变量或参数类型，就明确写 `import type`：
 
 ~~~ts
 import type { Student } from "./student-types.js";
 ~~~
 
-类型只参与检查，生成 JavaScript 时会被移除；值导入则必须在运行时找到真实导出。课程在 TypeScript 源文件里仍写 `.js` 扩展名，是因为 Node 的 ES Modules 最终运行 JavaScript 路径，`NodeNext` 会把它解析回对应的 `.ts` 源文件。
+`Student` 只在 TypeScript 检查代码时使用。生成 JavaScript 后，这行类型导入会消失，所以不能用 `console.log(Student)` 把它当成真实值输出。`courseTitle`、`formatScore` 这类值导入会留到运行时，对应模块必须真的导出它们。
 
-包含顶层 `import` 或 `export` 的文件是模块。模块内部名称默认只在本文件可见，除非明确导出。不要在多个入口复制同一份共享类型，否则定义会逐渐漂移。
+你现在编辑的是 `.ts` 文件，导入路径却写 `.js`，这是 Node ES Modules 的运行方式决定的：程序最终运行生成后的 JavaScript 文件。项目使用 `NodeNext`，TypeScript 检查时会根据 `.js` 路径找到对应的 `.ts` 源文件。这里不要自行删掉 `.js`。
+
+只要文件顶层出现 `import` 或 `export`，这个文件就是模块。文件内部声明默认只属于本文件；其他文件想使用它，必须先导出再导入。共享类型也只保留一份，然后让各文件导入它。否则以后新增字段时，复制出来的多份定义很容易只改到其中一份。
 
 ## 阅读示例
 
 打开并右键运行 `example.ts`，然后沿着四条导入路径查看 `course-data.ts`、`score-tools.ts`、`student-types.ts` 与 `student-tools.ts`。这些辅助模块不要修改。
+
+## 模块数据怎么进入入口文件
+
+读一条 `import` 时，按下面顺序找：
+
+1. 先看 `from` 后面的路径，确定内容来自哪个文件。
+2. 到源文件中找对应的 `export`。
+3. 回到入口文件，看导入的是运行时值还是只用于检查的类型。
+4. 值导入可以参与创建对象、调用函数和输出；类型导入只能出现在类型位置。
+
+这样排查导入错误时，就能分清是路径不对、导出方式不对，还是把类型当成了值。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+课程：TypeScript 零基础课（21 课）
+80：通过
+及格线：60
+Ada：完成 12 课（beginner）
+```
 
 ## Example 代码流程图
 

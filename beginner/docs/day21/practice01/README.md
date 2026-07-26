@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["调用 async 函数"] --> B
-  B["得到 Promise"] --> C
-  C["await 成功值或捕获错误"] --> D
-  D["输出异步结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+titles
+   └── map ──> fetchLesson(title) 产生的 Promise[]
+                    └── Promise.all ──> loadLessons 的 string[]
+失败 request ──> Promise rejected ──> catch unknown
+                                           └── errorMessage
+成功数组或错误文字 ──> main 输出
 ```
 
 请从头编写“并行课程加载器”。

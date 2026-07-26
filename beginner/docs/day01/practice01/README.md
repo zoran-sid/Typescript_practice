@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["声明不同类型变量"] --> B
-  B["用 let 更新计数"] --> C
-  C["模板字符串组合信息"] --> D
-  D["输出进度"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+learnerName ───────┐
+courseName ────────┼──> 模板字符串 ──> 学习档案输出
+isBeginner ────────┤
+completedLessons ──┘
+        │
+        └── + 1 ──> 更新后的 completedLessons ──> 进度输出
 ```
 
 请在 `practice.ts` 的说明注释后，从第一条变量声明开始完成“学习档案”。

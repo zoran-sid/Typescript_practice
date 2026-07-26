@@ -14,15 +14,17 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["价格数组进入 map"] --> B
-  B["计算九折新数组"] --> C
-  C["filter 找出低价项"] --> D
-  D["find 找到首个高价项"] --> E
-  E["输出三个结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+prices
+   ├── map(九折) ──> discountedPrices
+   │                      └── filter ──> affordablePrices
+   └── find(大额边界) ──> firstLargePrice
+
+discountedPrices + affordablePrices + firstLargePrice ──> 输出
 ```
 
 ## 必须练到的能力

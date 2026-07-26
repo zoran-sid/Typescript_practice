@@ -14,14 +14,17 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取年龄"] --> B
-  B["分支决定票价"] --> C
-  C["组合年龄条件决定能否独自入场"] --> D
-  D["输出三项结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+ageText ──> Number(...) ──> age
+                              ├── if / else if ──> ticketPrice
+                              └── 年龄条件 ──┐
+hasStudentCard ──────────────────────────────┴──> canEnterAlone
+
+age + ticketPrice + canEnterAlone ──> 输出
 ```
 
 ## 必须练到的能力

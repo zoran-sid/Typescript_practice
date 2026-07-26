@@ -2,13 +2,19 @@
 
 预计用时：60–90 分钟。
 
-网络请求、定时器和文件读取不会立刻给出结果。JavaScript 用 `Promise` 表示“未来会成功或失败的结果”，`async/await` 让异步步骤更接近从上到下的阅读顺序。
+网络请求、定时器和文件读取都要等一段时间。调用这类函数时，程序先拿到一个 `Promise`：它不是最终数据，而是一份“稍后会成功给值，或者失败给错误”的结果。`async/await` 是配套写法，其中 `await` 用来等待这份结果，再决定继续正常步骤还是进入错误处理。
 
 ## 核心讲解
 
-`Promise<string>` 是“未来的字符串”，不是字符串本身。`await getName()` 才取得成功值；如果 Promise 失败，`await` 会像同步 `throw` 一样进入 `catch`。`async` 函数总是返回 Promise，因此其返回类型常写成 `Promise<T>`。
+先分清三个时刻：
 
-互不依赖的任务可以一起创建，再统一等待：
+1. 调用 `getName()` 后立刻得到 `Promise<string>`，此时还没有可直接使用的姓名字符串。
+2. `await getName()` 会暂停当前 `async` 函数，等待 Promise 得到结果；它不会把整个 JavaScript 程序都停住。
+3. Promise 成功时，`await` 表达式得到 `string`；Promise 失败时，当前路径像遇到 `throw` 一样进入附近的 `catch`。
+
+只要函数写了 `async`，它对外返回的就是 Promise。函数内部 `return` 一个 `T`，调用者拿到的是 `Promise<T>`；调用者再 `await` 后才得到 `T`。
+
+两个请求如果互相不需要对方的结果，就可以同时启动，再一起等待：
 
 ~~~ts
 const [lesson, progress] = await Promise.all([
@@ -17,17 +23,45 @@ const [lesson, progress] = await Promise.all([
 ]);
 ~~~
 
-不要写无人等待的 `forEach(async () => ...)`。`forEach` 不会收集回调返回的 Promise；应使用 `map` 产生 Promise 数组，再交给 `Promise.all`。
+执行数组中的两个函数调用时，请求就开始了。`Promise.all` 等到两项都成功后，把两个成功值按原顺序放进结果数组，再解构到 `lesson` 和 `progress`。只要其中一项失败，`Promise.all` 返回的 Promise 就会失败；它不会自动取消其他已经开始的请求。
 
-调用异步函数后必须明确 `await`、`return` 或保存并统一等待。捕获异步错误时，错误值仍是 `unknown`，先用 `instanceof Error` 收窄。不要在 `catch` 中返回看似成功的假数据，除非产品明确要求且结果能标记为备用数据。
+顺序可以这样比较：
+
+| 写法 | 第二个请求何时开始 | 适用情况 |
+| --- | --- | --- |
+| 先 `await` 第一个，再调用第二个 | 第一个完成以后 | 第二个需要第一个的结果 |
+| 先创建两个 Promise，再 `Promise.all` | 不等待第一个完成 | 两个请求互不依赖 |
+
+不要写无人等待的 `forEach(async () => ...)`。`forEach` 只负责逐项调用回调，不会把回调返回的 Promise 收集起来，也不会等它们完成。用 `map` 把每次调用得到的 Promise 放进新数组，再把这个数组交给 `Promise.all`。
+
+每次调用异步函数后，都要决定谁来等待它：当前函数立刻 `await`，把 Promise `return` 给上一层，或者先保存起来稍后统一等待。如果三种都没做，外层代码可能已经继续执行，而异步任务还没完成，失败也可能没人处理。
+
+异步错误进入 `catch` 后，捕获值仍先看作 `unknown`，通过 `instanceof Error` 检查后再读取 `message`。不要在 `catch` 中随手返回看似成功的数据；这样调用者会把失败当成正常结果。只有产品明确允许备用数据，并且返回结果能标明“这是备用值”时，才适合这样做。
 
 ## 阅读示例
 
-打开并右键运行 `example.ts`。画出 `Promise.all` 的成功路径和通知请求的失败路径，并指出每个 `await` 后变量的类型。
+打开并右键运行 `example.ts`。先找出每个异步函数调用返回的 Promise，再找对应的 `await`。对每个变量分别写下“等待前的类型”和“等待后的类型”。最后沿失败请求找到它进入的 `catch`。
 
 ## 函数变量追踪
 
-调用 async 函数先得到 Promise；函数内部 return 的 T 会成为 Promise<T> 的成功值；调用处 await 后才得到 T。异常会让 Promise 拒绝并沿 await 进入 catch。
+追踪一个 `async` 函数时，按调用者和函数内部两层看：
+
+1. 调用者执行异步函数，立刻得到 `Promise<T>`。
+2. 异步函数内部继续执行自己的步骤；遇到 `await` 时，当前函数等待该 Promise。
+3. 内部最终 `return` 的 `T` 会成为外层 Promise 的成功值。
+4. 调用者对这个 Promise 使用 `await` 后，才得到真正的 `T`。
+5. 内部抛错或等待到失败 Promise 时，外层 Promise 会拒绝；调用者的 `await` 再把错误送进 `catch`。
+
+看到变量类型时，先问它处在 `await` 前还是后：前面通常是 `Promise<T>`，后面才是 `T`。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+并行结果: 课程、进度
+错误: 网络不可用
+```
 
 ## Example 代码流程图
 

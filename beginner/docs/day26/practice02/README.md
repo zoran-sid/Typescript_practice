@@ -14,15 +14,18 @@
 
 课程运营希望在管理页展示异步加载的任务摘要，数据仓库返回的响应在验证前不能被当作任务数组使用。若页面过早进入成功状态或直接读取未知字段，任务数、完成数和分钟数都可能不可信。你需要先展示加载状态，再把合法响应转换为成功状态并输出三项统计。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["先渲染 loading"] --> B
-  B["仓库异步返回 unknown"] --> C
-  C["验证为任务数组"] --> D
-  D["生成 success 状态"] --> E
-  E["渲染数量、完成数与分钟"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+loading 状态 ──> render ──> 首次输出
+MemoryTaskRepository
+   └── loadDashboard ──> await repository.load()
+                              └── unknown 验证 ──> finalState
+                                                   ├── success(tasks)
+                                                   └── failure(message)
+finalState ──> render ──> 数量、完成数、分钟输出
 ```
 
 ## 必须练到的能力

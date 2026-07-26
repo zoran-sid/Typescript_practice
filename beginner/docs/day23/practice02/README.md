@@ -14,14 +14,16 @@
 
 一名新成员接手了开启严格检查的 TypeScript 项目，需要向团队解释 TSConfig 中最常遇到的几个选项。输入边界是编译器给出的诊断顺序和 `strict`、`noEmit`、`target`、`module` 这些配置概念；若为消除报错而直接关闭严格规则，真正的源码问题会被掩盖。你需要生成一份按排查顺序排列的简短说明，让成员知道先看什么以及每项配置负责什么。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取 TSConfig 概念"] --> B
-  B["解释 strict 与 noEmit"] --> C
-  C["解释 target 与 module"] --> D
-  D["按诊断顺序输出提示"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+第一条 TypeScript 诊断 ──┐
+strict 的职责 ───────────┤
+noEmit 的职责 ───────────┼──> configNotes
+target / module 的职责 ──┘        │
+                                 └── for...of ──> 按阅读顺序输出
 ```
 
 ## 必须练到的能力

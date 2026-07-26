@@ -14,14 +14,17 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["创建学习记录数据"] --> B
-  B["格式函数接收当前项目"] --> C
-  C["默认与 rest 参数组织文字"] --> D
-  D["void 回调输出各行"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+minutes ──> formatMinutes ──> 格式文字
+reportLines ──> printReport
+                  └── 每一行 ──> void 回调 ──> 输出
+topics ──> joinTopics(...topics) ──> 主题文字
+
+三个结果 ──> 输出
 ```
 
 ## 必须练到的能力

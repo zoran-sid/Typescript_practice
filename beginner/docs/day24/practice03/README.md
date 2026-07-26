@@ -14,15 +14,17 @@
 
 电商运营每天会导入合作方提供的订单 JSON，入口数据可能包含正确订单，也可能把金额或其他字段写成错误类型。若错误订单进入统计，财务报表的订单量和收入都会被放大或缩小。你需要筛出合法订单，并给运营返回接受数、拒绝数和可以入账的总金额。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取订单 JSON 文本"] --> B
-  B["JSON.parse 得到 unknown"] --> C
-  C["isOrder 逐字段验证"] --> D
-  D["筛出合法订单"] --> E
-  E["统计接受数、拒绝数与金额"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+订单 JSON 文本 ──> JSON.parse ──> parsed: unknown
+                                      └── 数组 values
+                                             ├── filter(isOrder) ──> orders
+                                             │                        └── reduce ──> total
+                                             └── values.length - orders.length ──> rejected
+orders.length + rejected + total ──> 导入报告
 ```
 
 ## 要求

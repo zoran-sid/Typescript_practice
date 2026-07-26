@@ -14,15 +14,21 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["数组进入回调"] --> B
-  B["map 转换"] --> C
-  C["filter 筛选"] --> D
-  D["find 查找"] --> E
-  E["输出新结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+orders
+   │
+   ├── filter ──> completedOrders
+   │                 ├── map ──> completedIds
+   │                 └── for...of 累加 ──> completedTotal
+   │
+   └── find ──> firstLargeOrder
+                     └── if 找到 ──> firstLargeId
+
+completedIds + completedTotal + firstLargeId ──> 报告输出
 ```
 
 在 `practice.ts` 中从零完成“订单数组报告”。

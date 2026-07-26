@@ -2,31 +2,33 @@
 
 预计用时：75–90 分钟。
 
-真实项目常常已经有可靠类型，我们只想从它派生“更新输入”“公开字段”或“键值表”，而不是复制一份几乎相同的定义。今天会用工具类型、`as const` 和 `satisfies` 建立一套不会轻易漂移的文章模型。
+项目里已经有 `Article` 类型时，更新表单、文章预览和状态文字表通常都与它有关。重新复制一份接口很容易漏改字段。今天学习从已有类型或已有值生成新的类型规则，让 TypeScript 在源类型变化时提醒你检查相关位置。
 
 ## 核心讲解
 
-常用 Utility Types 会从已有类型生成新类型：
+工具类型（Utility Types）不会创建新对象。它们只拿已有类型当原料，生成另一套检查规则：
 
-- `Partial<T>`：所有属性可选，适合补丁对象。
-- `Required<T>`：所有属性必填。
-- `Readonly<T>`：属性只读。
-- `Pick<T, Keys>`：只挑选指定属性。
-- `Omit<T, Keys>`：排除指定属性。
-- `Record<Keys, Value>`：每个指定键对应同一种值。
-- `ReturnType<typeof fn>`：取得函数返回类型。
-- `Awaited<PromiseType>`：取得等待后的结果类型。
+- `Partial<T>`：把每个字段变成可选。适合“这次只更新传进来的几个字段”的补丁对象。
+- `Required<T>`：把每个字段变成必填。少一个字段就会得到类型提示。
+- `Readonly<T>`：不允许通过这个类型重新给字段赋值；它是编译期检查，不是运行时冻结。
+- `Pick<T, Keys>`：新类型只保留指定字段，例如预览只需要标题和状态。
+- `Omit<T, Keys>`：新类型排除指定字段。它只改变允许你怎样使用变量，不会从真实对象中删字段。
+- `Record<Keys, Value>`：要求 `Keys` 中的每个键都出现，并且每个键对应的值都符合 `Value`。适合检查状态文字表是否漏项。
+- `ReturnType<typeof fn>`：读取函数声明中的返回类型，函数以后改变返回值时，这个类型也会跟着更新。
+- `Awaited<PromiseType>`：取得 Promise 被 `await` 后的成功值类型。
 
-它们只改变静态描述，不会在运行时自动复制、冻结或删除字段。`Omit<Account, "email">` 不会让真实对象的 `email` 自动消失。
+这些工具只在 TypeScript 检查代码时工作。它们不会自动复制对象、冻结对象或删除字段。例如，把变量标成 `Omit<Account, "email">`，只是后续代码不能通过这个类型读取 `email`；运行时的原对象仍可能带着 `email`。要真的删除字段，需要用解构 rest 等 JavaScript 操作创建新对象。
 
-`as const` 会保留字面量并把数组推断为只读元组：
+接下来从一个真实数组生成类型。普通字符串数组通常只记得“里面是字符串”；加上 `as const` 后，TypeScript 会记住每个位置的具体文字，并把数组视为只读元组：
 
 ~~~ts
 const levels = ["初级", "中级", "高级"] as const;
 type Level = (typeof levels)[number];
 ~~~
 
-`satisfies` 检查表达式符合目标类型，同时尽量保留表达式自身的精确推断：
+先读 `type Level = (typeof levels)[number]`：`typeof levels` 取得整个元组的类型，后面的 `[number]` 表示“任意数字位置上的成员类型”，所以 `Level` 得到 `"初级" | "中级" | "高级"`。这些步骤只产生类型，不会创建新数组。
+
+先声明状态联合 `type Status = "draft" | "published";`，再用 `satisfies` 检查文字表：每个状态键都必须出现，值也必须是字符串；同时，`labels` 仍保留自身较精确的类型。
 
 ~~~ts
 const labels = {
@@ -35,11 +37,35 @@ const labels = {
 } satisfies Record<Status, string>;
 ~~~
 
-与强制断言相比，漏键、拼错键和值类型错误都能得到提示。它仍然只是编译期检查，不能验证网络返回的未知数据。
+这里先创建 `labels` 对象，再让 TypeScript 检查它是否满足 `Record<Status, string>`。少一个状态、拼错键名或把值写成非字符串，都会在编辑器中提示。
+
+`satisfies` 是检查，不是强制相信。`as Record<...>` 可能把漏键问题盖住，而 `satisfies` 会把问题显示出来。它同样只在编译期工作，不能替你验证接口返回或 JSON 中的未知数据。
 
 ## 阅读示例
 
-打开并右键运行 `example.ts`。指出 `ArticlePatch`、`ArticlePreview`、`Status` 与 `statusLabels` 分别由哪个已有类型或值派生。
+打开并右键运行 `example.ts`。给每个派生结果找来源：`ArticlePatch` 和 `ArticlePreview` 来自哪个基础类型，`Status` 来自哪个数组值，`statusLabels` 又在检查哪些键。先找到源头，再看源头变化后哪些位置会收到提示。
+
+## 派生关系怎么读
+
+可以把本日的类型关系看成四条线：
+
+1. `Article` → `Partial`、`Pick` 或 `Omit` → 更新或展示所需的新类型。
+2. 状态数组 → `as const` → 保留每个状态文字。
+3. `typeof` 加 `[number]` → 从数组成员得到状态联合。
+4. 状态联合 → `Record` 加 `satisfies` → 检查每个状态都有对应文字。
+
+这些箭头只描述 TypeScript 的检查关系。运行时要创建新对象、删字段或读取 JSON，仍然需要真正的 JavaScript 代码。
+
+## Example 实际输出
+
+运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
+
+```text
+原标题：旧标题
+新标题：TypeScript 工具类型
+状态：published=已发布
+可用状态：draft、published、archived
+```
 
 ## Example 代码流程图
 

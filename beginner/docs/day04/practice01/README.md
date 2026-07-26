@@ -14,14 +14,17 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取业务条件"] --> B
-  B["组合布尔表达式"] --> C
-  C["按优先级选择分支"] --> D
-  D["计算并输出"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+orderTotal ─┬──> 比较金额边界 ──────────────┐
+isMember ───┼──> 会员条件 ──┐               │
+hasCoupon ──┘              └──> canUseMemberDiscount
+                                            │
+金额边界 + canUseMemberDiscount ──> if / else if ──> discount
+discount + orderTotal ──> amountToPay ──> 输出
 ```
 
 在 `practice.ts` 中从零完成“订单优惠计算器”。

@@ -14,14 +14,16 @@
 
 团队正在把一个仍在生产环境使用的旧 JavaScript 计分模块接入 TypeScript 课程系统，运行时实现不能随意修改，只能由声明文件诚实描述。若 `.d.ts` 写出的导出或返回类型与真实 JS 不一致，编译器会给出虚假的安全感，错误要到运行时才暴露。你需要验证旧模块的真实结果，建立合并后的课程模型，并把旧状态与现代状态统一成可输出的形式。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取旧 JS 真实行为"] --> B
-  B["在 d.ts 声明接口"] --> C
-  C["TypeScript 检查调用"] --> D
-  D["运行核对声明真实性"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+score.js 的真实行为 ──> score.d.ts 声明 ──> TypeScript 调用检查
+数字数组 ──> score(...) ──> result
+两段 LessonInfo 声明 ──> 声明合并 ──> lesson
+LegacyStatus / ModernStatus ──> normalizeStatus ──> 现代状态
+运行时结果 ──> 输出并核对声明
 ```
 
 只编辑 `practice.ts`，从零完成“旧模块兼容入口”；不要修改 `score.js` 或 `score.d.ts`。

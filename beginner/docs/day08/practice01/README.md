@@ -14,14 +14,19 @@
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["读取可能缺失的数据"] --> B
-  B["可选链安全访问"] --> C
-  C["空值合并提供后备值"] --> D
-  D["输出摘要"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+contacts
+   └── find ──> selectedContact
+                    ├── ?.name ?? 后备值 ──> selectedName
+                    ├── ?.phone ?? 后备值 ──> selectedPhone
+                    └── ?.address?.city ?? 后备值 ──> selectedCity
+score ──> ?? ──> displayedScore
+nickname ──> ?? ──> displayedNickname
+五个显示值 ──> 摘要输出
 ```
 
 在 `practice.ts` 中从零完成“联系人安全摘要”。

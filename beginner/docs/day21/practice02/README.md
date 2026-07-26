@@ -14,15 +14,16 @@
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["启动两个异步请求"] --> B
-  B["Promise.all 并行等待"] --> C
-  C["成功值组合成结果"] --> D
-  D["失败 Promise 进入 catch"] --> E
-  E["输出成功与错误"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+课程名 ──> fetchText ──> Promise ──┐
+进度名 ──> fetchText ──> Promise ──┴──> Promise.all ──> 两个成功值
+失败请求 ──> rejected Promise ──> catch unknown ──> 错误文字
+
+成功组合结果 + 错误结果 ──> main 输出
 ```
 
 ## 必须练到的能力

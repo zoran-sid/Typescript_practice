@@ -14,14 +14,17 @@
 
 商品服务团队希望在不改写核心价格算法的前提下记录类注册和方法调用，同时给服务对象增加标签，并组合可替换的消息格式器。装饰器接收的方法、参数组和实例上下文都是边界；若包装函数丢失 `this`、实参或返回值，价格会算错，旧式装饰器写法也无法匹配当前配置。你需要输出注册与调用轨迹、对象标签、准确总价和格式化后的消息。
 
-## 代码流程图
+## 数据流
 
-```mermaid
-flowchart TD
-  A["装饰器接收方法与 context"] --> B
-  B["返回包装函数"] --> C
-  C["用 call 保留 this 与 args"] --> D
-  D["原样返回结果"]
+先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
+
+```text
+PriceCalculator.total + context ──> tracedMethod
+   └── 普通 function 包装器 ──> target.call(this, ...args) ──> 原返回值
+PriceCalculator 类 ──> registerClass ──> 注册日志
+new PriceCalculator ──> withTag ──> calculator + tag
+message ──> MessageService ──> Formatter ──> 最终文字
+装饰、Mixin、组合三条结果 ──> 输出
 ```
 
 从零完成“带追踪的价格服务”。
