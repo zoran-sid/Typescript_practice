@@ -19,8 +19,10 @@
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-起始数字 ──> createCountdown ──> generator
-                                   └── 每次 next ──> yield 值 / done
+start + end ──> evenNumbers 生成器 ──> 每次消费 ──> yield 偶数 / 结束
+起始数字 ──> createCountdown ──> Iterable<number>
+                                   └── [Symbol.iterator]() ──> iterator
+                                                                  └── next() ──> { value, done }
 currentId + increment ──> nextId: bigint
 nextId ──> toString ──> JSON.stringify ──> jsonText
 迭代结果 + bigint JSON ──> 输出

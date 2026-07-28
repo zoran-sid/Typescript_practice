@@ -1,7 +1,7 @@
 export default {
   "title": "Day 27 · 运行环境边界独立综合题",
   "exampleExpected": [
-    "Browser handler: typed",
+    "Normalized query: typed",
     "Fetched title: Runtime boundaries",
     "CLI day: 27"
   ],
@@ -32,7 +32,7 @@ export default {
       "id": "practice02",
       "title": "搜索与命令行边界",
       "expected": [
-        "Browser handler: typed",
+        "Normalized query: typed",
         "Fetched title: Runtime boundaries",
         "CLI day: 27"
       ],

@@ -38,6 +38,14 @@ const [lesson, progress] = await Promise.all([
 
 异步错误进入 `catch` 后，捕获值仍先看作 `unknown`，通过 `instanceof Error` 检查后再读取 `message`。不要在 `catch` 中随手返回看似成功的数据；这样调用者会把失败当成正常结果。只有产品明确允许备用数据，并且返回结果能标明“这是备用值”时，才适合这样做。
 
+## 为什么要这样设计
+
+网络和文件操作不能立刻得到结果；若程序一直原地阻塞，界面和其他任务也无法继续。Promise 用一个值表示“将来成功或失败的结果”，`async/await` 让等待步骤按普通代码的顺序阅读，`Promise.all` 则统一收集互不依赖的多个任务。
+
+运行环境负责在任务完成后继续 Promise 链，TypeScript 负责区分 `Promise<T>` 和等待后的 `T`。你仍要判断任务之间是否有依赖、哪些可以并行、谁负责 `await`、失败在哪里处理，以及是否需要超时或取消。
+
+并行不是没有代价：一次启动太多请求会造成压力；`Promise.all` 遇到一项失败就整体失败，却不会自动取消已经启动的其他任务。`async` 函数也总是返回 Promise，忘记等待或返回它，外层就可能提前继续并漏掉错误。
+
 ## 阅读示例
 
 打开并右键运行 `example.ts`。先找出每个异步函数调用返回的 Promise，再找对应的 `await`。对每个变量分别写下“等待前的类型”和“等待后的类型”。最后沿失败请求找到它进入的 `catch`。
@@ -117,6 +125,31 @@ const requests = ["课程", "进度"].map((name) => fetchText(name));
 await Promise.all(requests); // ✅ map 收集所有 Promise，再统一等待。
 console.log("全部完成");
 ```
+
+## 面试时怎么回答
+
+**问：`async` 函数抛错后，为什么外层有时捕获不到？**
+
+**答：**`async` 函数总会返回 Promise。函数内部 `return "课程"` 会变成成功的 `Promise<string>`，内部抛错会变成 rejected Promise；调用它本身通常不会把错误同步抛到外层，必须等待或返回这个 Promise：
+
+```ts
+async function load(): Promise<string> {
+  throw new Error("网络不可用");
+}
+try {
+  await load();
+} catch (error: unknown) {
+  // 这里才能观察到拒绝
+}
+```
+
+运行环境负责在 Promise 完成后继续，开发者仍要决定由哪一层 `await`、捕获和记录错误。忘记等待会留下未处理拒绝。
+
+**问：`Promise.all` 是否等于“更快且自动取消”？**
+
+**答：**它适合互不依赖的任务：先全部启动，再统一等待，并按输入顺序交回结果。任一 Promise 拒绝时，组合结果会尽快拒绝，但其他已启动任务不会因此自动取消。
+
+**容易答错或追问：**不要把并行当成永远更好；请求过多会增加压力，有依赖的任务仍要顺序等待，`forEach(async ...)` 也不会替你收集和等待回调返回的 Promise。
 
 ## 拓展思考（不要求写代码）
 

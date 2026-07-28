@@ -1,9 +1,15 @@
 type SearchCallback = (query: string) => void;
 
+function normalizeQuery(value: string): string {
+  return value.trim();
+}
+
 function bindSearch(input: HTMLInputElement, onSearch: SearchCallback): void {
   input.addEventListener("input", (event) => {
     const target = event.currentTarget;
-    if (target instanceof HTMLInputElement) onSearch(target.value.trim());
+    if (target instanceof HTMLInputElement) {
+      onSearch(normalizeQuery(target.value));
+    }
   });
 }
 
@@ -27,7 +33,7 @@ function parseDay(args: readonly string[]): number | undefined {
   const index = args.indexOf("--day");
   if (index < 0) return undefined;
   const raw = args[index + 1];
-  if (raw === undefined) return undefined;
+  if (raw === undefined || raw.trim() === "") return undefined;
   const day = Number(raw);
   return Number.isInteger(day) && day >= 0 ? day : undefined;
 }
@@ -39,6 +45,6 @@ const fakeClient: JsonClient = {
 };
 
 void bindSearch;
-console.log("Browser handler: typed");
+console.log(`Normalized query: ${normalizeQuery("  typed  ")}`);
 console.log(`Fetched title: ${await loadTitle(fakeClient)}`);
 console.log(`CLI day: ${parseDay(["--day", "27"]) ?? "missing"}`);

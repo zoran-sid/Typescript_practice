@@ -67,6 +67,14 @@ type FlagName = keyof typeof flags;
 
 `keyof` 也只在类型检查阶段工作。它不会像 `Object.keys()` 那样在运行时生成键数组。
 
+## 为什么要这样设计
+
+普通泛型虽然能保留类型，却不知道 `item` 一定有什么属性；把属性名放宽成 `string`，拼错键名也要到运行时才发现。约束先说明可依赖的最低能力，`keyof` 再把键限制为对象真实拥有的键，`T[K]` 则保留该键对应的准确值类型。
+
+TypeScript 负责检查键是否存在，并把返回类型跟所选键关联起来。你仍要决定函数最低需要哪些属性、调用方可以读取哪些键，以及从用户输入得到的普通字符串怎样先验证后再缩窄。
+
+约束和 `keyof` 都是编译期规则，不会检查服务器返回的真实对象。约束写得太严会拒绝本来可复用的数据，写得太松又无法在函数体内安全工作，因此只承诺实现真正需要的最小结构。
+
 ## 阅读示例
 
 打开并右键运行 `example.ts`。分别找到 `getProperty(course, "title")` 和 `getProperty(course, "lessons")`：对象参数相同，但键参数不同，所以 TypeScript 选中的 `Key` 不同，最终返回类型也不同。把鼠标悬停在接收结果的变量上核对。
@@ -147,6 +155,26 @@ function getProperty<Item, Key extends keyof Item>(
   return item[key]; // ✅ Key 只能取合法键，Item[Key] 保留该键对应的精确值类型。
 }
 ```
+
+## 面试时怎么回答
+
+**问：为什么读取对象属性时要写 `Key extends keyof Item` 和 `Item[Key]`？**
+
+**答：**它解决“键名可能拼错”和“返回类型过宽”两个问题。`keyof Item` 得到对象真实键名的联合，`Key extends ...` 保留本次选中的那个键，`Item[Key]` 再取出它对应的值类型：
+
+```ts
+function read<Item, Key extends keyof Item>(
+  item: Item,
+  key: Key,
+): Item[Key] {
+  return item[key];
+}
+const title = read({ title: "TS", lessons: 21 }, "title"); // string
+```
+
+TypeScript 负责检查 `"title"` 存在并推断 `string`；开发者仍要决定函数允许读取哪些对象和哪些字段。
+
+**容易答错或追问：**约束不会在运行时给对象补属性，也不会把用户输入的任意字符串自动变成合法键。来自输入框的 `string` 仍需先检查。`keyof T` 也不保证只得到 `string`：数字或 symbol 键、索引签名都可能让结果包含 `number` 或 `symbol`，需要拼接字符串时应主动限制为 `Key & string`。约束还应只描述实现真正依赖的最小结构；写得太严会降低复用，写得太松又无法安全访问属性。
 
 ## 拓展思考（不要求写代码）
 

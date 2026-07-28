@@ -23,24 +23,30 @@
 | 请求客户端 | `Promise<unknown>` | 验证后的课程标题 | 字段不对就返回失败或抛出明确错误 |
 | Node 命令行 | `readonly string[]` | 合法的 day 数字 | 缺标志、缺值或不是整数时返回 `undefined` |
 
-真实网页中，事件目标可以用 `HTMLInputElement` 检查，再读取它的 `value`。本课程的示例最终由 Node 运行，所以不直接操作 `document`；浏览器绑定留在最外层，搜索逻辑只接收普通字符串。
+真实网页中，事件目标可以用 `HTMLInputElement` 检查，再读取它的 `value`。本课程的示例最终由 Node 运行，所以不直接操作 `document`；浏览器绑定留在最外层，去空格的普通字符串处理拆成 `normalizeQuery`，Node 只测试这个纯函数。
 
 请求代码写成 TypeScript，也不能约束另一台服务器实际返回什么。`await client.get("/lesson")` 后先得到 `unknown`，确认它是非空对象并且 `title` 是字符串，才返回标题。`await` 只负责等待异步操作完成，不负责验证响应内容。
 
 命令行也一样。给 `parseDay` 传入 `["--day", "27"]`，结果是 `27`；传入 `["--day"]`，标志后面没有值，结果应是 `undefined`。函数自己不读取全局 `process.argv`，测试就能直接传入这两组数据。更通用的解析器也可以写成 `parseArgs(args)`；重点都是让环境入口把参数数组传进来。
 
+## 为什么要这样设计
+
+浏览器事件、网络响应和命令行参数都来自程序外部：目标元素可能缺失，JSON 字段可能写错，标志后也可能没有值。若入口处直接断言类型，错误会带着不可信数据进入业务层，最后在离来源很远的地方爆发。
+
+浏览器和 Node 提供事件、Promise、请求及参数数组，TypeScript 的环境类型负责说明这些 API 的已知外形；你仍要决定要读取哪个元素、响应必须有哪些字段、参数缺失时使用默认值还是报错。环境类型也有边界：DOM 类型不代表代码能在 Node 中运行，请求成功不代表数据结构正确，而每一种外部格式都需要维护自己的验证与错误处理。
+
 ## 函数变量追踪
 
 三个入口的变量路线分别是：`event → currentTarget → value → query`；`client.get() → Promise → await 后的 value → title`；`args → index → raw → day`。每一步只做一次转换，也都保留失败分支。
 
-“边界适配函数”是这些入口函数的正式名称。它们负责认识浏览器、请求客户端或 Node；后面的纯业务函数只认识字符串、数字和普通对象。
+这类入口函数常被称为“边界适配函数”。它们负责认识浏览器、请求客户端或 Node；后面的纯业务函数只认识字符串、数字和普通对象。
 
 ## Example 实际输出
 
 运行 `example.ts` 后，终端会按下面的顺序显示。先用代码推测结果，再逐行对照：
 
 ```text
-Browser handler: typed
+Normalized query: typed
 Fetched title: Runtime boundaries
 CLI day: 27
 ```
@@ -51,7 +57,7 @@ CLI day: 27
 
 ```mermaid
 flowchart TD
-  A["模拟浏览器输入事件"] --> B
+  A["normalizeQuery 处理固定输入"] --> B
   B["请求适配器读取 unknown 响应"] --> C
   C["CLI 参数解析 day"] --> D
   D["三个边界结果分别输出"]
@@ -93,6 +99,10 @@ function parseDay(): number {
 ### 正确写法
 
 ```ts
+interface Lesson {
+  title: string;
+}
+
 interface JsonClient {
   get(path: string): Promise<unknown>;
 }
@@ -114,11 +124,20 @@ async function loadLesson(client: JsonClient): Promise<Lesson | null> {
 function parseDay(args: readonly string[]): number | undefined {
   const index = args.indexOf("--day");
   const raw = index < 0 ? undefined : args[index + 1];
-  const day = raw === undefined ? Number.NaN : Number(raw);
+  const day =
+    raw === undefined || raw.trim() === "" ? Number.NaN : Number(raw);
   // ✅ 环境入口负责传入 args，函数只处理普通数据。
   return Number.isInteger(day) && day >= 0 ? day : undefined;
 }
 ```
+
+## 面试时怎么回答
+
+**问：** 同一套 TypeScript 代码怎样处理浏览器、Node 和外部请求的边界？
+
+**答：** 我会先把环境值转换成普通参数。浏览器最外层可以读取已经绑定的输入框，也可以先确认 `event.currentTarget` 是输入框，再把 `.value` 交给字符串函数；请求返回值先作为 `unknown` 验证字段；Node 的 `process.argv` 只是字符串数组，要检查 `--day` 后一项是否存在并真的是非负整数。比如 `["--day", "27"]` 可得到 `27`，`["--day"]` 只能进入缺失分支。这样业务函数不直接依赖 `document`、网络或全局参数，更容易测试。
+
+**容易答错或追问：** 普通 Node 进程没有真实的 `document`、输入框或 `HTMLInputElement` 构造器，除非测试环境另外提供了 DOM 实现，不能为了凑输出伪造一个对象就说浏览器路径已经运行。在浏览器回调里可以用 `currentTarget instanceof HTMLInputElement`；读出 `.value` 后，跨环境的业务函数最好只接收普通字符串。面试官还可能问 DOM 类型为什么能编译却不能运行：类型声明只帮助检查，不会给 Node 创建这些运行时对象。
 
 ## 拓展思考（不要求写代码）
 

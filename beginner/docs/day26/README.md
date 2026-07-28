@@ -38,6 +38,12 @@ TaskRepository.load() → Promise<unknown> → await → 运行时验证
 
 `catch` 接到的值也不保证是 `Error`，因为 JavaScript 可以抛出字符串或其他值。先用 `instanceof Error` 检查 `error`，成功后才能读 `error.message`；否则使用约定好的备用消息。测试要覆盖任务成功、空数组、坏数据和异步抛错，四条路径各自失败时才容易定位。
 
+## 为什么要这样设计
+
+异步请求不会立刻给出结果。如果只用 `tasks`、`isLoading`、`error` 三个互不关联的变量，它们可能短暂或永久组合成矛盾状态，例如仍在加载却已经有错误。`Promise` 和 `await` 负责等待完成顺序，判别联合把界面限制为 loading、success、failure 三种合法形状，仓库接口则把“从哪里加载”与“加载后怎样处理”分开。
+
+这些工具不会替你判断返回数据是否可信，也不会决定错误提示、重试策略或成功界面要展示什么；这些仍是业务选择。`await` 后得到的外部值依然要验证，`catch` 里的错误仍是 `unknown`，而多出来的状态分支也意味着每条路径都要测试，不能只验证成功情况。
+
 ## 函数变量追踪
 
 这里有两条相连的数据流。第一条是异步值：`repository.load()` 返回 `Promise<unknown>`，`await` 后得到 `value`，或者跳进 `catch`。第二条是界面状态：`value` 验证通过后返回 `success`，验证失败或捕获错误后返回 `failure`。调用处用 `finalState` 接住最终状态，再交给 `render`。
@@ -130,6 +136,14 @@ async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
   }
 }
 ```
+
+## 面试时怎么回答
+
+**问：** 为什么异步页面常用判别联合，而不是三个布尔变量？
+
+**答：** `isLoading`、`hasData`、`hasError` 可以组合出“仍在加载但同时成功和失败”这类无效状态。判别联合把合法情况写成三种：`{ status: "loading" }`、`{ status: "success"; tasks: StudyTask[]; totalMinutes: number }`、`{ status: "failure"; message: string }`。`switch (state.status)` 后，TypeScript 会在 success 分支允许读 `tasks`，在 failure 分支允许读 `message`，渲染逻辑也能逐个覆盖。
+
+**容易答错或追问：** `await repository.load()` 只解决等待顺序，不会验证返回的 `unknown`；成功拿到值后仍要经过守卫。`catch` 里的值也应按 `unknown` 处理，先判断 `error instanceof Error` 才读 `message`。面试官若追问新增 `empty` 状态，我会把它加入联合，并在 `switch` 的 `default` 分支把剩余值交给接收 `never` 的穷尽检查，让编译器指出还没处理的状态。状态越多，测试路径也越多，数据与界面要继续共用同一状态来源。
 
 ## 拓展思考（不要求写代码）
 

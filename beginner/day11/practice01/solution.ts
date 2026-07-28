@@ -1,25 +1,29 @@
-// 解题结构提示：本文件不是完整答案，请沿 TODO 自己补全。
+// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 type StudyTask =
   | { status: "waiting"; title: string }
   | { status: "studying"; title: string; minutes: number }
   | { status: "completed"; title: string; score?: number }
   | { status: "failed"; title: string; reason: string };
-// TODO：实现穷尽检查失败时的处理；这里只保留输入必须为 never 的签名。
-// 提示：declare 在这里只保存签名；正式作答时要删除 declare，并写出函数体。
+// TODO：删除 declare 并实现 assertNever：参数保持 never；若运行时意外到达这里，抛出包含该值的错误。
+// never 表示前面的分支本应处理完所有 StudyTask；以后新增状态却漏写 case 时，调用处会产生类型错误。
 declare function assertNever(value: never): never;
 function describeTask(task: StudyTask): string {
   switch (task.status) {
     case "waiting":
-      // TODO：返回“待开始”文字，并使用当前分支共有的 title。
+      // TODO：使用当前 task.title 组织“标题：待开始”的字符串。
+      // 下面的 "" 只为暂时满足 string 返回类型，完成时要替换。
       return "";
     case "studying":
-      // TODO：此处已收窄，可安全读取 minutes。
+      // TODO：此分支的 task 已收窄为 studying；用 task.title 和 task.minutes 组织学习时长文字。
+      // 下面的 "" 是临时占位，不能作为最终返回值。
       return "";
     case "completed":
-      // TODO：score 仍可能是 undefined，请分别组织“待评分”和具体分数。
+      // TODO：此分支可读取 task.score，但它仍可能是 undefined；缺席时显示“待评分”，存在时显示具体分数。
+      // 把结果和 task.title 组成字符串，并替换下面的 ""。
       return "";
     case "failed":
-      // TODO：此处已收窄，可安全读取 reason。
+      // TODO：此分支的 task 已收窄为 failed；用 task.title 和 task.reason 组织失败文字。
+      // 下面的 "" 是临时占位，完成时要替换。
       return "";
     default:
       return assertNever(task);
@@ -33,5 +37,5 @@ const tasks: StudyTask[] = [
   { status: "failed", title: "提交", reason: "网络中断" },
 ];
 for (const task of tasks) {
-  // TODO：调用 describeTask，并输出每次调用交回的字符串。
+  // TODO：把当前 task 传给 describeTask，再输出该次调用返回的字符串；不要把五行结果写死。
 }

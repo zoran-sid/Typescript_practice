@@ -33,6 +33,12 @@
 
 读错误时固定做五步：只看第一条；找到行号和出错表达式；读出它现在的类型；读出当前位置需要的类型；做最小修改后重新检查。第一条消失后，后面的错误有时也会一起消失。
 
+## 为什么要这样设计
+
+如果项目没有一份共同配置，同一段代码可能在一个人的编辑器里没有提示，到了持续集成或另一台电脑却检查失败；数组越界和缺失属性也容易被当成“一定存在”。`tsconfig.json` 让编译器对整批文件使用同一组检查规则，并统一决定目标 JavaScript 和模块输出方式。
+
+编译器负责追踪 `undefined`、隐式 `any`、索引访问和生成选项；你仍要决定项目支持哪些运行环境、采用多严格的规则，以及每个缺失值在业务上该怎样处理。严格检查会增加旧项目迁移时要处理的提示，`noEmit` 也只代表不生成文件，不会替你运行程序或测试业务结果。
+
 ## 把一条错误翻译成人话
 
 看到 `const first: number = scores[0]` 报错，可以这样读：右侧 `scores[0]` 的实际类型是 `number | undefined`，左侧却要求一定是 `number`。这条提示可以翻译成：空数组没有第一项。先把结果放进 `first`，检查 `first !== undefined`，再调用数字方法。
@@ -121,6 +127,14 @@ const preferences: Preferences = { theme: "dark" };
 const { theme: _removed, ...withoutTheme } = preferences;
 // ✅ withoutTheme 中真正不存在 theme 这个键。
 ```
+
+## 面试时怎么回答
+
+**问：** `strict`、`noUncheckedIndexedAccess` 和 `skipLibCheck` 分别管什么？
+
+**答：** `strict` 是一组严格检查的总开关，会连带开启空值、隐式 `any` 等规则。`noUncheckedIndexedAccess` 针对类型中没有明确声明结果一定存在的索引读取补上 `undefined`：例如 `const scores: number[] = []` 后，`scores[0]` 会是 `number | undefined`，使用前要检查。`skipLibCheck` 跳过 `.d.ts` 文件本身的完整检查，可以在迁移期或检查耗时过长时作为权衡；它不会跳过自己的 `.ts` 源码，也不会让运行时更安全。
+
+**容易答错或追问：** 不要把 `noUncheckedIndexedAccess` 说成“数组永远不能取下标”，它只是让未声明为必然存在的索引结果带上 `undefined`。也不要说 `skipLibCheck` 会忽略所有类型错误或修复错误声明；调用处仍可能相信一份不准确的 `.d.ts`。如果冲突来自同一个库的多个类型版本，应先统一依赖版本。`target`、`module` 和 `moduleResolution` 也没有一份适合所有项目的万能配置，它们要和 Node、浏览器或打包器的真实加载方式匹配。若被问怎样选择，我会先保留 `strict`，对缺失值写明确分支；`skipLibCheck` 只作为短期权衡，并记录要消除的声明问题。
 
 ## 拓展思考（不要求写代码）
 

@@ -10,7 +10,7 @@
 
 ## 场景背景
 
-学习小组想用一个简单面板记录不同主题的学习时段。每条输入包含主题和分钟数，各记录之间必须保持独立。程序需要展示单个学习时段，并让汇总面板通过这些实例生成统一的摘要。
+学习小组想记录不同主题的学习时段。每条记录包含主题和分钟数，各实例之间必须保持独立。程序先分别展示两个实例的摘要，再把 `types` 这一个实例交给面板；面板只负责给它的摘要加上统一前缀，不计算多个实例的总分钟数。
 
 这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
 
@@ -19,11 +19,16 @@
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-new StudyCounter(topic) ──> types / modules
-   └── addMinutes ──> 当前实例 minutes
-types ───────────────┐
-modules ─────────────┴──> Dashboard ──> totalMinutes / summary
-单项摘要 + 总分钟 ──> 输出
+new StudyCounter("Types") ──> types
+   ├── add(30) ──> types.minutes: 0 → 30
+   ├── add(15) ──> types.minutes: 30 → 45
+   ├── summary() ──> "Types: 45 minutes" ──> 输出
+   └── Dashboard(types) ──> render()
+                                └── types.summary() ──> "Dashboard | Types: 45 minutes" ──> 输出
+
+new StudyCounter("Modules") ──> modules
+   ├── add(20) ──> modules.minutes: 0 → 20
+   └── summary() ──> "Modules: 20 minutes" ──> 输出
 ```
 
 ## 必须练到的能力

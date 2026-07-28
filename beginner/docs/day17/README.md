@@ -41,6 +41,14 @@ const labels = {
 
 `satisfies` 是检查，不是强制相信。`as Record<...>` 可能把漏键问题盖住，而 `satisfies` 会把问题显示出来。它同样只在编译期工作，不能替你验证接口返回或 JSON 中的未知数据。
 
+## 为什么要这样设计
+
+手写“文章预览”“文章补丁”“公开文章”这些相似类型时，原类型新增字段后，副本很容易忘记同步。Utility Types 从一个主要类型派生其他用途的形状，`as const` 保留精确字面量，`satisfies` 则检查配置有没有漏键或写错值。
+
+TypeScript 负责计算 `Pick`、`Omit`、`Partial` 等派生结果，并在编译时检查对应关系。你仍要决定哪一个类型是事实来源、哪些字段允许更新或公开，以及运行时到底要构造什么对象；类型工具不会替你删除真实对象里的字段。
+
+这些能力只在编译阶段提供保护。`as const` 不会冻结运行中的对象，`satisfies` 也不会补上缺失数据；派生层次过多时还会让最终形状难以阅读，应该让每个别名都对应清楚的业务用途。
+
 ## 阅读示例
 
 打开并右键运行 `example.ts`。给每个派生结果找来源：`ArticlePatch` 和 `ArticlePreview` 来自哪个基础类型，`Status` 来自哪个数组值，`statusLabels` 又在检查哪些键。先找到源头，再看源头变化后哪些位置会收到提示。
@@ -123,6 +131,25 @@ const labels = {
   archived: "已归档",
 } satisfies Record<Status, string>; // ✅ 漏键或值类型错误都会被检查。
 ```
+
+## 面试时怎么回答
+
+**问：Utility Types、`as const` 和 `satisfies` 各自解决什么问题？**
+
+**答：**Utility Types 从主要类型派生新用途，减少复制后字段不同步；`as const` 保留字面量并得到只读类型；`satisfies` 检查一个值是否满足目标结构，同时尽量保留这个值自己的推断。例如：
+
+```ts
+const statuses = ["draft", "published"] as const;
+type Status = (typeof statuses)[number];
+const labels = {
+  draft: "草稿",
+  published: "已发布",
+} satisfies Record<Status, string>;
+```
+
+漏掉状态或多写错误键时会在编译期提示。开发者仍要选择事实来源、允许更新和公开的字段。
+
+**容易答错或追问：**这些工具都不负责运行时转换。`Omit<Article, "summary">` 不会从真实对象中删除 `summary`，仍要实际构造公开对象；`as const` 不等于 `Object.freeze`；`satisfies` 也不会补齐字段或改变运行值。派生类型太多时，最终形状反而难追踪，应让每个别名对应明确用途。
 
 ## 拓展思考（不要求写代码）
 

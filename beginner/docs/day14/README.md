@@ -43,6 +43,14 @@ import type { Student } from "./student-types.js";
 
 只要文件顶层出现 `import` 或 `export`，这个文件就是模块。文件内部声明默认只属于本文件；其他文件想使用它，必须先导出再导入。共享类型也只保留一份，然后让各文件导入它。否则以后新增字段时，复制出来的多份定义很容易只改到其中一份。
 
+## 为什么要这样设计
+
+所有变量和函数都写在一个文件里时，名称容易冲突，依赖从哪里来只能靠人记，任何文件也可能碰到本不该公开的细节。模块用 `export` 明确对外入口，用 `import` 明确当前文件依赖什么，让代码可以按职责拆开。
+
+运行环境负责加载值模块，TypeScript 负责检查导入名、导出形式和类型是否匹配。你仍要决定哪些内容值得公开、使用默认导出还是具名导出，以及模块之间应该朝哪个方向依赖；`import type` 只处理类型，不会在运行时加载一个值。
+
+模块不会自动消除设计问题。循环依赖、过细的文件拆分和错误的运行时路径仍会造成故障；在 NodeNext 中，源码相对导入保留 `.js` 扩展名也是运行环境规则，不是 TypeScript 随意增加的写法。
+
 ## 阅读示例
 
 打开并右键运行 `example.ts`，然后沿着四条导入路径查看 `course-data.ts`、`score-tools.ts`、`student-types.ts` 与 `student-tools.ts`。这些辅助模块不要修改。
@@ -120,6 +128,29 @@ import type { Student } from "./student-types.js";
 const student: Student = { name: "Ada", completed: 12, track: "beginner" };
 console.log(formatScore(passingScore), student.name); // ✅ Student 只用于类型位置。
 ```
+
+## 面试时怎么回答
+
+**问：ES Module、namespace 和 `import type` 分别解决什么问题？**
+
+**答：**ES Module 用文件级 `import` / `export` 表达运行时依赖，加载器知道要执行哪些模块；`namespace` 主要是在同一命名空间中组织名称，不能替代现代项目的模块加载关系。`import type` 只把类型带给 TypeScript，编译后会被移除，所以不能拿它导入的名字去 `new` 或当运行时值使用：
+
+```ts
+import type { Student } from "./student-types.js";
+const student: Student = {
+  name: "Ada",
+  completed: 12,
+  track: "beginner",
+};
+```
+
+开发者仍要设计公开 API、依赖方向以及默认导出或具名导出；循环依赖和错误路径不会由模块语法自动解决。
+
+**问：模块增强会把缺少的方法实现出来吗？**
+
+**答：**不会。模块增强只是给已有模块补充类型声明，让编译器知道某个运行时成员“应该存在”。例如声明 `Logger` 多了 `debug()` 后，真实的 `Logger.prototype.debug` 仍必须由代码或库提供，否则编译可能通过，运行时照样得到“不是函数”。
+
+**容易答错或追问：**不要把声明合并当成修改 JavaScript 对象；类型信息和运行时实现必须分别到位。`import type` 同样只影响类型检查，不会触发值模块的运行时代码。
 
 ## 拓展思考（不要求写代码）
 

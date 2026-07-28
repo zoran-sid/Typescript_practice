@@ -50,6 +50,26 @@ for (const day of expectedDays) {
   ) {
     errors.push(`docs/${day}/README.md 必须有且只有一个 Example 实际输出文本块。`);
   }
+  const designReason = readSection(dayReadme, "## 为什么要这样设计").trim();
+  if (
+    countText(dayReadme, "## 为什么要这样设计") !== 1 ||
+    designReason.length < 120 ||
+    !/(问题|避免|因为|负责|交给)/.test(designReason)
+  ) {
+    errors.push(
+      `docs/${day}/README.md 必须有且只有一个具体解释“解决什么问题、谁负责什么”的设计原因章节。`,
+    );
+  }
+  const interviewAnswer = readSection(dayReadme, "## 面试时怎么回答").trim();
+  if (
+    countText(dayReadme, "## 面试时怎么回答") !== 1 ||
+    interviewAnswer.length < 180 ||
+    !interviewAnswer.includes("**问：")
+  ) {
+    errors.push(
+      `docs/${day}/README.md 必须有且只有一个结合当天知识、包含具体问答与边界的面试章节。`,
+    );
+  }
 
   const badExample = readSection(dayReadme, "### 错误代码示例");
   const goodExample = readSection(dayReadme, "### 正确写法");
@@ -143,6 +163,14 @@ for (const day of expectedDays) {
       if (!/\bTODO\b/.test(scaffold)) {
         errors.push(`${day}/${id}/solution.ts 必须保留 TODO，不能提供完整答案。`);
       }
+      if (
+        !scaffold.includes("TODO 旁的空字符串、0、false、[] 等只是占位值") ||
+        !scaffold.includes("完成时要替换或删除")
+      ) {
+        errors.push(
+          `${day}/${id}/solution.ts 必须说明 TODO 旁的类型占位值不是答案，完成时要替换或删除。`,
+        );
+      }
     }
 
     const guidePath = path.join(docPracticeDir, "SOLUTION.md");
@@ -225,7 +253,7 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    "PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有场景背景、关联数据流、空白作答入口、TODO 解题结构和匹配检查。",
+    "PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、面试问答、场景背景、关联数据流、空白作答入口、明确的 TODO 占位说明和匹配检查。",
   );
 }
 

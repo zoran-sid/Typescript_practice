@@ -33,6 +33,12 @@ JSON 文本 → JSON.parse → unknown → 逐层检查 → StudyTask[]
 
 状态也要按实际可能出现的形状拆开：`todo` 不需要时间；`doing` 必须有 `startedAt`；`done` 必须同时有 `startedAt` 和 `completedAt`。`status` 是区分这三种对象的字段，所以正式名称叫“判别字段”，整组类型叫“判别联合”。当代码判断 `state.status === "doing"` 后，TypeScript 才知道这一分支一定能读取 `startedAt`。
 
+## 为什么要这样设计
+
+如果把 `JSON.parse` 的结果直接断言成 `StudyTask[]`，缺少字段、分钟为字符串甚至 `null` 的数据都会伪装成可信任务，错误要到统计或渲染时才暴露。`unknown` 先阻止代码随意读取字段，类型守卫再把运行时检查结果告诉 TypeScript，让后续代码只处理已经确认的形状。
+
+类型守卫返回 `true`，是在承诺“当前值已经通过非空对象、字段类型、数值范围和状态结构等检查”，TypeScript 因此把它收窄为目标类型；返回 `false` 表示至少一项检查未通过，不能作出这份承诺。语言只负责根据这个布尔结果收窄类型，具体检查哪些字段、整批拒绝还是保留合法项、错误怎样说明，仍由你决定。代价是模型变化时守卫也必须同步更新，而且每次导入都会做真实的运行时检查。
+
 ## 变量与数据追踪
 
 `text` 是原始 JSON 字符串；`parsed` 是解析后但尚未确认的 `unknown`；验证函数再让每一项得到 `true` 或 `false`。Example 和 practice02 使用整批策略：全部通过后，`result.tasks` 才是可信的 `StudyTask[]`；否则进入失败分支读取 `message`。practice01 使用部分接收策略：合法项进入 `tasks`，不合法项只增加 `rejected`。两种策略都必须先验证，之后才能安全读取 `minutes`。
@@ -114,6 +120,14 @@ const parsed: unknown = JSON.parse(text);
 // ✅ 数组外形和每一个元素都通过后，才得到可信的 StudyTask[]。
 const tasks = Array.isArray(parsed) && parsed.every(isStudyTask) ? parsed : [];
 ```
+
+## 面试时怎么回答
+
+**问：** 为什么外部 JSON 要先放进 `unknown`，类型守卫又做了什么？
+
+**答：** `JSON.parse` 成功只代表文本语法正确，不代表字段符合模型。比如 `{ "id": "a", "minutes": "20" }` 能解析，但 `minutes` 不是数字。把结果保留为 `unknown`，代码就不能直接读取字段；`isStudyTask(value): value is StudyTask` 在运行时逐项检查非空对象、`id`、`title`、有限非负的 `minutes` 和嵌套状态。它返回 `true`，是在向 TypeScript 承诺这些检查全部通过；返回 `false`，表示不能把当前值当成任务。
+
+**容易答错或追问：** 类型谓词不是自动验证器，TypeScript 会相信你写的布尔逻辑。若守卫无条件 `return true`，类型看似安全，坏数据仍会进入程序。JSON 没有 `Date` 类型，日期字段通常以字符串传输；把响应标成 `{ createdAt: Date }` 不会自动创建 `Date`，必须验证格式并显式转换。面试官还可能问整批与部分导入：`every(isStudyTask)` 适合任一失败就拒绝，`filter(isStudyTask)` 适合保留合法项并统计拒绝数；选择哪种是业务协议，不是语言替你决定。
 
 ## 拓展思考（不要求写代码）
 

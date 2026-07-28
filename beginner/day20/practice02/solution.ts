@@ -1,7 +1,8 @@
-// 解题结构提示：本文件不是完整答案，请沿 TODO 自己补全。
+// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 interface Course { title: string; score: number; }
 function isCourse(value: unknown): value is Course {
-  // TODO：排除 null，并真实检查 title 与 score 的存在和类型。
+  // TODO：确认当前 value 是非 null 对象，并真实检查 value.title 是 string、value.score 是 number。
+  // 全部通过时返回 true，表示该输入可作为 Course；任一项失败返回 false。下面固定 false 只是全部拒绝的临时占位。
   return false;
 }
 const rawCourses = [
@@ -9,5 +10,5 @@ const rawCourses = [
   '{"title":"TypeScript","score":"九十"}',
 ];
 for (const raw of rawCourses) {
-  // TODO：解析为 unknown；isCourse 返回 true 后才能读取 title 与 score。
+  // TODO：把当前 raw 的解析结果保存在 unknown 变量中；isCourse 返回 true 时才读取 title、score 并输出课程，返回 false 时输出“课程数据无效”。
 }

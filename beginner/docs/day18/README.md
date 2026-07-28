@@ -50,6 +50,14 @@ format = (message: string): string => {
 
 `class` 会生成运行时真实存在的 JavaScript 代码，所以程序可以执行 `new Counter()`。`type` 和 `interface` 只负责检查，编译后会消失，不能拿它们去 `new` 或在控制台中当值输出。
 
+## 为什么要这样设计
+
+当“学习分钟数”和“怎样增加、怎样生成摘要”散落在不同函数里，任何代码都可能写入非法状态，函数也容易拿错对象。类把一份实例数据和操作它的方法放在一起，每次 `new` 都得到独立状态；接口让面板只依赖“能提供摘要”这项能力，而不是绑死某个具体类。
+
+JavaScript 负责创建实例、保存原型方法并在方法调用时提供 `this`，TypeScript 负责检查公开成员、私有成员和接口契约。你仍要决定哪些状态应隐藏、方法接受什么范围、无效输入如何处理，以及使用组合还是继承。
+
+类不会自动保证状态合法，验证仍要写在方法里。箭头函数字段可以保留 `this`，代价是每个实例都会创建一份函数；`private` 主要是 TypeScript 层面的访问限制，也不等于对不可信数据的运行时安全检查。
+
 ## 阅读示例
 
 打开并右键运行 `example.ts`。先分别记下两个 `StudyCounter` 变量，再逐次看方法调用的点号左边是谁。运行后检查分钟数：只有被调用的那个实例应该变化。接着看 `Dashboard` 构造器接收了什么对象，以及它实际调用了对方的哪个方法。
@@ -58,7 +66,7 @@ format = (message: string): string => {
 
 方法调用有两类输入，分开看就不容易乱：
 
-1. 点号左边的对象决定 `this`。例如 `session.addMinutes(20)` 中，`session` 成为 `this`。
+1. 点号左边的对象决定 `this`。例如 `session.add(20)` 中，`session` 成为 `this`。
 2. 圆括号里的值进入普通参数。这里的 `20` 进入分钟参数。
 3. 方法用 `this.minutes` 读取或更新当前实例保存的字段。
 4. 方法里的普通局部变量只属于这一次调用，调用结束后不会自动变成实例字段。
@@ -84,8 +92,8 @@ Dashboard | Types: 45 minutes
 flowchart TD
   A["new 创建学习 Session"] --> B
   B["方法读取 minutes 与 topic"] --> C
-  C["Dashboard 接收多个实例"] --> D
-  D["输出单项和汇总"]
+  C["Dashboard 接收一个 SummaryProvider"] --> D
+  D["render 包装这个对象的 summary"]
 ```
 
 ## 独立练习导航
@@ -136,6 +144,29 @@ class MessageFormatter {
 const format = new MessageFormatter("[学习]").format;
 format("完成");
 ```
+
+## 面试时怎么回答
+
+**问：`class implements` 后面只能写 `interface` 吗？**
+
+**答：**不是。只要 `type` 表示可静态检查的对象形状，类也可以实现它；`implements` 检查的是实例是否具有要求的成员，不会把方法实现自动塞进类里：
+
+```ts
+type Printable = { print(): string };
+class Report implements Printable {
+  print(): string {
+    return "report";
+  }
+}
+```
+
+联合类型这类无法让一个类同时确定实现哪种形状的类型，不能直接拿来 `implements`。开发者仍要亲自写成员和业务规则。
+
+**问：接口、抽象类和访问修饰符怎样区分？**
+
+**答：**接口适合只描述能力；抽象类除了规定抽象成员，还能带共享状态和已实现方法，并参与运行时继承。`public`、`protected`、TypeScript 的 `private` 主要帮助编译期限制访问，不等于安全边界；JavaScript 的 `#field` 才有运行时私有语义。
+
+**容易答错或追问：**不要说抽象类只是“不能实例化的接口”，也不要以为 `implements`、`private` 会自动生成实现和数据校验。
 
 ## 拓展思考（不要求写代码）
 
