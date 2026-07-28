@@ -1,4 +1,4 @@
-# DAY31 · Practice 02：数字序列生成器
+# DAY31 · Practice 02：可重复分页游标
 
 [返回当天课程](../README.md)
 
@@ -8,26 +8,35 @@
 - 结构提示代码：[solution.ts](../../../day31/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
-这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
+这题不写 generator，也不处理 `bigint`。你要手写一个可重复遍历的分页 iterable，并直接观察两个 iterator 各自保存的游标。
 
 ## 场景背景
 
-报表调度器需要按需遍历页码范围和任务倒计时，同时处理已经超过安全整数上限的流水号。序列的起止值和大整数都是明确输入；若一次性展开无限增长的数据或用普通数字计算流水号，系统会浪费资源并产生重复编号。你需要输出两组按调用推进的序列，以及保持精度的大整数运算结果。
+日志查看器一次只请求一页，不希望预先生成完整页码数组。同一个查询还可能被两个消费者同时浏览：第一个已经走到第 4 页时，第二个仍应从第 2 页开始。若游标放在 iterable 外层共享，两个消费者会互相抢走页码。你需要手写 `[Symbol.iterator]()` 与 `next()`，直接验证两次遍历互不影响。
 
 ## 数据流
 
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-范围参数 ──> range generator ──> yield 数字序列
-起始数字 ──> createCountdown ──> 倒计时序列
-largeInteger + 1n ──> nextSafeInteger
-三类惰性/大整数结果 ──> 输出
+start=2 + end=4 ──> createPageCursor ──> pages: Iterable<number>
+pages[Symbol.iterator]()
+   ├── firstIterator ──> next() 2 ──> next() 3 ──> next() 4 ──> done
+   └── secondIterator ──> next() 2（独立 current）
+两个 iterator 的 IteratorResult ──> 输出推进顺序与完成状态
 ```
 
-## 必须练到的能力
+## 和 Practice 01 的区别
 
-实现 Iterable、Iterator 或 generator，并区分 yield 与 return。
+Practice 01 同时使用 generator、手写 iterator 和 `bigint`，最后大多通过展开语法一次消费。本题只练手写协议，并保留两个 iterator 交错调用；输入从“生成两类序列”变成“同一个 iterable 上的两个独立游标”，核心边界是状态应该放在哪里。
+
+## 任务要求
+
+1. 实现 `createPageCursor(start, end): Iterable<number>`，不使用 `function*`、`yield` 或预先创建的页码数组。
+2. 每次调用 `[Symbol.iterator]()` 都在函数内部创建自己的 `current = start`。
+3. `next()` 在 `current <= end` 时返回当前页并推进，在超出终点后返回 `done: true`；完成后再次调用仍保持完成。
+4. 为 `createPageCursor(2, 4)` 创建 `firstIterator`、`secondIterator`。第一个先取 2、3，第二个再取 2，第一个继续取 4 并确认下一次已完成。
+5. 输出值必须来自各次 `next()` 的 `IteratorResult`，不能直接写死页码行。
 
 - 不得导入 `practice01` 或直接调用其他练习的实现。
 - 输出必须由变量、计算或函数返回值产生，不把整行结果写死。
@@ -36,10 +45,17 @@ largeInteger + 1n ──> nextSafeInteger
 ## 精确期望输出
 
 ```text
-范围: 2, 3, 4
-倒计时: 3, 2, 1
-安全整数之后: 9007199254740994
+First cursor: 2, 3
+Second cursor: 2
+First resumes: 4
+First done: true
 ```
+
+## 写完后自检
+
+- `createPageCursor(5, 4)` 第一次 `next()` 应返回什么？完成后再调用一次是否仍然完成？
+- 为什么 `current` 必须创建在 `[Symbol.iterator]()` 内部，而不是 `createPageCursor` 的函数体里？
+- generator 能更短地写出页码序列。什么情况下仍值得手写 `next()` 和 `IteratorResult`？
 
 ## 文件
 

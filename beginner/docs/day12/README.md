@@ -4,6 +4,30 @@
 
 今天把函数当成一种可以传递的“处理规则”。例如，成绩报告函数不必自己决定分数怎么显示；外部可以把一个格式化函数传进去，让报告函数在需要时调用它。你会看到数据如何进入普通参数、如何进入回调，以及每一层 `return` 把结果交给谁。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `array.forEach(callback)`：逐项执行动作
+
+`forEach` 由数组提供，所以点号左边必须是数组。括号里传入一个回调函数；数组会按顺序把“当前项、下标、原数组”交给回调。最常用的是前两个参数。
+
+`forEach` 适合输出、记录等动作。它不会创建新数组，整个调用返回 `undefined`；回调里的 `return` 也不能让外层 `forEach` 提前结束。需要收集新值时用已经学过的 `map`，需要中途停止时通常用 `for...of`。
+
+```ts
+const minutes = [30, 45];
+const result = minutes.forEach((value, index) => {
+  console.log(`${index + 1}: ${value}`);
+});
+console.log(result);
+```
+
+实际输出：
+
+```text
+1: 30
+2: 45
+undefined
+```
+
 ## 核心讲解
 
 先看一个函数类型。它不写具体实现，只说明“调用时要给什么，调用后会拿到什么”：
@@ -81,6 +105,10 @@ flowchart TD
   D["void 回调输出各行"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 12 对应阅读](../OFFICIAL-READING.md#day-12) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -88,7 +116,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 函数类型、箭头函数与回调 | 主任务 |
-| [practice02](./practice02/README.md) | 学习记录格式器 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 消息格式化与多路投递 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day12 practice02`。
 
@@ -146,10 +174,3 @@ const result = report("TS"); // result 的类型是 void
 ## 拓展思考（不要求写代码）
 
 如果 `Reporter` 需要把每条报告异步保存到服务器，它的返回类型和 `reportScores` 的实现应怎样变化，调用者又应等待什么？
-
-## 官方资料
-
-- [More on Functions：Function Type Expressions](https://www.typescriptlang.org/docs/handbook/2/functions.html#function-type-expressions)
-- [More on Functions：Optional Parameters](https://www.typescriptlang.org/docs/handbook/2/functions.html#optional-parameters)
-- [More on Functions：Rest Parameters](https://www.typescriptlang.org/docs/handbook/2/functions.html#rest-parameters-and-arguments)
-- [More on Functions：void](https://www.typescriptlang.org/docs/handbook/2/functions.html#void)

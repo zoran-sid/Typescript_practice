@@ -68,6 +68,12 @@ settings ──> keyof typeof settings ──> SettingName ──> selectedSetti
 
 keyof T 产生键联合，T[K] 用方括号取属性类型；运行时读取写 object[key]。
 
+## 写完后自检
+
+- 把 `selectedSetting` 改成 `"fontSize"` 后，读取结果的类型和值应怎样变化？
+- 尝试把 `"missing"` 交给 `getProperty`，TypeScript 应在哪个参数位置拒绝它？为什么任意 `string` 不够安全？
+- 为什么函数还需要独立的 `Key extends keyof Item`，不能只接收 `keyof Item` 再统一返回所有属性类型的联合？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

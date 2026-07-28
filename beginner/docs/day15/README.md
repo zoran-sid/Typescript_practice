@@ -88,6 +88,10 @@ flowchart TD
   E["输出结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 15 对应阅读](../OFFICIAL-READING.md#day-15) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -95,7 +99,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 泛型基础与输入输出关系 | 主任务 |
-| [practice02](./practice02/README.md) | 泛型首项读取 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 安全读取首项与空数组 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day15 practice02`。
 
@@ -159,8 +163,3 @@ TypeScript 负责推断并传递 `Item` 的关系，开发者仍要决定空数�
 ## 拓展思考（不要求写代码）
 
 为什么不带回退值的 `firstOrUndefined<Item>` 必须返回 `Item | undefined`，而本题的 `lastOrFallback<Item>` 可以只返回 `Item`？这个区别是谁提供的保证？
-
-## 官方资料
-
-- [Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)
-- [Guidelines for Writing Good Generic Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#guidelines-for-writing-good-generic-functions)

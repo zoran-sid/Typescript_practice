@@ -14,3 +14,6 @@ const updated: StudyTask[] = [...original];
 // 再从 report.counts 读取 done/todo，并从 report.totalMinutes 读取总分钟，按题目格式输出。
 console.log(`Original first status: ${original[0]?.status}`);
 console.log(`Updated first status: ${updated[0]?.status}`);
+// TODO 3：再调用 completeTask(original, "missing")；比较每个返回任务与
+// original 同位置任务的引用，输出“Missing id changed item: false”。
+// 不要只比较数组引用：updateById 使用 map 时，即使没命中也会创建新数组。

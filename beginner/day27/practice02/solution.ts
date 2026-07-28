@@ -1,36 +1,37 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-type SearchCallback = (query: string) => void;
-function normalizeQuery(value: string): string {
-  // TODO 1：去掉当前 value 两端的空格并返回新字符串；下面的空字符串只是 string 占位。
-  return "";
-}
-function bindSearch(input: HTMLInputElement, onSearch: SearchCallback): void {
-  // TODO 2：给当前 input 注册 input 事件；在处理函数中确认 currentTarget 是输入元素，
-  // 再把它的 value 交给 normalizeQuery，并把返回的普通 string 交给 onSearch。
-  // 这个浏览器适配器不在普通 Node 进程中调用。
-}
-interface JsonClient { get(url: string): Promise<unknown>; }
+type Lesson = { title: string; minutes: number };
 function isRecord(value: unknown): value is Record<string, unknown> {
-  // TODO 3：检查 value 不是 null 且 typeof 为 object。
+  // TODO 1：检查 value 不是 null 且 typeof 为 object。
   // true 承诺可读取对象字段，false 表示检查失败；下面的 false 是全拒绝占位。
   return false;
 }
-async function loadTitle(client: JsonClient): Promise<string | undefined> {
-  const value = await client.get("/lesson");
-  // TODO 4：验证 await 得到的 unknown value 是对象且 title 是 string；
-  // 通过时返回该 title，坏数据才返回 undefined。下面的 undefined 目前也拒绝了好响应。
+function parseLesson(value: unknown): Lesson | null {
+  // TODO 2：要求对象的 title 是 string，minutes 是有限非负 number；
+  // 通过时返回 Lesson，失败时返回 null。下面的 null 目前也拒绝好响应。
+  return null;
+}
+function valueAfter(args: readonly string[], flag: string): string | undefined {
+  // TODO 3：找到 flag 的索引，返回后一项；缺失标记或缺少值时返回 undefined。
   return undefined;
 }
-function parseDay(args: readonly string[]): number | undefined {
-  // TODO 5：从当前 args 找到 --day 后一项，转成 number 后确认是非负整数；
-  // 合法时返回数字，缺失或非法时返回 undefined。下面的 undefined 只是失败分支结果。
+function parseMinutesOverride(args: readonly string[]): number | undefined {
+  // TODO 4：读取 --minutes 后的非空字符串，转换后只接受有限非负整数。
+  // 非法或缺失返回 undefined；下面的 undefined 目前忽略合法的 "45"。
   return undefined;
 }
-const fakeClient: JsonClient = { async get(): Promise<unknown> { return { title: "Runtime boundaries" }; } };
-// TODO 6：把固定输入 "  typed  " 交给 normalizeQuery，并让 query 接住结果；
-// Node 只验证这段纯字符串逻辑，不伪造 HTMLInputElement 或声称浏览器事件已触发。
-// 下面的空字符串表示 normalizeQuery 还没有返回结果，只是等待替换的占位值。
-const query = "";
-console.log(`Normalized query: ${query}`);
-console.log(`Fetched title: ${(await loadTitle(fakeClient)) ?? "invalid"}`);
-console.log(`CLI day: ${parseDay(["--day", "27"]) ?? "missing"}`);
+function applyMinutesOverride(lesson: Lesson, minutes: number | undefined): Lesson {
+  // TODO 5：minutes 为 undefined 时返回原 lesson；有数字时创建新对象并覆盖 minutes。
+  // 不能直接修改 lesson。下面直接返回原对象只是尚未处理合法覆盖时的占位。
+  void minutes;
+  return lesson;
+}
+const base = parseLesson({ title: "Runtime boundaries", minutes: 35 });
+if (base !== null) {
+  const valid = applyMinutesOverride(base, parseMinutesOverride(["--minutes", "45"]));
+  const invalid = applyMinutesOverride(base, parseMinutesOverride(["--minutes", "soon"]));
+  console.log(`Base: ${base.title}/${base.minutes}`);
+  console.log(`Override: ${valid.title}/${valid.minutes}`);
+  console.log(`Invalid minutes: ${invalid.title}/${invalid.minutes}`);
+}
+const bad = parseLesson({ title: "Broken", minutes: "35" });
+console.log(`Bad response: ${bad === null ? "rejected" : "accepted"}`);

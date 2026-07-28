@@ -37,20 +37,20 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "主题设置不可变更新",
+      "title": "购物车的更新、删除与不变分支",
       "expected": [
-        "原主题：light",
-        "新主题：dark",
-        "原技能：HTML",
-        "新技能：HTML、TypeScript",
-        "第一项：HTML",
-        "其余：TypeScript"
+        "原商品数：2",
+        "新商品数：1",
+        "原键盘数量：2",
+        "新键盘数量：3",
+        "优惠券：TS20"
       ],
-      "success": "你已闭卷重建 主题设置不可变更新 的完整数据流。",
+      "success": "购物车已按输入选择更新、删除或不变分支，原状态也没有被修改。",
       "hints": [
-        "使用解构、spread、rest 创建不可变的新数据。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "先检查 sku 是否存在和 nextQuantity 是否为负数，拒绝分支返回原 cart。",
+        "数量为 0 使用 filter；正数使用 map 并只替换目标商品。",
+        "applyCoupon 再通过对象 spread 返回新 Cart。",
+        "输出同时读取 originalCart 和 updatedCart，确认原键盘数量仍为 2。"
       ]
     }
   ]

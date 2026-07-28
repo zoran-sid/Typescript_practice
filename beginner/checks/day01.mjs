@@ -27,16 +27,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "学习进度卡",
+      "title": "键盘库存快照",
       "expected": [
-        "Ada completed 1 lesson. Beginner: true",
-        "Zoran completed 2 and Lesson Beginner is: true"
+        "商品: Keyboard",
+        "出库前库存: 5",
+        "出库后库存: 3",
+        "启用库存跟踪: true"
       ],
-      "success": "你已闭卷重建 学习进度卡 的完整数据流。",
+      "success": "你已经能先保存旧值快照，再更新当前库存并分别输出两个时刻。",
       "hints": [
-        "使用 const、let、string、number、boolean 和模板字符串。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "beforeStock 要在第一次修改 stock 之前读取它。",
+        "两次出库都要把减 1 的结果重新赋值给 stock。",
+        "四条输出分别读取商品名、旧库存、新库存和布尔值。",
       ]
     }
   ]

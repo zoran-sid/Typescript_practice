@@ -26,16 +26,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "课程 JSON 验证",
+      "title": "通知批次的部分接收",
       "expected": [
-        "课程: TypeScript / 90 分",
-        "课程数据无效"
+        "可发送：email,push",
+        "丢弃数量：2",
+        "批次错误：JSON 格式错误"
       ],
-      "success": "你已闭卷重建 课程 JSON 验证 的完整数据流。",
+      "success": "批次容器与单项数据已分层验证，合法通知被保留，语法错误也有独立结果。",
       "hints": [
-        "JSON.parse 的结果先当 unknown，再逐层验证运行时形状。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "JSON.parse 的结果先存成 unknown，catch 只处理语法错误。",
+        "先用 Array.isArray 检查容器，再逐项调用 isNotification。",
+        "email 检查 address，push 检查 token；只看 kind 不够。",
+        "合法项 push 到 valid，其他项增加 rejectedCount，不要让单项错误拒绝整批。"
       ]
     }
   ]

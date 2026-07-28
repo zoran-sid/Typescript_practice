@@ -10,7 +10,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 25 · 结课项目（二）独立综合题",
+      "title": "学习任务快照更新",
       "expected": [
         "Original first: todo",
         "Updated first: done",
@@ -39,13 +39,14 @@ export default {
         "Updated first status: done",
         "Done: 2",
         "Todo: 0",
-        "Total minutes: 105"
+        "Total minutes: 105",
+        "Missing id changed item: false"
       ],
-      "success": "你已闭卷重建 任务更新与统计 的完整数据流。",
+      "success": "你已组合任务模块，并区分新数组、命中更新与未变化对象引用。",
       "hints": [
-        "业务函数使用参数与返回值，执行不可变更新、筛选、排序和统计。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "入口调用 completeTask 和 buildReport，不要重写模块算法。",
+        "missing id 的返回数组可能是新的，但各任务对象都应保持原引用。",
+        "逐项引用比较可用 some；任何一项不同才表示 changed item。"
       ]
     },
     {

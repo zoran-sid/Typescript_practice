@@ -65,6 +65,12 @@ titles
 
 async 函数返回 Promise<T>；调用先得到 Promise，await 后的变量才是 T。
 
+## 写完后自检
+
+- 如果三个正常请求中的第二个也设置为失败，`Promise.all` 会交付部分成功数组，还是进入失败路径？调用方应在哪里处理？
+- 把 `loadLessons` 改成循环里逐个 `await`，输出内容也许相同，但请求启动顺序和总等待方式有什么变化？
+- 为什么 `forEach(async ...)` 不能替代 `map + Promise.all` 来交付一个可统一等待的结果？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

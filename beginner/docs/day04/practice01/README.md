@@ -1,4 +1,4 @@
-# DAY04 · Practice 01：Day 04：订单优惠计算器
+# DAY04 · Practice 01：订单优惠计算器
 
 [返回当天课程](../README.md)
 
@@ -76,6 +76,12 @@ discount + orderTotal ──> amountToPay ──> 输出
 ## 本题易漏语法
 
 比较用 >=、严格相等用 ===；多分支写 } else if (...) {，不要把互斥规则拆成叠加的 if。
+
+## 写完后自检
+
+- 如果 `orderTotal` 恰好是 200，同时会员条件也成立，会应用哪一档优惠？
+- 如果订单仍为 120、顾客是会员但 `hasCoupon` 改成 `true`，`canUseMemberDiscount`、优惠和应付金额分别怎样变化？
+- 为什么优惠规则要写成一条 `if / else if / else` 链，而不是三个独立 `if`？
 
 ## 文件
 

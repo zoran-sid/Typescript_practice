@@ -1,4 +1,4 @@
-# DAY03 · Practice 02：温度观测报告
+# DAY03 · Practice 02：慢任务位置报告
 
 [返回当天课程](../README.md)
 
@@ -10,40 +10,60 @@
 
 ## 场景背景
 
-室内传感器依次记录了三次温度，读数为 `[18, 21, 23]`。值班人员需要一份简单观测报告，用来核对采样次数、全部读数之和以及本轮最高温度。程序应从原始数组生成这三项结果，而不是人工填写统计值。
+性能测试按运行顺序记录了四个任务的耗时：`[5, 12, 8, 15]` 分钟。团队把耗时达到 10 分钟的任务视为慢任务，需要报告“第几个任务”比较慢，方便回到原测试记录中定位。
 
-这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
+这题不能只拿到数组项本身，因为报告还需要它的位置。经典 `for` 循环会同时保留 `index`，既能通过 `taskMinutes[index]` 读取耗时，也能把位置转换成人习惯的第 1、2、3 项。
 
 ## 数据流
 
-先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
-
 ```text
-temperatures
+taskMinutes = [5, 12, 8, 15]
    │
-   └── for...of 每轮取出 temperature
-          ├── 累加 ──> totalTemperature
-          └── 比较并更新 ──> highestTemperature
+   └── for：index 从 0 递增
+          │
+          ├── taskMinutes[index] ──> minutes ──> >= 10 ──> isSlow
+          │                                              │
+          │                                              └── true ──┬──> slowCount + 1
+          │                                                        └──> index + 1
+          │                                                               │
+          └───────────────────────────────────────────────────────────────┴──> slowPositionsText
 
-数组长度 + totalTemperature + highestTemperature ──> 报告输出
+taskMinutes.length ──> Tasks
+slowCount ──> Slow tasks
+slowPositionsText ──> Slow positions
 ```
 
-## 必须练到的能力
+## 需要完成
 
-使用数字数组、for...of、累加变量和最大值判断。
+- 使用 `taskMinutes = [5, 12, 8, 15]` 和慢任务边界 `10`。
+- 使用带 `index` 的 `for` 循环读取每一项，不要直接写死第 2 项和第 4 项。
+- 当前耗时 `>= 10` 时，让 `slowCount` 增加 1，并把 `index + 1` 追加到 `slowPositionsText`。
+- 多个序号之间使用 `", "` 分隔，但第一个序号前不能多出逗号。
+- 分别输出任务总数、慢任务数量和慢任务序号文字。
+- 本题独立运行，不导入 `practice01` 或其他练习。
 
-- 不得导入 `practice01` 或直接调用其他练习的实现。
-- 输出必须由变量、计算或函数返回值产生，不把整行结果写死。
-- 每个参数、局部变量和返回值都应能在流程图中找到位置。
+## 为什么保存 `index + 1`
+
+数组的第一项下标是 0，代码用下标定位；人说“第一个任务”时通常从 1 开始。`index + 1` 是把内部位置翻译成给人看的序号。若直接保存 `index`，程序虽然找对了数组项，报告中的编号却会整体小 1。
 
 ## 精确期望输出
 
 ```text
-Readings: 3
-Total: 62
-Highest: 23
+Tasks: 4
+Slow tasks: 2
+Slow positions: 2, 4
 ```
+
+## 和 Practice 01 的区别
+
+Practice 01 的输入数据只需逐项取值，用 `for...of` 累加总时长并寻找最长值。这里的输出需要任务位置，因此控制流程必须保留数组下标，同时累计命中数量并逐步拼出给人看的序号文字。
+
+## 写完后自检
+
+- 如果数据改成 `[10, 9]`，`slowCount` 和 `slowPositionsText` 应分别是什么？
+- 为什么判断使用 `>= 10`，而不是 `> 10`？
+- 为什么这里选带 `index` 的 `for`，而不是只提供数组项的 `for...of`？
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。

@@ -7,6 +7,7 @@ function isCourse(value: unknown): value is Course {
   return (
     typeof value === "object" &&
     value !== null &&
+    !Array.isArray(value) &&
     "title" in value &&
     typeof value.title === "string" &&
     "score" in value &&

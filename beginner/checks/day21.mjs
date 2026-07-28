@@ -26,16 +26,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "并行内容加载",
+      "title": "并行还是顺序：按依赖关系等待",
       "expected": [
         "并行结果: 课程、进度",
+        "依赖结果: 用户42=editor",
         "错误: 网络不可用"
       ],
-      "success": "你已闭卷重建 并行内容加载 的完整数据流。",
+      "success": "独立请求已并行启动，有数据依赖的权限请求保持顺序，失败 Promise 也已处理。",
       "hints": [
-        "使用 Promise、async/await、Promise.all，并安全处理异步错误。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "先创建课程和进度两个 Promise，再调用 Promise.all；不要先 await 其中一个。",
+        "fetchPermission 的参数来自 await fetchUserId()，所以这两步必须有先后。",
+        "fetchPermission 要使用 userId 参数生成结果，不能写死完整输出。",
+        "通知请求要在 try 中 await，catch 的 unknown 交给 errorMessage。"
       ]
     }
   ]

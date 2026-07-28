@@ -114,6 +114,10 @@ flowchart TD
   D["输出课程与设置字段"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 16 对应阅读](../OFFICIAL-READING.md#day-16) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -121,7 +125,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 泛型约束、keyof、T[K] 与 typeof | 主任务 |
-| [practice02](./practice02/README.md) | 安全读取配置字段 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 类型安全的配置更新 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day16 practice02`。
 
@@ -179,9 +183,3 @@ TypeScript 负责检查 `"title"` 存在并推断 `string`；开发者仍要决�
 ## 拓展思考（不要求写代码）
 
 如果键来自地址栏或输入框，它在运行时只是普通 `string`。在不使用类型断言的前提下，你需要做什么验证，才能安全地把它交给本题的 `getProperty`？
-
-## 官方资料
-
-- [Generics：Generic Constraints](https://www.typescriptlang.org/docs/handbook/2/generics.html#generic-constraints)
-- [Keyof Type Operator](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html)
-- [Indexed Access Types](https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html)

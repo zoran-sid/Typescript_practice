@@ -9,7 +9,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 23 · 严格配置下的独立练习",
+      "title": "严格模式下的课程入口",
       "expected": [
         "找到: TypeScript",
         "没有找到",
@@ -38,18 +38,23 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "编译配置说明器",
+      "title": "严格配置发布前检查",
       "expected": [
-        "先读: 第一条错误",
-        "strict: 开启一组严格检查",
-        "noEmit: 只检查，不生成文件",
-        "target/module: 输出语法 / 模块规则"
+        "First step: fix first diagnostic",
+        "type-check: no files emitted",
+        "build: JavaScript emitted",
+        "Runtime: ES2022/NodeNext",
+        "Unknown option: rejected"
       ],
-      "success": "你已闭卷重建 编译配置说明器 的完整数据流。",
+      "success": "你已比较类型检查与发布配置，并安全验证外部配置键。",
       "hints": [
-        "阅读严格 TSConfig，优先处理第一条根因错误，不关闭严格检查。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "firstDiagnostic 的空数组结果是 undefined。",
+        "describeEmit 只根据 noEmit 决定是否写出 JavaScript。",
+        "isKnownOption 只接受四个已知配置键。",
+        "target/module 与 strict 解决的是不同问题。"
+      ],
+      "typeHints": [
+        "不要用非空断言读取第一条诊断，也不要把外部字符串断言成 KnownOption。"
       ]
     }
   ]

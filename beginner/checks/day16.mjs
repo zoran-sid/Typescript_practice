@@ -29,18 +29,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "安全读取配置字段",
+      "title": "类型安全的配置更新",
       "expected": [
-        "ID=7",
-        "标题：TypeScript",
-        "课数：21",
-        "设置：theme=dark"
+        "原页数：20",
+        "新页数：50",
+        "原提示：true",
+        "新提示：false"
       ],
-      "success": "你已闭卷重建 安全读取配置字段 的完整数据流。",
+      "success": "配置键与新值类型保持关联，两次更新也没有修改原设置。",
       "hints": [
-        "使用泛型约束、keyof 与 T[K] 安全读取属性。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "updateProperty 的 key 是 Key extends keyof Item，nextValue 是 Item[Key]。",
+        "使用对象 spread 返回新对象，并让 [key]: nextValue 放在旧字段之后。",
+        "pageSizeKey 约束为 SettingName，不能写不存在的字段。",
+        "输出同时读取 originalSettings 和 updatedSettings。"
       ]
     }
   ]

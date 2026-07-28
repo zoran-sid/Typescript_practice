@@ -2,7 +2,43 @@
 
 预计用时：60–90 分钟。
 
-Day 03 里，你用 `for...of` 自己写循环。今天先不背“回调函数”这个词。假设原数组是 `[1, 2, 3]`，现在要得到 `[2, 4, 6]`：程序需要把 1、2、3 依次拿出来，每次乘以 2，再把三个结果放进新数组。`map` 负责重复取值，你只写“拿到一个值后怎么算”。把这条规则写成函数交给 `map`，再由 `map` 反复调用，它就是回调函数。
+Day 03 里，你用循环自己逐项处理数组。今天先不背新名词。假设原数组是 `[1, 2, 3]`，现在要得到 `[2, 4, 6]`：程序需要把 1、2、3 依次拿出来，每次乘以 2，再把三个结果放进新数组。JavaScript 已经提供了负责重复取值的数组工具，你只需把“拿到一个值后怎么算”交给它。
+
+## 今天第一次见到的 JavaScript 工具
+
+今天四个方法都由数组提供，所以点号左边永远是“这一步要读取的数组”。它们不会因为调用本身而改写原数组容器。
+
+| 写法 | 圆括号里传什么 | 返回什么 | 主要解决什么 |
+| --- | --- | --- | --- |
+| `items.map(callback)` | 如何把当前项变成新值的函数 | 与原数组等长的新数组 | 批量转换 |
+| `items.filter(callback)` | 当前项要不要保留的函数 | 只含保留项的新数组 | 批量筛选 |
+| `items.find(callback)` | 当前项是不是目标的函数 | 第一项匹配值，找不到是 `undefined` | 找一个结果 |
+| `items.join(separator)` | 项与项之间使用的分隔文字 | 一个字符串 | 把数组整理成显示文字 |
+
+最小示例：
+
+```ts
+const numbers = [1, 2, 3];
+const doubled = numbers.map((number) => number * 2);
+const large = numbers.filter((number) => number >= 2);
+const found = numbers.find((number) => number === 2);
+
+console.log(`Doubled: ${doubled.join(", ")}`);
+console.log(`Large: ${large.join(", ")}`);
+console.log(`Found: ${found}`);
+```
+
+实际输出：
+
+```text
+Doubled: 2, 4, 6
+Large: 2, 3
+Found: 2
+```
+
+回调参数 `number` 表示当前这一项，名字可以换，但它不是整个数组。`map` 收集回调交回的新值；`filter` 与 `find` 把回调结果当作“是/否”。`find` 遇到第一个 `true` 就停止，全部为 `false` 时返回 `undefined`。`join` 不接收回调；括号里的 `", "` 是相邻两项之间的分隔符，空数组会得到空字符串。
+
+方法名都是小写。常见错误是漏写点号、把 `find` 误以为返回数组，或在带花括号的回调中忘记 `return`。
 
 ## 完成目标
 
@@ -143,6 +179,10 @@ flowchart TD
   E["输出三个结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 07 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-07) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -209,8 +249,3 @@ if (largeOrder !== undefined) {
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照三个数组方法各自保存的中间结果。
-
-## 官方资料
-
-- [Everyday Types：Arrays](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays)
-- [MDN：Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)

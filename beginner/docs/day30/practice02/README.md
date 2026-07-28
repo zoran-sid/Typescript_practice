@@ -1,4 +1,4 @@
-# DAY30 · Practice 02：旧模块声明适配
+# DAY30 · Practice 02：模块增强与运行时补丁
 
 [返回当天课程](../README.md)
 
@@ -8,26 +8,38 @@
 - 结构提示代码：[solution.ts](../../../day30/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
-这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
+这题专门验证声明文件和模块增强的运行时边界。辅助文件提供一个旧计分模块和一个没有 `label()` 方法的旧用户类；你要先观察真实原型，再同时补类型与实现。
 
 ## 场景背景
 
-维护团队需要为一个旧版 JavaScript 工具补上 TypeScript 适配层，调用方会读取真实的求和函数和版本号，并在新代码中扩展课程模型。声明边界必须与模块实际导出完全一致，否则旧代码升级后可能出现类型检查通过、运行却崩溃的问题。你需要输出旧模块计算值与版本、声明合并后的课程信息，以及独立建模的现代状态。
+维护团队以 `import * as legacyScore` 接入旧计分模块，这里的导入结果是 ES 模块命名空间对象，不是 TypeScript 的 `namespace` 关键字。另一个 `LegacyUser` 运行时只有 `name`；模块增强可以让编译器知道未来会有 `label()`，却不会替你把方法装到原型上。你需要先证明方法不存在，再安装运行时补丁并调用它。
 
 ## 数据流
 
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-旧 JS 模块 ──> .d.ts ──> 类型安全的导入值
-两段 LessonInfo ──> 声明合并 ──> lesson
-namespace / enum Status ──> status
-旧模块值 + lesson + status ──> 运行输出
+legacy-score.js + legacy-score.d.ts
+   └── import * as legacyScore ──> total / version
+
+legacy-user.js ──> LegacyUser.prototype
+                      ├── 补丁前 typeof label ──> "undefined"
+                      └── 模块增强（只补类型）
+                              + 原型赋值（补运行时实现）
+                                      └── user.label() ──> 最终文字
 ```
 
-## 必须练到的能力
+## 和 Practice 01 的区别
 
-让 .d.ts 诚实描述旧 JavaScript 的真实导出与返回值。
+Practice 01 站在调用者一侧，读取已有 `.d.ts`，并练声明合并与旧枚举转换。本题站在维护者一侧：先检查真实原型，再用模块增强补实例类型，同时亲自安装运行时方法；控制流包含“补丁前观察 → 类型扩展 → 运行时补丁 → 调用”四个阶段。
+
+## 任务要求
+
+1. 用 `import * as legacyScore from "../legacy-score.js"` 导入模块对象，调用 `total([10, 20, 30])` 并读取 `version`。
+2. 从 `../legacy-user.js` 导入 `LegacyUser`。安装补丁前先读取 `typeof LegacyUser.prototype.label`，结果必须来自真实运行时。
+3. 使用 `declare module "../legacy-user.js"` 增强 `LegacyUser` 的实例类型，增加 `label(): string`。
+4. 模块增强之后仍要执行原型赋值，为 `label` 提供真实实现；返回 `名字 (legacy)`。
+5. 创建 Ada 用户并输出补丁后的标签。不要使用 TypeScript `namespace` 关键字，也不要声称模块增强会生成 JavaScript。
 
 - 不得导入 `practice01` 或直接调用其他练习的实现。
 - 输出必须由变量、计算或函数返回值产生，不把整行结果写死。
@@ -36,11 +48,17 @@ namespace / enum Status ──> status
 ## 精确期望输出
 
 ```text
-Legacy total: 60
-Legacy version: 1.0
-Merged: Declarations/40
-Modern status: published
+Module total: 60
+Module version: 1.0
+Before patch: undefined
+User label: Ada (legacy)
 ```
+
+## 写完后自检
+
+- 暂时注释掉原型赋值，只保留模块增强时，类型检查可能怎样，运行 `user.label()` 又会怎样？
+- 为什么 `import * as legacyScore` 得到的“模块命名空间对象”和 `namespace LegacyScore {}` 不是同一套组织方式？
+- 如果 `legacy-user.js` 下一版自己实现了不同含义的 `label()`，你的补丁会覆盖什么？真实项目应怎样避免这种冲突？
 
 ## 文件
 

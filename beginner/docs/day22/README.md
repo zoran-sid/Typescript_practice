@@ -14,6 +14,30 @@
 - 测试同步抛错，并在异步测试中先 `await`；
 - 从第一条失败信息和最小输入开始调试。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `Object.is`：比较两个值是不是同一个值
+
+`Object.is(actual, expected)` 是 JavaScript 自带的比较工具，不是本课程编写的函数。点号左边的 `Object` 是 JavaScript 提供的内置对象；括号里依次放“实际值”和“期望值”；返回值是 `boolean`，相同为 `true`，不同为 `false`。
+
+它适合放进小型断言函数中，因为测试需要一个明确的真假结果。课程里的 `assertEqual` 是我们自己写的函数，它在内部调用 `Object.is`；两者不要混为一谈。
+
+```ts
+console.log(Object.is(60, 60));
+console.log(Object.is(Number.NaN, Number.NaN));
+console.log(Object.is({ total: 60 }, { total: 60 }));
+```
+
+实际输出：
+
+```text
+true
+true
+false
+```
+
+最后一行是 `false`，因为两个对象虽然内容看起来一样，却是分别创建的两个对象。`Object.is` 不会逐层比较对象字段；本日断言只用它比较数字、字符串等简单值。还要注意拼写是大写的 `Object`、小写的 `is`。
+
 ## 核心讲解
 
 ### 一条测试实际做了什么
@@ -72,13 +96,17 @@ flowchart TD
   E["逐项报告通过"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 22 官方手册索引](../OFFICIAL-READING.md#day-22) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 22 · 独立测试与调试练习 | 主任务 |
+| [practice01](./practice01/README.md) | 成绩服务回归测试 | 主任务 |
 | [practice02](./practice02/README.md) | 购物车回归测试 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day22 practice02`。
@@ -143,8 +171,3 @@ console.log(actual === "你好，小夏");
 ## 拓展思考（不要求写代码）
 
 如果 `loadScores()` 偶尔因为网络错误而拒绝 Promise，第五条测试应怎样区分“正确失败”和“意外失败”？请用 AAA 三步口述测试设计。
-
-## 官方资料
-
-- [TypeScript：静态类型检查](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#static-type-checking)
-- [Node.js：Test runner](https://nodejs.org/api/test.html)

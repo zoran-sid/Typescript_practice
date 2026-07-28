@@ -4,6 +4,94 @@
 
 接口、文件或浏览器存储给程序的是一段外部数据。即使里面写着 `name`、`contact` 等熟悉字段，TypeScript 也没有检查过它们是否存在、类型是否正确。先把解析结果放进 `unknown`，意思是“现在还不知道它能不能安全使用”；验证通过后，再交给业务代码。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `JSON.parse(text)` 与 `JSON.stringify(value)`
+
+`JSON` 是 JavaScript 运行环境提供的对象。
+
+- `JSON.parse(text)` 的括号里放 JSON 字符串，返回解析后的 JavaScript 值。语法损坏时会抛错；解析成功也不代表字段符合业务类型。
+- `JSON.stringify(value)` 的括号里放 JavaScript 值，返回 JSON 字符串。它用于保存或传输，不负责验证业务字段。
+
+TypeScript 标准库没有替你验证 `JSON.parse` 的结果，本教程先把结果保存为 `unknown`。
+
+```ts
+const value: unknown = JSON.parse('{"title":"TypeScript","score":90}');
+console.log(typeof value);
+console.log(JSON.stringify(value));
+```
+
+实际输出：
+
+```text
+object
+{"title":"TypeScript","score":90}
+```
+
+### 判断 unknown：也没有内置的 `isString`、`isNumber`
+
+JavaScript 没有通用的 `isString(value)` 或 `isNumber(value)`。常用检查来自同一个“判断运行时值”家族：
+
+| 写法 | 返回什么 | 能确认什么 | 不能确认什么 |
+| --- | --- | --- | --- |
+| `typeof value === "string"` | boolean | 原始字符串 | 对象里的其他字段 |
+| `typeof value === "number"` | boolean | number 类型，包括 `NaN` | 是否有限、是否整数 |
+| `Array.isArray(value)` | boolean | 值是不是数组 | 数组元素是否合格 |
+| `value !== null` | boolean | 排除 `null` | 值一定是普通记录对象 |
+| `!Array.isArray(value)` | boolean | 排除数组 | 其他对象字段是否合格 |
+| `"title" in value` | boolean | 对象或原型链上存在该属性 | 属性值是不是字符串 |
+| `value instanceof Error` | boolean | 值来自 Error 家族 | 普通错误形状 |
+
+`typeof null` 的结果也是 `"object"`，而数组的 `typeof` 结果同样是 `"object"`。本教程把 `isRecord` 定义为“普通记录对象”，所以必须同时排除 `null` 和数组；如果想让数组也通过，更合适的名字是 `isObject`。类型和值的完整规则通常写成自己的类型守卫：
+
+```ts
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+console.log(isString("TS"));
+console.log(isString(90));
+console.log(isRecord(null));
+console.log(isRecord([]));
+console.log(Array.isArray([]));
+```
+
+实际输出：
+
+```text
+true
+false
+false
+false
+true
+```
+
+### `array.every(check)`：每一项都必须通过
+
+`every` 由数组提供。括号里传检查回调，每项都让回调返回真时，`every` 才返回 `true`；遇到第一项失败会停止继续检查。空数组没有失败项，所以 `[].every(check)` 会返回 `true`，业务若要求至少一项，还要额外检查数组长度。
+
+```ts
+console.log(["变量", "函数"].every(isString));
+console.log(["变量", 90].every(isString));
+console.log([].every(isString));
+```
+
+实际输出：
+
+```text
+true
+false
+true
+```
+
 ## 核心讲解
 
 从 JSON 文本进入业务代码，按这个顺序走：
@@ -21,6 +109,7 @@ function isCourse(value: unknown): value is Course {
   return (
     typeof value === "object" &&
     value !== null &&
+    !Array.isArray(value) &&
     "title" in value &&
     typeof value.title === "string"
   );
@@ -31,8 +120,9 @@ function isCourse(value: unknown): value is Course {
 
 1. `typeof value === "object"` 先排除字符串、数字等值。
 2. `value !== null` 单独排除 `null`，因为 JavaScript 中 `typeof null === "object"` 的结果是 `true`。
-3. `"title" in value` 确认属性存在。
-4. `typeof value.title === "string"` 再确认属性值确实是字符串。
+3. `!Array.isArray(value)` 排除数组；数组虽然也是对象，却不是这里要读取命名字段的普通记录对象。
+4. `"title" in value` 确认属性存在。
+5. `typeof value.title === "string"` 再确认属性值确实是字符串。
 
 嵌套对象要在进入下一层前重复对象检查。数组先用 `Array.isArray` 确认容器，再用 `every` 让每个元素都通过元素验证函数。只要漏查一个必填字段，`value is Course` 的承诺就比真实检查更乐观，后面的业务代码仍可能出错。
 
@@ -90,6 +180,10 @@ flowchart TD
   D["合法输出课程，非法输出提示"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 20 对应阅读](../OFFICIAL-READING.md#day-20) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -97,7 +191,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | JSON、unknown 与运行时验证 | 主任务 |
-| [practice02](./practice02/README.md) | 课程 JSON 验证 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 通知批次的部分接收 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day20 practice02`。
 
@@ -105,6 +199,7 @@ flowchart TD
 
 - 只检查最外层对象就相信内部字段。
 - 忘记排除 `null`。
+- 把数组也当成普通记录对象通过 `isRecord`。
 - 数组只检查 `Array.isArray`，没有检查元素。
 - 谓词声明 `value is Profile`，实际却漏查字段。
 - 用 `as` 让编译器安静，却没有改变真实数据。
@@ -167,8 +262,3 @@ function isCourse(value: unknown): value is Course {
 ## 拓展思考（不要求写代码）
 
 如果 `Profile` 新增可选 `nickname?: string`，验证器应怎样区分“字段完全缺席”“字段存在且为字符串”和“字段存在但类型错误”？
-
-## 官方资料
-
-- [TypeScript Handbook：Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
-- [Everyday Types：Type Assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)

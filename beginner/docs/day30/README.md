@@ -14,6 +14,59 @@
 - 把旧 enum 归一化成现代字面量状态；
 - 知道错误声明会让编译器相信不真实的行为。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `import * as`：把模块导出收进一个对象
+
+`import * as legacyScore from "./score.js"` 是 JavaScript 模块语法。运行时模块系统读取 `"./score.js"`，再让 `legacyScore` 指向一个“模块命名空间对象”；之后用 `legacyScore.score`、`legacyScore.version` 读取这个模块真正导出的成员。
+
+```ts
+import * as legacyScore from "../../day30/score.js";
+
+console.log(legacyScore.version);
+console.log(legacyScore.score([10, 20]));
+```
+
+实际输出：
+
+```text
+1.0
+30
+```
+
+这里的“模块命名空间对象”不是 TypeScript 的 `namespace` 关键字，也不会把模块内容复制到全局。路径拼错、真实 JS 没有该导出，运行时仍会失败；`.d.ts` 只能描述这些成员，不能创造它们。
+
+### `.prototype`：给已有类的所有实例补上运行时方法
+
+JavaScript 类构造函数自带 `.prototype` 对象。实例读取自身没有的成员时，会继续到这个原型对象上查找。`LegacyUser.prototype.label = function (...) { ... }` 的左边是要安装方法的位置，右边的普通函数是实际实现；以后所有 `LegacyUser` 实例都能找到它。
+
+```ts
+class LegacyUser {
+  constructor(public name: string) {}
+}
+
+interface LegacyUser {
+  label(): string;
+}
+
+console.log(typeof LegacyUser.prototype.label);
+
+LegacyUser.prototype.label = function (this: LegacyUser): string {
+  return `${this.name} (legacy)`;
+};
+
+console.log(new LegacyUser("Ada").label());
+```
+
+实际输出：
+
+```text
+undefined
+Ada (legacy)
+```
+
+这段代码要配合类型声明才会通过 TypeScript 检查，但声明和实现职责不同：模块增强只是让编译器知道 `label`，给 `.prototype` 赋值才真正把方法装到运行时。原型补丁会影响该构造函数创建的所有实例，且普通函数里的动态 `this` 才会指向实例；不要在这里随手换成箭头函数。
+
 ## 核心讲解
 
 ```text
@@ -67,13 +120,17 @@ flowchart TD
   E["输出运行结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 30 官方手册索引](../OFFICIAL-READING.md#day-30) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 30 · 声明文件与旧代码独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 旧计分模块兼容入口 | 主任务 |
 | [practice02](./practice02/README.md) | 旧模块声明适配 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day30 practice02`。
@@ -121,10 +178,3 @@ console.log(score([10, 20]).toFixed(0));
 ## 拓展思考（不要求写代码）
 
 如果 `score.js` 实际开始忽略负数，但 `.d.ts` 完全没有变化，TypeScript 能发现这次业务行为变更吗？应由哪类测试保护它？
-
-## 官方资料
-
-- [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)
-- [Declaration Files](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html)
-- [Declaration Merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)
-- [Enums](https://www.typescriptlang.org/docs/handbook/enums.html)

@@ -31,17 +31,16 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "工单编号格式化",
+      "title": "调试开关规范化",
       "expected": [
-        "TS-10",
-        "#42",
-        "对齐方式: center"
+        "staging debug: enabled",
+        "production debug: disabled"
       ],
-      "success": "你已闭卷重建 工单编号格式化 的完整数据流。",
+      "success": "你已经能先收窄并规范化联合类型，再把统一结果交给环境策略。",
       "hints": [
-        "使用联合类型和控制流收窄后再访问成员专属能力。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "布尔输入已经是规范结果；字符串输入要比较是否等于 on。",
+        "即使请求开启，production 环境也必须得到 disabled。",
+        "describeDebug 应复用 normalizeToggle，不要重复判断三种输入。"
       ]
     }
   ]

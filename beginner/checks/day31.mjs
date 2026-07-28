@@ -8,7 +8,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 31 · 迭代器、生成器与 bigint 独立综合题",
+      "title": "惰性序列与大整数编号",
       "expected": [
         "偶数: 2, 4, 6",
         "倒计时: 3, 2, 1",
@@ -27,17 +27,22 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "数字序列生成器",
+      "title": "可重复分页游标",
       "expected": [
-        "范围: 2, 3, 4",
-        "倒计时: 3, 2, 1",
-        "安全整数之后: 9007199254740994"
+        "First cursor: 2, 3",
+        "Second cursor: 2",
+        "First resumes: 4",
+        "First done: true"
       ],
-      "success": "你已闭卷重建 数字序列生成器 的完整数据流。",
+      "success": "你已手写可重复 iterable，并验证两个 iterator 的游标互不影响。",
       "hints": [
-        "实现 Iterable、Iterator 或 generator，并区分 yield 与 return。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "不要使用 generator；显式实现 Symbol.iterator 和 next。",
+        "current 放在 Symbol.iterator 内，每次遍历得到一份状态。",
+        "有值时先保存本轮页码再递增，超出 end 后返回 done: true。",
+        "两个 iterator 要交错调用，不能分别一次性展开。"
+      ],
+      "runtimeHints": [
+        "如果第二个游标不是从 2 开始，检查 current 是否被两个 iterator 共享。"
       ]
     }
   ]

@@ -4,6 +4,50 @@
 
 输入框里看见的 `3`，程序收到的可能是文字 `"3"`。文字 `"3"` 加数字 `2` 会得到 `"32"`，不是 `5`。今天先认清数据的实际类型，再按“转换 → 计算 → 判断”的顺序处理。
 
+## 今天第一次见到的 JavaScript 工具
+
+**`Number(...)`：把一个值转换成数字**
+
+`Number` 是 JavaScript 全局提供的转换函数。它前面没有点号；圆括号里放一个待转换的值，返回一个 `number`。原变量不会自动改变，所以通常用新变量接住结果：
+
+```ts
+const countText = "12";
+const count = Number(countText);
+
+console.log(count);
+console.log(Number("12px"));
+console.log(Number(""));
+```
+
+实际输出：
+
+```text
+12
+NaN
+0
+```
+
+`NaN` 表示“这次没能得到有效数字”，但它仍属于 JavaScript 的数字类型。空字符串和只含空格的字符串会转换成 0，这往往不符合表单业务，因此真实项目不能只看转换有没有执行，还要先约定空输入怎么处理。
+
+**`Number.isNaN(...)`：检查结果是不是 `NaN`**
+
+这是 `Number` 提供的检查方法：点号左边是全局的 `Number`，括号里传入要检查的值，返回 `true` 或 `false`。
+
+```ts
+const amount = Number("12px");
+console.log(Number.isNaN(amount));
+console.log(Number.isNaN(12));
+```
+
+实际输出：
+
+```text
+true
+false
+```
+
+注意大小写：写 `Number.isNaN`，不是 `number.isnan`。本日练习给的是合法数字文本，不要求加入校验；这里先知道非法转换不会自动报错或变成 0。
+
 ## 完成后你会做到
 
 - 使用 `+`、`-`、`*`、`/` 完成数字运算。
@@ -105,6 +149,10 @@ flowchart TD
   E["输出价格与状态"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 02 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-02) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -112,7 +160,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | Day 02：课程计划统计器 | 主任务 |
-| [practice02](./practice02/README.md) | 批量订单金额 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 同城配送报价 | 独立迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day02 practice02`。
 
@@ -160,9 +208,3 @@ const totalLessons = completed + plannedLessons; // ✅ 3 + 2 得到数字 5。
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点比较括号放置位置和实际执行顺序。
-
-## 官方资料
-
-- [The Basics：静态类型检查与运行时行为](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)
-- [MDN：Number 转换](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
-- [MDN：Addition 运算符](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Addition)

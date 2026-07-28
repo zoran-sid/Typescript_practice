@@ -14,6 +14,31 @@
 - 写一个不使用 any 的对象 Mixin；
 - 在横切功能、Mixin 与普通组合之间做选择。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `Object.assign`：把来源对象的字段复制到目标对象
+
+`Object.assign(target, source)` 是 JavaScript 内置方法。点号左边的 `Object` 是内置对象；第一个参数 `target` 是被修改的目标，后面的一个或多个参数是字段来源；返回值仍是修改后的 `target`。
+
+```ts
+const calculator = { name: "calculator" };
+const enhanced = Object.assign(calculator, { category: "utility" });
+
+console.log(enhanced.category);
+console.log(calculator === enhanced);
+console.log(calculator);
+```
+
+实际输出：
+
+```text
+utility
+true
+{ name: 'calculator', category: 'utility' }
+```
+
+它适合给对象补充一组字段，但会直接修改第一个参数，只做一层复制；嵌套对象不会被深度复制，后面的同名字段还会覆盖前面的字段。本日的 `withCategory` 是课程自定义 Mixin，内部选择使用 `Object.assign`；调用者必须知道原对象也会改变。
+
 ## 核心讲解
 
 ### 方法装饰器分两个时刻工作
@@ -76,13 +101,17 @@ flowchart TD
   E["输出定义、调用与结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 32 官方手册索引](../OFFICIAL-READING.md#day-32) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 32 · 标准装饰器、Mixin 与组合独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 带追踪的价格服务 | 主任务 |
 | [practice02](./practice02/README.md) | 计算器方法日志 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day32 practice02`。
@@ -144,9 +173,3 @@ function logged<This, Args extends unknown[], Return>(
 ## 拓展思考（不要求写代码）
 
 如果 `total` 改成返回 Promise 的异步方法，当前装饰器会保留什么？若还要在异步完成后记录结果，包装器应在哪一步等待，又会怎样影响 Return 的类型设计？
-
-## 官方资料
-
-- [TypeScript 5.0：Decorators](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html#decorators)
-- [Writing Well-Typed Decorators](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html#writing-well-typed-decorators)
-- [旧版 Decorators 页面（仅用于辨认 legacy）](https://www.typescriptlang.org/docs/handbook/decorators)

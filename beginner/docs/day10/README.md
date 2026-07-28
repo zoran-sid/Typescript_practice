@@ -4,6 +4,94 @@
 
 同一个工单编号可能来自两处：系统生成的是数字 `42`，人工录入的是字符串 `"A42"`。函数要同时接收这两种数据，但不能还没判断就调用字符串专用方法。代码先检查当前到底是哪一种，再使用对应方法；这个“先排除其他可能”的过程叫类型收窄。
 
+## 今天第一次见到的 JavaScript 工具
+
+今天要解决的是同一个问题：“运行时收到的值到底是什么？”不同数据要用不同证据判断。
+
+| 判断 | 谁提供 / 左边是谁 | 传入或检查什么 | 返回什么 |
+| --- | --- | --- | --- |
+| `typeof value` | JavaScript 运算符，不属于某个对象 | 运算符右侧的一个值 | 小写类型文字 |
+| `Number.isFinite(value)` | 全局 `Number` | 一个待检查值 | 是否为有限数字 |
+| `Number.isNaN(value)` | 全局 `Number` | 一个待检查值 | 是否正好是 `NaN` |
+| `Array.isArray(value)` | 全局 `Array` | 一个待检查值 | 是否为数组 |
+| `value !== null && typeof value === "object"` | 两个条件组合 | 一个可能未知的值 | 是否为非 `null` 对象 |
+| `"email" in value` | `in` 运算符，右侧必须是对象 | 左侧属性名、右侧对象 | 对象是否拥有可访问的该属性 |
+
+最小对照：
+
+```ts
+console.log(typeof "42");
+console.log(typeof 42);
+console.log(typeof true);
+console.log(Number.isFinite(42));
+console.log(Number.isFinite(Infinity));
+console.log(Number.isNaN(Number("abc")));
+console.log(Array.isArray([]));
+console.log(typeof {});
+console.log(typeof null);
+console.log("email" in { email: "a@example.com" });
+```
+
+实际输出：
+
+```text
+string
+number
+boolean
+true
+false
+true
+true
+object
+object
+true
+```
+
+**字符串的 `.toUpperCase()` 与 `.toLowerCase()`**
+
+这两个方法由字符串提供，所以点号左边必须已经确定是字符串。括号里不传参数；它们返回一段大小写转换后的新字符串，不会修改原字符串：
+
+```ts
+const code = "Ts-10";
+
+console.log(code.toUpperCase());
+console.log(code.toLowerCase());
+console.log(code);
+```
+
+实际输出：
+
+```text
+TS-10
+ts-10
+Ts-10
+```
+
+联合值在收窄前不能直接调用字符串专属方法。方法名区分大小写，准确拼写为 `toUpperCase` 和 `toLowerCase`。
+
+需要特别记住：
+
+- `typeof` 后面没有必须使用的圆括号，结果是小写 `"string"`、`"number"`、`"boolean"`、`"object"` 等；不会返回 `"String"`。
+- `typeof null` 历史上也得到 `"object"`，所以对象检查要先排除 `null`。
+- 数组也是对象，`typeof []` 不能把它与普通对象分开；要用 `Array.isArray`。
+- `Number.isFinite("42")` 是 `false`，它只检查，不负责把字符串转换成数字。
+- `Number.isNaN` 只识别真正的 `NaN`，不会把普通字符串当成 `NaN`。
+- 执行 `"email" in value` 前，右侧必须先确认是非 `null` 对象，否则可能在运行时报错。
+
+JavaScript 没有内置的 `isString(value)` 或 `isNumber(value)`。需要让项目反复使用时，可以自己把同一组真实判断封装成类型守卫：
+
+```ts
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+```
+
+这两个名字是项目自己定义的，不是 JavaScript 内置方法。`value is string` / `value is number` 告诉 TypeScript：函数返回 `true` 时，调用处可以把该值收窄成对应类型。它们与本日收窄属于同一类工具，但不要求写进必做练习。
+
 ## 完成目标
 
 - 使用 `A | B` 声明联合类型。
@@ -113,6 +201,10 @@ flowchart TD
   D["输出三个格式结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 10 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-10) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -120,7 +212,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | Day 10：支持工单摘要 | 主任务 |
-| [practice02](./practice02/README.md) | 工单编号格式化 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 调试开关规范化 | 独立迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day10 practice02`。
 
@@ -192,9 +284,3 @@ function printEmail(externalValue: unknown): void {
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，逐个指出四个函数使用的收窄方法。
-
-## 官方资料
-
-- [Everyday Types：Union Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types)
-- [Everyday Types：Literal Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types)
-- [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)

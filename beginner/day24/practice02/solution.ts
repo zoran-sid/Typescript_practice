@@ -48,3 +48,5 @@ if (result.ok) {
   // describeState(first.state) 组合成“First: 标题 (状态描述)”，替换下面只输出状态的占位写法。
   console.log(first ? describeState(first.state) : "First: none");
 } else console.log(`Import failed: ${result.message}`);
+// TODO 8：再创建一批 minutes 为字符串的 JSON，交给 importTasks；
+// 失败分支按“Invalid import: 消息”输出。不要复用上面的成功 result 假装测试坏数据。

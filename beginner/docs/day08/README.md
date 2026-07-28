@@ -13,6 +13,26 @@ Day 07 的 `find` 可能找不到名字，通讯录中的电话也可能没有�
 - 区分 `??` 与 `||` 对 0、空字符串、`false` 的不同处理。
 - 不使用非空断言 `!` 掩盖风险。
 
+## 今天第一次见到的 JavaScript 工具
+
+**`JSON.stringify(...)`：把值变成可显示的 JSON 文字**
+
+`JSON` 是 JavaScript 全局提供的对象，`stringify` 是它的方法。点号左边是提供功能的 `JSON`，圆括号里传入要转换的值，通常返回一个字符串：
+
+```ts
+console.log(JSON.stringify(""));
+console.log(JSON.stringify({ name: "Lin" }));
+```
+
+实际输出：
+
+```text
+""
+{"name":"Lin"}
+```
+
+本日用它显示空字符串，是为了让终端里的两个引号可见；普通 `console.log("")` 只会显示一行空白。它不是“给任意内容加引号”：单独传入 `undefined` 时，结果也是 `undefined`；对象里值为 `undefined` 的属性通常不会出现在 JSON 文字中。拼写和大小写必须是 `JSON.stringify`，不是 `Json.Stringify`。
+
 ## `undefined` 和 `null` 表示什么
 
 - `undefined` 常见于“没有找到”或“这个属性没有填写”。
@@ -110,6 +130,10 @@ flowchart TD
   D["保留 0 与空字符串并输出"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 08 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-08) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -180,8 +204,3 @@ function showContact(
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照每一层缺失值是怎样被处理的。
-
-## 官方资料
-
-- [Everyday Types：Optional Properties](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#optional-properties)
-- [Everyday Types：null and undefined](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#null-and-undefined)

@@ -9,7 +9,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 29 · 类型派生独立综合题",
+      "title": "SDK 类型派生与品牌 ID",
       "expected": [
         "Flags: dark=true, retries=false",
         "Selected: modules",
@@ -30,18 +30,22 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "界面类型派生",
+      "title": "API 客户端类型派生",
       "expected": [
-        "Flags: true/false",
-        "Topic: modules",
-        "Handler: onReady",
-        "Title: Advanced types"
+        "Method: getUser",
+        "User: Ada",
+        "First order: keyboard",
+        "Loaded orders: 2"
       ],
-      "success": "你已闭卷重建 界面类型派生 的完整数据流。",
+      "success": "你已从资源模型派生 getter、异步结果和数组元素类型。",
       "hints": [
-        "从现有类型派生映射、条件或模板字面量类型，避免重复手写。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "GetterName 用模板字面量拼接 get 与大写开头的资源名。",
+        "Getters 遍历 ApiModel 的键，并保留每个键对应的值类型。",
+        "Resolved 与 ElementOf 分别在 Promise、只读数组中 infer。",
+        "类型派生不会创建客户端方法，getUser/getOrders 仍要实现。"
+      ],
+      "typeHints": [
+        "让客户端 satisfies Getters<ApiModel>，不要把方法表断言成目标类型。"
       ]
     }
   ]

@@ -30,18 +30,20 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "加载状态渲染器",
+      "title": "通知投递决策",
       "expected": [
-        "等待开始",
-        "正在加载",
-        "已加载 2 项：变量、联合",
-        "加载失败：网络不可用"
+        "排队：msg-1 / email",
+        "已发送：msg-2 / sms / 10:30",
+        "稍后重试：msg-3 / push / 30 秒",
+        "永久拒绝：msg-4 / email / 地址无效",
+        "需要重试：1"
       ],
-      "success": "你已闭卷重建 加载状态渲染器 的完整数据流。",
+      "success": "四种投递事件都被收窄处理，展示结果与重试决策也保持一致。",
       "hints": [
-        "使用判别联合与 switch 覆盖每一种状态。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "decideDelivery 的每个 case 都返回 text 和 shouldRetry。",
+        "只有 retrying 分支的 shouldRetry 为 true，rejected 是永久失败。",
+        "外层循环根据 decision.shouldRetry 计数，不要再次复制 status 分支。",
+        "default 把 event 交给 assertNever，保留穷尽检查。"
       ]
     }
   ]

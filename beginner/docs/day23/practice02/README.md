@@ -1,4 +1,4 @@
-# DAY23 · Practice 02：编译配置说明器
+# DAY23 · Practice 02：严格配置发布前检查
 
 [返回当天课程](../README.md)
 
@@ -8,27 +8,36 @@
 - 结构提示代码：[solution.ts](../../../day23/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
-这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
+这题不重复修复空值代码。你要比较“只做类型检查”和“正式构建”两份配置，并验证外部传入的配置键是否是团队支持的选项。
 
 ## 场景背景
 
-一名新成员接手了开启严格检查的 TypeScript 项目，需要向团队解释 TSConfig 中最常遇到的几个选项。输入边界是编译器给出的诊断顺序和 `strict`、`noEmit`、`target`、`module` 这些配置概念；若为消除报错而直接关闭严格规则，真正的源码问题会被掩盖。你需要生成一份按排查顺序排列的简短说明，让成员知道先看什么以及每项配置负责什么。
+团队在编辑器和持续集成中使用 `noEmit: true`，发布构建则要生成 JavaScript。两份配置使用相同的 `target`、`module`，但输出行为不同；命令行工具还会收到一个来源不明的配置键。你需要先选出第一条诊断，再比较两个构建配置，并拒绝不支持的键，避免把关闭严格检查当成修复。
 
 ## 数据流
 
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-第一条 TypeScript 诊断 ──┐
-strict 的职责 ───────────┤
-noEmit 的职责 ───────────┼──> configNotes
-target / module 的职责 ──┘        │
-                                 └── for...of ──> 按阅读顺序输出
+diagnostics ──> firstDiagnostic ──> 第一条待处理问题
+typeCheckProfile(noEmit=true) ──> describeEmit ──> 不生成文件
+buildProfile(noEmit=false) ─────> describeEmit ──> 生成 JavaScript
+buildProfile.target + module ──> 运行环境说明
+外部 option "paths" ──> isKnownOption ──> rejected
 ```
 
-## 必须练到的能力
+## 和 Practice 01 的区别
 
-阅读严格 TSConfig，优先处理第一条根因错误，不关闭严格检查。
+Practice 01 在严格规则下处理 `undefined`、可选属性和 `unknown`，输入是业务值。本题处理两份 TSConfig 资料和一个外部配置键；控制流是“取第一条诊断 → 比较两个 profile → 验证 option”，不会再次实现课程查找或数值收窄。
+
+## 任务要求
+
+1. 声明 `BuildProfile`，包含名称、`noEmit`、`target: "ES2022"` 和 `module: "NodeNext"`。
+2. `firstDiagnostic(diagnostics)` 返回第一项或 `undefined`；固定诊断第一项为 `fix first diagnostic`。
+3. `describeEmit(profile)` 根据 `noEmit` 返回 `配置名: no files emitted` 或 `配置名: JavaScript emitted`。
+4. 创建 `type-check / true` 与 `build / false` 两份 profile，共用 ES2022、NodeNext。
+5. 声明 `KnownOption = "strict" | "noEmit" | "target" | "module"`，实现 `isKnownOption(value)`。固定外部输入 `"paths"` 必须被拒绝。
+6. 不修改真实 `tsconfig.json`，也不要把 `noEmit` 或 `strict` 解释成业务测试。
 
 - 不得导入 `practice01` 或直接调用其他练习的实现。
 - 输出必须由变量、计算或函数返回值产生，不把整行结果写死。
@@ -37,11 +46,18 @@ target / module 的职责 ──┘        │
 ## 精确期望输出
 
 ```text
-先读: 第一条错误
-strict: 开启一组严格检查
-noEmit: 只检查，不生成文件
-target/module: 输出语法 / 模块规则
+First step: fix first diagnostic
+type-check: no files emitted
+build: JavaScript emitted
+Runtime: ES2022/NodeNext
+Unknown option: rejected
 ```
+
+## 写完后自检
+
+- 诊断数组改成空数组时，`firstDiagnostic` 应返回什么？调用处要怎样避免把 `undefined` 当成错误文字？
+- 为什么 `noEmit: false` 只改变是否写出文件，不会自动修复第一条类型错误？
+- `target`、`module` 与 `strict` 都在 `compilerOptions` 中，为什么前两项描述输出环境，后一项描述检查强度？
 
 ## 文件
 

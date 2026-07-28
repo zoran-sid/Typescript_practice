@@ -1,5 +1,35 @@
 # Day 27（选修）｜浏览器、请求与命令行边界
 
+## 今天第一次见到的 JavaScript 工具
+
+### `querySelector` 与 `addEventListener`：找到网页元素，再监听它
+
+这两个 API 由浏览器提供，不是 TypeScript 或本课程自带的业务函数。
+
+- `document.querySelector("#search")` 中，点号左边的 `document` 代表当前网页；参数 `"#search"` 是 CSS 选择器；返回第一个匹配元素，找不到时返回 `null`。
+- `input.addEventListener("input", callback)` 中，点号左边的 `input` 是找到的输入框；第一个参数 `"input"` 是事件名，第二个参数是事件发生后才执行的回调；这个调用本身返回 `undefined`。
+
+它们解决的是“用户操作发生时，怎样让代码开始工作”。注册监听器不会立刻运行回调，只有用户真的输入时才会执行。
+
+```html
+<input id="search" />
+<script>
+  const input = document.querySelector("#search");
+
+  input?.addEventListener("input", (event) => {
+    console.log("输入:", event.currentTarget.value);
+  });
+</script>
+```
+
+用户在输入框键入 `ts` 后，控制台输出：
+
+```text
+输入: ts
+```
+
+浏览器才有 `document`；直接在 Node.js 中运行会找不到它。选择器里的 `#` 表示按 `id` 查找，事件名是小写的 `"input"`。`querySelector` 可能返回 `null`，所以必须先判断或像示例一样使用 `?.`。本日的 `normalizeQuery` 则是课程自定义函数，它只处理普通字符串，不负责监听浏览器。
+
 同一份 TypeScript 放到不同地方运行，能用的东西不一样。网页里的输入框由浏览器提供；命令行参数和文件系统由 Node.js 提供。代码中写得出 `document`，不代表当前运行的 Node 进程真的有 `document`。
 
 今天分别处理三个入口：浏览器输入事件、请求返回值和命令行参数。每个入口先把环境提供的数据转成普通值，再交给业务函数，这样才能在 Node 中用假数据单独测试。
@@ -63,13 +93,17 @@ flowchart TD
   D["三个边界结果分别输出"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 27 官方手册索引](../OFFICIAL-READING.md#day-27) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 27 · 运行环境边界独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 跨环境课程搜索入口 | 主任务 |
 | [practice02](./practice02/README.md) | 搜索与命令行边界 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day27 practice02`。
@@ -142,9 +176,3 @@ function parseDay(args: readonly string[]): number | undefined {
 ## 拓展思考（不要求写代码）
 
 真实网页中应把哪一小段代码留在最外层，负责把 `HTMLInputElement`、`fetch` 和这里的纯函数连接起来？这样拆分对测试有什么帮助？
-
-## 官方资料
-
-- [DOM Manipulation](https://www.typescriptlang.org/docs/handbook/dom-manipulation.html)
-- [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
-- [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)

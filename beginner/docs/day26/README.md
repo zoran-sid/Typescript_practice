@@ -14,6 +14,34 @@
 - 在 `catch` 中把错误当作 `unknown` 收窄；
 - 测试正常、空数组、坏数据和异步失败。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `Promise.reject`：造出一条失败的异步结果
+
+`Promise.reject(reason)` 由 JavaScript 内置的 `Promise` 提供。点号左边是 `Promise`，括号里的 `reason` 是失败原因，可以传 `Error`；返回的是一个已经失败的 Promise，不是普通的 `Error`。
+
+本日用它让假仓库稳定地走进失败分支，检查界面是否显示正确消息。它不会在这一行同步 `throw`；只有调用方 `await` 这个 Promise，或者用 `.catch(...)` 接住它时，才会进入异步失败处理。
+
+```ts
+async function read(): Promise<string> {
+  return Promise.reject(new Error("Network unavailable"));
+}
+
+try {
+  await read();
+} catch (error: unknown) {
+  console.log(error instanceof Error ? error.message : "Unknown error");
+}
+```
+
+实际输出：
+
+```text
+Network unavailable
+```
+
+`read` 是本课程为了演示而写的函数，`Promise.reject` 才是 JavaScript 自带工具。若只是写 `Promise.reject(...)` 却既不 `return`、也不 `await`，调用方的控制流不会按你期望的方式进入失败状态。
+
 ## 核心讲解
 
 ```text
@@ -75,13 +103,17 @@ flowchart TD
   E["渲染数量、完成数与分钟"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 26 官方手册索引](../OFFICIAL-READING.md#day-26) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 26 · 结课项目（三）独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 异步任务仪表板 | 主任务 |
 | [practice02](./practice02/README.md) | 异步任务面板 | 闭卷迁移 |
 | [practice03](./practice03/README.md) | 异步天气面板 | 综合应用 |
 
@@ -148,9 +180,3 @@ async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
 ## 拓展思考（不要求写代码）
 
 如果面板还要从另一个独立仓库加载用户名，怎样用 `Promise.all` 并发等待两项数据？其中一项失败时，最终状态应如何定义才不会留下半成功的矛盾数据？
-
-## 官方资料
-
-- [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
-- [Utility Types：Awaited](https://www.typescriptlang.org/docs/handbook/utility-types.html#awaitedtype)
-- [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)

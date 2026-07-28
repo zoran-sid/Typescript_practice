@@ -14,6 +14,26 @@
 - 用品牌类型防止结构相同的标识符被误传；
 - 区分类型层转换与运行时验证。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `startsWith`：检查字符串是否以指定文字开头
+
+`.startsWith` 是 JavaScript 字符串自带的方法。在 `value.startsWith("usr_")` 中，点号左边的 `value` 必须是字符串；参数 `"usr_"` 是要检查的开头；返回值是 `boolean`，符合为 `true`，不符合为 `false`。它只检查，不会修改原字符串。
+
+```ts
+console.log("usr_42".startsWith("usr_"));
+console.log("order_42".startsWith("usr_"));
+```
+
+实际输出：
+
+```text
+true
+false
+```
+
+本日用它检查外部字符串是否遵守用户 ID 前缀约定。比较会区分大小写，所以 `"USR_42"` 不会通过；空前缀 `""` 对任何字符串都会得到 `true`，不能拿来做有效前缀规则。`parseUserId` 是课程自定义验证函数，`startsWith` 只是它内部使用的一个 JavaScript 字符串工具；通过前缀检查也不等于其余格式一定正确。
+
 ## 核心讲解
 
 先用表单字段看映射类型怎样逐个处理对象的键：
@@ -94,13 +114,17 @@ flowchart TD
   D["创建合法值并输出"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 29 官方手册索引](../OFFICIAL-READING.md#day-29) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 29 · 类型派生独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | SDK 类型派生与品牌 ID | 主任务 |
 | [practice02](./practice02/README.md) | 界面类型派生 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day29 practice02`。
@@ -155,10 +179,3 @@ function createUserId(value: string): UserId {
 ## 拓展思考（不要求写代码）
 
 哪些部分可以直接改用 `Record`、`Awaited` 或其他内置工具类型？在什么情况下“少写一个自定义高级类型”反而能让项目更安全？
-
-## 官方资料
-
-- [Creating Types from Types](https://www.typescriptlang.org/docs/handbook/2/types-from-types.html)
-- [Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)
-- [Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html)
-- [Template Literal Types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)

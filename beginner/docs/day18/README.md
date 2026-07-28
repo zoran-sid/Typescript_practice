@@ -96,6 +96,10 @@ flowchart TD
   D["render 包装这个对象的 summary"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 18 对应阅读](../OFFICIAL-READING.md#day-18) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -103,7 +107,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 类：把数据与行为放在一起 | 主任务 |
-| [practice02](./practice02/README.md) | 学习时段类 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 存储配额与状态边界 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day18 practice02`。
 
@@ -171,8 +175,3 @@ class Report implements Printable {
 ## 拓展思考（不要求写代码）
 
 一个只保存姓名和邮箱、没有长期内部行为的 `Profile` 是否值得写成类？请从实例状态、行为、测试难度和代码复杂度四方面比较“类型加普通函数”与“类”。
-
-## 官方资料
-
-- [Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html)
-- [Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html)

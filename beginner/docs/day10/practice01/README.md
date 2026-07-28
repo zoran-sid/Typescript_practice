@@ -1,4 +1,4 @@
-# DAY10 · Practice 01：Day 10：支持工单摘要
+# DAY10 · Practice 01：支持工单摘要
 
 [返回当天课程](../README.md)
 
@@ -81,6 +81,12 @@ Priority ──> 字面量分支 ──> describePriority ──> 优先级文�
 ## 本题易漏语法
 
 联合成员用 |；先用 typeof、in 或判别字段收窄，再访问特定成员。
+
+## 写完后自检
+
+- 如果优先级改成 `"medium"`，最后一行会怎样变化？如果编号改成数字 0，会进入哪条格式化分支？
+- 为什么 `Contact` 收窄前不能直接读取 `.email`，而 `"email" in contact` 后可以？
+- 联合类型只检查已进入程序的 TypeScript 调用；如果值来自外部 JSON，为什么仍需要先做运行时验证？
 
 ## 文件
 

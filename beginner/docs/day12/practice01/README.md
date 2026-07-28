@@ -64,6 +64,12 @@ studentName + 默认标点 ──> greetStudent ──> 问候输出
 
 函数类型中的 => 描述返回类型；箭头函数值中的 => 后面是实现。? 表示可选参数，...args 收集剩余实参。
 
+## 写完后自检
+
+- 把分数改成 `59、60` 后，两条反馈和通过数量分别会怎样变化？先预测再运行。
+- 如果调用 `greetStudent("Ada", undefined, "?")`，哪个参数使用回退值，哪个参数使用显式传入值？
+- 为什么 `reportScores` 要接收 `formatter` 和 `reporter`，而不是在函数内部固定拼接文字并直接 `console.log`？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

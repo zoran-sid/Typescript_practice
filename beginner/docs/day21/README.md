@@ -4,6 +4,44 @@
 
 网络请求、定时器和文件读取都要等一段时间。调用这类函数时，程序先拿到一个 `Promise`：它不是最终数据，而是一份“稍后会成功给值，或者失败给错误”的结果。`async/await` 是配套写法，其中 `await` 用来等待这份结果，再决定继续正常步骤还是进入错误处理。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `Promise.resolve(value)`：得到一个成功 Promise
+
+`Promise` 是 JavaScript 运行环境提供的构造函数和工具对象。`Promise.resolve("课程")` 把括号里的值变成已经成功的 `Promise<string>`；`await` 后才得到字符串 `"课程"`。
+
+不传值时得到 `Promise<void>`。它可以制造一个异步边界，但不会等待真实的几秒钟；本课示例用它避免引入网络或定时器。
+
+```ts
+const pending = Promise.resolve("课程");
+console.log(await pending);
+```
+
+实际输出：
+
+```text
+课程
+```
+
+### `Promise.all(promises)`：统一等待一组任务
+
+`Promise.all` 的括号里放可遍历的一组 Promise（最常见是数组），返回一个新的 Promise。所有输入都成功时，新 Promise 的值是结果数组，顺序与输入数组一致；任意一项失败时，新 Promise 直接失败，但不会自动取消其他已启动任务。
+
+```ts
+const first = Promise.resolve("课程");
+const second = Promise.resolve("进度");
+const results = await Promise.all([first, second]);
+console.log(results.join("、"));
+```
+
+实际输出：
+
+```text
+课程、进度
+```
+
+同一家族里，`Promise.allSettled` 会等待所有任务结束，并为每项返回 `fulfilled` 或 `rejected` 状态。它适合“无论成功失败都要收集结果”的场景；本日必做题需要任一失败就进入错误处理，因此使用 `Promise.all`。
+
 ## 核心讲解
 
 先分清三个时刻：
@@ -84,6 +122,10 @@ flowchart TD
   E["输出成功与错误"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 21 对应阅读](../OFFICIAL-READING.md#day-21) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -91,7 +133,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | Promise、async/await 与异步错误 | 主任务 |
-| [practice02](./practice02/README.md) | 并行内容加载 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 并行还是顺序：按依赖关系等待 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day21 practice02`。
 
@@ -154,8 +196,3 @@ try {
 ## 拓展思考（不要求写代码）
 
 如果第二个请求必须使用第一个请求返回的课程 id，它们还能放进同一个 `Promise.all` 吗？请画出依赖顺序，并指出哪些请求仍可能并行。
-
-## 官方资料
-
-- [MDN：async function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/async_function)
-- [MDN：Promise.all](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)

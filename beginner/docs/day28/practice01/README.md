@@ -1,4 +1,4 @@
-# DAY28 · Practice 01：Day 28 · 高级函数独立综合题
+# DAY28 · Practice 01：课程函数工具箱
 
 [返回当天课程](../README.md)
 
@@ -57,6 +57,12 @@ Elective Day 28: Advanced functions
 ## 本题易漏语法
 
 元组类型用 [] 且位置固定；rest 参数写 ...args: Args；显式 this 不是运行时第一个实参。
+
+## 写完后自检
+
+- 给 `invoke` 传入三个参数的函数，或让函数返回对象时，参数提示与返回类型是否仍能跟着原函数变化？
+- 为什么 `normalize` 用重载，而 `progress` 只需要一个元组返回类型？两者要保留的对应关系有什么不同？
+- 如果直接调用 `describe("Elective")` 而不提供 `this`，类型检查为什么应该拒绝？
 
 ## 文件
 

@@ -10,7 +10,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 26 · 结课项目（三）独立综合题",
+      "title": "异步任务仪表板",
       "expected": [
         "State: loading",
         "State: success",
@@ -42,13 +42,15 @@ export default {
         "State: success",
         "Tasks: 2",
         "Done: 1",
-        "Minutes: 75"
+        "Minutes: 75",
+        "State: failure",
+        "Message: Invalid task data"
       ],
-      "success": "你已闭卷重建 异步任务面板 的完整数据流。",
+      "success": "你已用同一个渲染器处理 loading、success 与坏数据 failure。",
       "hints": [
-        "把异步加载、unknown 验证、状态渲染和回归测试组合起来。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "入口复用已有 loadDashboard 和 MemoryTaskRepository。",
+        "render 的 success、failure 分支读取不同成员。",
+        "坏数据仓库的 minutes 使用字符串，最终消息来自加载器。"
       ]
     },
     {

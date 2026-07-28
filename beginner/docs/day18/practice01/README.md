@@ -72,6 +72,12 @@ Dashboard | TypeScript: 45 minutes
 
 类字段与方法在 class 花括号内；字段语句用分号，方法关闭花括号后通常不加分号。
 
+## 写完后自检
+
+- 把 `types.add(-5)` 改成 `types.add(0)`，摘要是否应该变化？哪个方法负责守住这个边界？
+- 如果把 `Dashboard` 的构造器参数写成具体的 `StudyCounter`，以后传入另一个能提供 `summary()` 的对象会受到什么限制？
+- 把 `format` 改成普通方法再赋给 `detachedFormat`，运行时可能发生什么？为什么箭头函数字段能改变这个结果？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

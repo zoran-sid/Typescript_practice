@@ -66,13 +66,17 @@ flowchart TD
   D["按诊断顺序输出提示"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 23 官方手册索引](../OFFICIAL-READING.md#day-23) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 23 · 严格配置下的独立练习 | 主任务 |
+| [practice01](./practice01/README.md) | 严格模式下的课程入口 | 主任务 |
 | [practice02](./practice02/README.md) | 编译配置说明器 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day23 practice02`。
@@ -139,10 +143,3 @@ const { theme: _removed, ...withoutTheme } = preferences;
 ## 拓展思考（不要求写代码）
 
 如果开启 `noUncheckedIndexedAccess` 后，一个已经检查过 `scores.length > 0` 的函数仍提示 `scores[0]` 可能缺失，你会选择怎样重写代码来让“存在性”更直接地被 TypeScript 看见？
-
-## 官方资料
-
-- [TSConfig：strict](https://www.typescriptlang.org/tsconfig/strict.html)
-- [TSConfig：noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
-- [TSConfig：exactOptionalPropertyTypes](https://www.typescriptlang.org/tsconfig/exactOptionalPropertyTypes.html)
-- [TSConfig 总览](https://www.typescriptlang.org/tsconfig)

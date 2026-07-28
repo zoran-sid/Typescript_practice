@@ -79,6 +79,12 @@ status=draft
 
 Utility Type 用尖括号传类型，如 Partial<Task>；as const 与 satisfies 放值表达式后，结尾仍是分号。
 
+## 写完后自检
+
+- 如果补丁只提供 `summary`，哪些字段必须保持原值？原文章的对象引用是否可以被直接返回？
+- 从 `statusLabels` 删除 `archived` 后，`satisfies` 应该指出什么问题？如果改成普通宽泛对象类型，还能否同样及时发现？
+- 为什么 `Omit<Article, "summary">` 不能自动删除运行时的 `summary`？题目中的解构 rest 解决的是哪一层问题？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

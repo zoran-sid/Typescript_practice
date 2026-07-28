@@ -29,17 +29,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "泛型首项读取",
+      "title": "安全读取首项与空数组",
       "expected": [
         "第一位：Ada",
         "第一个分数：80",
+        "空成绩：暂无",
         "标签：课程=TypeScript"
       ],
-      "success": "你已闭卷重建 泛型首项读取 的完整数据流。",
+      "success": "非空数组保留了元素类型，空数组也通过 T | undefined 交给调用方处理。",
       "hints": [
-        "使用泛型连接输入与输出，不使用 any。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "firstOrUndefined 的返回类型要包含 undefined，不能假装空数组一定有 Item。",
+        "给空成绩数组明确写 readonly number[]，再把它交给泛型函数。",
+        "“暂无”是界面决策，在调用处用 ?? 处理，不要写进通用读取函数。",
+        "labelValue 的 value 类型继续由本次调用推断，不要改成 any 或宽联合。"
       ]
     }
   ]

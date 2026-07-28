@@ -80,6 +80,12 @@ original + updated ──> 对照输出（原对象不变）
 
 const { name, ...rest } = object 是解构收集；{ ...object, name: next } 是展开新对象，位置决定含义。
 
+## 写完后自检
+
+- 如果把目标任务 id 从 `2` 改为不存在的 `99`，`original` 与 `updated` 的任务状态和引用关系应怎样变化？
+- 更新完成后再读取 `original.skills`，为什么它不能出现 `TypeScript`？沿着数据流指出必须新建的每一层容器。
+- 为什么任务更新适合用 `map` 返回新数组，而不是先复制外层对象后再对原任务执行直接赋值？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

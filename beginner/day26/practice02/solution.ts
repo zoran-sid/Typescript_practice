@@ -25,3 +25,5 @@ const repository = new MemoryTaskRepository([
 for (const line of render({ status: "loading" })) console.log(line);
 const finalState = await loadDashboard(repository);
 for (const line of render(finalState)) console.log(line);
+// TODO 4：再创建一个包含 minutes: "45" 的 MemoryTaskRepository，
+// 等待 loadDashboard 返回 failure，并把它交给同一个 render 输出状态与消息。

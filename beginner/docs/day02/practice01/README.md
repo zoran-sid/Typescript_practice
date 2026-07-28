@@ -1,4 +1,4 @@
-# DAY02 · Practice 01：Day 02：课程计划统计器
+# DAY02 · Practice 01：课程计划统计器
 
 [返回当天课程](../README.md)
 
@@ -67,6 +67,12 @@ Status: Goal reached
 ## 本题易漏语法
 
 转换写 Number(text)；if (条件) { ... } 的花括号后不加分号，内部赋值语句要加。
+
+## 写完后自检
+
+- 如果 `completedText` 改成 `"2"`，总课数和状态分别会是什么？
+- 如果先执行 `completedText + plannedLessons`，再把结果交给 `Number`，中间值为什么会改变业务结果？
+- 为什么这里需要运行时的 `Number(...)`，写类型标注或 `as number` 不能代替它？
 
 ## 文件
 

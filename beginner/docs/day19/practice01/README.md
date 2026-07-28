@@ -60,6 +60,12 @@ inputs
 
 throw new Error(message); 抛出，catch (error) 接住；unknown 必须先收窄。
 
+## 写完后自检
+
+- 分别把输入换成 `"0"`、`"65535"` 和 `"12.5"`，预测它们会进入解析成功、保存失败还是异常分支。
+- 如果 `savePort` 也改成抛异常，调用方还能否轻易区分“输入无效”和“合法端口暂时不可用”？
+- 为什么 `catch` 中不能直接读取 `error.message`？把捕获值保留为 `unknown` 防住了哪类情况？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

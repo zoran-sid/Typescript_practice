@@ -15,5 +15,8 @@ function labelValue<Value>(
 }
 const firstName = firstOrUndefined(["Ada", "Lin"]);
 const firstScore = firstOrUndefined([80, 90]);
+const emptyScores: readonly number[] = [];
+const firstEmptyScore = firstOrUndefined(emptyScores);
 const course = labelValue("课程", "TypeScript");
-// TODO：对 firstName 和 firstScore 分别用 ?? 提供缺席时的显示值；再从 course 读取 label 与 value，按题目顺序输出三行。
+// TODO：对 firstName、firstScore 和 firstEmptyScore 分别在调用处用 ?? 提供显示回退值；
+// 空成绩显示“暂无”，但不要把这个业务文字塞进 firstOrUndefined。最后从 course 读取 label 与 value，共输出四行。

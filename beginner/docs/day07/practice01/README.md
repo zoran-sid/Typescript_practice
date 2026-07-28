@@ -1,4 +1,4 @@
-# DAY07 · Practice 01：Day 07：订单数组报告
+# DAY07 · Practice 01：订单数组报告
 
 [返回当天课程](../README.md)
 
@@ -72,9 +72,36 @@ completedIds + completedTotal + firstLargeId ──> 报告输出
 - 能解释每个回调返回的内容。
 - 右击运行 `practice.ts`，三行输出完全一致。
 
+## 为什么骨架里先写 `return false`
+
+本题已经在第 3 条规则中把“大额边界”定为 100，也就是金额达到或超过 100。骨架还没有替你写比较式，所以临时放了：
+
+```ts
+const firstLargeOrder = orders.find((order) => {
+  // TODO：返回“金额达到 100”的比较结果。
+  return false;
+});
+```
+
+这里的 `return false` 不是最终答案，只是未完成时的布尔占位。它对 `find` 的意思是：“当前订单不匹配，请继续检查下一笔。”如果每轮都保留它，四笔订单都会被判定为不匹配，最终得到 `undefined`。
+
+你写的简洁形式没有问题：
+
+```ts
+const firstLargeOrder = orders.find((order) => order.amount >= 100);
+```
+
+箭头右侧只有一个表达式时，比较结果会自动交给 `find`，所以看不到单独的 `return`。它等价于带花括号并明确 `return order.amount >= 100;`，但不等价于保留骨架中的 `return false`。
+
 ## 本题易漏语法
 
 单表达式箭头可省略 return；写了 {} 就必须显式 return。回调参数只在回调内部可用。
+
+## 写完后自检
+
+- 如果大额边界改成 130，`find` 会返回什么，`firstLargeId` 最后应保留哪个值？
+- 如果给 `filter` 或 `find` 的花括号回调漏写 `return`，每一轮实际交回什么，结果数组或查找结果会怎样？
+- 为什么先保留完整的 `completedOrders`，再从它生成编号和总额，而不是一开始只留下编号？
 
 ## 文件
 

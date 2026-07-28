@@ -99,6 +99,10 @@ flowchart TD
   E["输出原值和新值"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 13 对应阅读](../OFFICIAL-READING.md#day-13) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -106,7 +110,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 解构、spread、rest 与不可变更新 | 主任务 |
-| [practice02](./practice02/README.md) | 主题设置不可变更新 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 购物车的更新、删除与不变分支 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day13 practice02`。
 
@@ -160,9 +164,3 @@ const wrong = { name: "Ada Lin", ...profile }; // 旧 name 又把新值覆盖
 ## 拓展思考（不要求写代码）
 
 如果每个任务内部又有一个 `history` 数组，要给第二项任务追加历史记录且保留所有旧数据，哪些层级必须创建新容器，哪些未改变的值可以安全复用？
-
-## 官方资料
-
-- [MDN：Destructuring assignment](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)
-- [MDN：Spread syntax](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-- [Object Types：ReadonlyArray](https://www.typescriptlang.org/docs/handbook/2/objects.html#the-readonlyarray-type)

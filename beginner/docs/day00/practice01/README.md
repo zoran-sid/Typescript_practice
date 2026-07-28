@@ -1,4 +1,4 @@
-# DAY00 · Practice 01：Day 00：第一段完整程序
+# DAY00 · Practice 01：第一段完整程序
 
 [返回当天课程](../README.md)
 
@@ -19,7 +19,7 @@
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-"Hello, TypeScript Practice!"
+"Hello, TypeScript!"
    │
    └── 赋值 ──> message
                     │
@@ -56,6 +56,12 @@ Hello, TypeScript!
 ## 本题易漏语法
 
 console.log(message); 中函数名后是圆括号，参数在括号内，语句以分号结束。
+
+## 写完后自检
+
+- 如果欢迎语改成 `"Hello, Lin!"`，哪一处输入需要变化，终端会显示什么？
+- 这道题为什么要求先保存到 `message`，而不是把文字直接写进 `console.log`？
+- `=`、引号、圆括号和分号在这一行程序里各负责什么？
 
 ## 文件
 

@@ -1,31 +1,48 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-function loggedMethod<This, Args extends unknown[], Return>(
-  target: (this: This, ...args: Args) => Return,
-  context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => Return>,
-): (this: This, ...args: Args) => Return {
-  // TODO 1：返回普通 function 包装器；先从 context.name 输出“调用方法: 名称”，
-  // 再用 target.call(this, ...args) 转交当前实例和完整参数，并原样返回 Return。
-  // 直接 return target 没有记录日志，只是保持类型和原行为的临时占位。
-  return target;
+interface AuditSink {
+  record(message: string): void;
 }
-function announceClass<Value extends abstract new (...args: never[]) => object>(
-  target: Value,
-  context: ClassDecoratorContext<Value>,
-): void {
-  // TODO 2：类定义时从 context.name 读取当前类名并输出“定义类: 类名”；
-  // 此处不替换构造器，也不需要返回 target。
+class MemoryAuditSink implements AuditSink {
+  private readonly entries: string[] = [];
+
+  record(message: string): void {
+    // TODO 1：把当前 message 加入 entries。空函数体目前会丢掉所有审计记录。
+    void message;
+  }
+
+  get count(): number {
+    // TODO 2：返回当前 entries 的真实长度；0 只是临时占位。
+    return 0;
+  }
+
+  last(): string | undefined {
+    // TODO 3：返回最后一条记录；没有记录时返回 undefined。
+    // 下面的 undefined 目前忽略了已有记录。
+    return undefined;
+  }
 }
-function withCategory<Value extends object>(value: Value): Value {
-  // TODO 3：给当前 value 增加字面量 category "utility"，并把返回类型改成
-  // Value 与该字段结构的交叉类型。直接返回 value 是占位：运行时和类型里都还没有 category。
-  return value;
+class PaymentService {
+  constructor(private readonly audit: AuditSink) {}
+
+  pay(quantity: number, unitPrice: number): number {
+    // TODO 4：先验证 quantity 是正整数，unitPrice 是有限非负数字；失败时抛 RangeError。
+    // 通过后计算 total，记录“paid 数量 x 单价”，最后返回 total。
+    // 下面的 0 没有使用输入，也没有记录，只是 number 占位。
+    return 0;
+  }
 }
-@announceClass
-class Calculator {
-  @loggedMethod
-  add(left: number, right: number): number { return left + right; }
+const audit = new MemoryAuditSink();
+const service = new PaymentService(audit);
+const total = service.pay(3, 8);
+console.log(`Paid: ${total}`);
+console.log(`Audit count: ${audit.count}`);
+console.log(`Last audit: ${audit.last() ?? "none"}`);
+try {
+  service.pay(0, 8);
+  console.log("Invalid quantity: accepted");
+} catch (error: unknown) {
+  // TODO 5：只有捕获到 RangeError 才输出 rejected；其他错误继续抛出，
+  // 不能把实现 bug 也伪装成正确的输入拒绝。
+  console.log(error instanceof RangeError ? "Invalid quantity: rejected" : "Invalid quantity: wrong error");
 }
-const calculator = withCategory(new Calculator());
-// TODO 4：完成 withCategory 后从 calculator.category 输出“类别: utility”，
-// 再调用 add，核对类定义日志、类别、方法日志和结果的先后顺序。
-console.log(`结果: ${calculator.add(2, 3)}`);
+console.log(`Audit after failure: ${audit.count}`);

@@ -89,6 +89,10 @@ flowchart TD
   D["输出组合结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 14 对应阅读](../OFFICIAL-READING.md#day-14) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -96,7 +100,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 现代 ES Modules 与类型导入 | 主任务 |
-| [practice02](./practice02/README.md) | 课程模块组合 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 库存入口与模块边界 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day14 practice02`。
 
@@ -155,8 +159,3 @@ const student: Student = {
 ## 拓展思考（不要求写代码）
 
 如果 `Student` 新增必填字段 `email`，哪些文件会立刻收到类型提示，哪些只在运行时依赖值导出？这说明类型依赖和值依赖有什么差异？
-
-## 官方资料
-
-- [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
-- [Modules：Type-only Import and Export](https://www.typescriptlang.org/docs/handbook/2/modules.html#type-only-imports-and-exports)

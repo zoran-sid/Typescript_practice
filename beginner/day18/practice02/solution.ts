@@ -1,28 +1,35 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 interface SummaryProvider { summary(): string; }
-class StudyCounter implements SummaryProvider {
-  private minutes = 0;
-  constructor(public readonly topic: string) {}
-  add(minutes: number): void {
-    // TODO：只有当前参数 minutes > 0 时，才把它累加到这个实例自己的 this.minutes；不要使用全局总数。
+class StorageQuota implements SummaryProvider {
+  private used = 0;
+  constructor(
+    public readonly name: string,
+    private readonly limit: number,
+  ) {}
+  consume(gigabytes: number): boolean {
+    // TODO：先检查 gigabytes > 0，再判断 this.used + gigabytes 没有超过 this.limit。
+    // 两项都通过才更新 this.used 并返回 true；拒绝分支必须保持原状态。
+    // 下面的 false 会拒绝所有请求，只是尚未实现规则时的占位。
+    return false;
   }
   summary(): string {
-    // TODO：用当前实例的 this.topic 和 this.minutes 组成“主题: 分钟 minutes”并返回。
+    // TODO：读取当前实例的 name、used、limit，组成“名称：已用 used/limit GB”并返回。
     // 下面的 "" 是临时占位，完成时要替换。
     return "";
   }
 }
-class Dashboard {
-  constructor(private readonly counter: SummaryProvider) {}
+class QuotaPanel {
+  constructor(private readonly provider: SummaryProvider) {}
   render(): string {
-    // TODO：只调用 counter.summary()，把得到的摘要接在“Dashboard | ”后返回；不要访问具体类的私有状态。
+    // TODO：只调用 provider.summary()，把结果接在“配额 | ”后返回；不要读取 StorageQuota 的私有字段。
     // 下面的 "" 是临时占位，完成时要替换。
     return "";
   }
 }
-const types = new StudyCounter("Types");
-const modules = new StudyCounter("Modules");
-types.add(30);
-types.add(15);
-modules.add(20);
-// TODO：为 types 创建 Dashboard；依次输出 types.summary()、modules.summary() 和面板的 render() 结果，证明两个实例状态互不共享。
+const quota = new StorageQuota("团队盘", 100);
+quota.consume(20);
+quota.consume(10);
+const oversizedAccepted = quota.consume(80);
+const panel = new QuotaPanel(quota);
+// TODO：输出 quota.summary()；根据 oversizedAccepted 生成“接受”或“拒绝”文字；
+// 最后输出 panel.render()。第三次写入被拒绝后，摘要仍应保留前两次成功写入的状态。

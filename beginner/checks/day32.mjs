@@ -9,7 +9,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 32 · 标准装饰器、Mixin 与组合独立综合题",
+      "title": "带追踪的价格服务",
       "expected": [
         "注册类: PriceCalculator",
         "标签: advanced",
@@ -33,18 +33,23 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "计算器方法日志",
+      "title": "可替换支付审计器",
       "expected": [
-        "定义类: Calculator",
-        "类别: utility",
-        "调用方法: add",
-        "结果: 5"
+        "Paid: 24",
+        "Audit count: 1",
+        "Last audit: paid 3 x 8",
+        "Invalid quantity: rejected",
+        "Audit after failure: 1"
       ],
-      "success": "你已闭卷重建 计算器方法日志 的完整数据流。",
+      "success": "你已用构造器组合可替换审计器，并保证失败请求不产生副作用。",
       "hints": [
-        "标准装饰器包装方法时保留 this、参数元组与返回类型。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "MemoryAuditSink 自己保存 entries，只暴露 count 和 last。",
+        "PaymentService 依赖 AuditSink 接口，不写死 MemoryAuditSink。",
+        "所有输入检查都要发生在 record 之前。",
+        "无效数量只接受 RangeError，其他错误不能吞掉。"
+      ],
+      "runtimeHints": [
+        "如果失败后审计数变成 2，检查 record 是否放在校验之前。"
       ]
     }
   ]

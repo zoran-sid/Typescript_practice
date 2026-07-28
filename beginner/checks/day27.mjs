@@ -8,7 +8,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 27 · 运行环境边界独立综合题",
+      "title": "跨环境课程搜索入口",
       "expected": [
         "Query: typescript",
         "Missing: empty",
@@ -30,17 +30,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "搜索与命令行边界",
+      "title": "API 课程与 CLI 覆盖",
       "expected": [
-        "Normalized query: typed",
-        "Fetched title: Runtime boundaries",
-        "CLI day: 27"
+        "Base: Runtime boundaries/35",
+        "Override: Runtime boundaries/45",
+        "Invalid minutes: Runtime boundaries/35",
+        "Bad response: rejected"
       ],
-      "success": "你已闭卷重建 搜索与命令行边界 的完整数据流。",
+      "success": "你已分别验证 API 与 CLI 边界，并安全合并合法覆盖值。",
       "hints": [
-        "把浏览器、请求或 CLI 边界转成可测试的普通参数。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "parseLesson 检查 title、有限非负 minutes。",
+        "parseMinutesOverride 拒绝缺失、空值、非整数和负数。",
+        "合法覆盖创建新 Lesson，无效覆盖保留原 Lesson。",
+        "坏 API 响应不能进入 applyMinutesOverride。"
       ]
     }
   ]

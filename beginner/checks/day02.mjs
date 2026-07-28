@@ -25,16 +25,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "批量订单金额",
+      "title": "同城配送报价",
       "expected": [
-        "Total price: 24",
-        "Status: Large order"
+        "Weight: 2.5 kg",
+        "Distance: 30 km",
+        "Fee: 16",
+        "Route: Long distance"
       ],
-      "success": "你已闭卷重建 批量订单金额 的完整数据流。",
+      "success": "你已经能转换两项表单文本，让它们参与同一个费用公式和边界判断。",
       "hints": [
-        "先用 Number 转换文本，再计算并用 if 判断状态。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "weightText 和 distanceText 要分别调用 Number(...)。",
+        "费用由基础费、重量费和里程费三部分相加。",
+        "30 公里本身也属于 Long distance。"
       ]
     }
   ]

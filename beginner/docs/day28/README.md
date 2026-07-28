@@ -1,5 +1,27 @@
 # Day 28（选修）｜元组、重载、`this` 与可变参数
 
+## 今天第一次见到的 JavaScript 工具
+
+### `call`：明确指定这一次调用中的 `this`
+
+普通函数从 JavaScript 的 `Function.prototype` 获得 `.call`。在 `label.call(context, value)` 中，点号左边的 `label` 必须是函数；第一个参数 `context` 会成为函数里的 `this`；后面的参数才依次交给函数的普通形参；`.call` 最后返回原函数的返回值。
+
+```ts
+function label(this: { prefix: string }, value: string): string {
+  return `${this.prefix}: ${value}`;
+}
+
+console.log(label.call({ prefix: "TS" }, "functions"));
+```
+
+实际输出：
+
+```text
+TS: functions
+```
+
+它解决的是“函数已经单独拿出来，但这次仍要让它使用指定对象”的问题。函数声明里的 `this: { prefix: string }` 只供 TypeScript 检查，不是运行时的第一个普通参数。箭头函数没有自己的动态 `this`，即使用 `.call` 也不能把它改掉，因此这里必须使用普通 `function`。本日的 `invoke`、`normalize` 都是课程自定义函数，只有 `.call` 是 JavaScript 自带的调用方式。
+
 今天会看到四种平时不常写、但在库代码里很常见的函数形式：用 `["Functions", 45]` 保存固定的“标题 + 分钟”；让 `invoke` 原样转交两个加法参数；让 `normalize` 同时接收一个字符串或一组字符串；用 `.call` 告诉函数“这次由谁来调用”。
 
 普通业务函数仍应优先用简单参数和联合类型。这里的目标是看懂这些类型怎样保护参数顺序、返回值和 `this`，需要设计通用 API 时再使用。
@@ -67,13 +89,17 @@ flowchart TD
   E["输出四种结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 28 官方手册索引](../OFFICIAL-READING.md#day-28) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 28 · 高级函数独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 课程函数工具箱 | 主任务 |
 | [practice02](./practice02/README.md) | 高级函数调用器 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day28 practice02`。
@@ -136,9 +162,3 @@ console.log(describe.call({ title: "Functions", day: 28 }, "Day 28"));
 ## 拓展思考（不要求写代码）
 
 `normalize` 能否只用联合参数写成一个函数？比较联合版本与重载版本在调用处返回类型精度和实现可读性上的差别。
-
-## 官方资料
-
-- [More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html)
-- [Tuple Types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types)
-- [Variadic Tuple Types](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#variadic-tuple-types)

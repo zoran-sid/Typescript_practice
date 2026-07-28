@@ -13,6 +13,8 @@
     "beginner:example": "node beginner/scripts/run.mjs example",
     "beginner:solution": "node beginner/scripts/run.mjs solution",
     "beginner:verify": "node beginner/scripts/verify.mjs",
+    "official:sync": "node beginner/scripts/sync-official-docs.mjs",
+    "test:practice": "node beginner/scripts/audit.mjs --allow-answers && npm run beginner:check && npm run beginner:verify",
     "test": "npm run beginner:audit && npm run beginner:check && npm run beginner:verify"
   },
   "devDependencies": {

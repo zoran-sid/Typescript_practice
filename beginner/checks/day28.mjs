@@ -9,7 +9,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 28 · 高级函数独立综合题",
+      "title": "课程函数工具箱",
       "expected": [
         "Progress: 3/4",
         "Total: 36",
@@ -31,18 +31,23 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "高级函数调用器",
+      "title": "通知与账单适配器",
       "expected": [
-        "Functions: 45m",
-        "42",
-        "types, modules",
-        "[TS] typed this"
+        "email -> learner@example.com",
+        "Invoice: 216",
+        "Single: learner@example.com",
+        "Batch: a@example.com, b@example.com",
+        "[billing] paid"
       ],
-      "success": "你已闭卷重建 高级函数调用器 的完整数据流。",
+      "success": "你已根据调用需求区分元组、可变参数泛型、重载与显式 this。",
       "hints": [
-        "使用元组、重载、显式 this 或可变参数保持函数关系。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "DeliveryPair 的两个位置含义固定。",
+        "invoke 用同一个 Args 连接函数参数和转发实参。",
+        "单地址与地址数组各写一条公开重载。",
+        "formatNotice.call 的第一个参数提供 this，不属于普通参数。"
+      ],
+      "typeHints": [
+        "不要用 any[] 或 string | string[] 的宽结果切断调用关系。"
       ]
     }
   ]

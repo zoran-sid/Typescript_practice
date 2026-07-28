@@ -59,6 +59,12 @@ Ada：完成 12 课（beginner）
 
 具名导入导出用 {}，名称之间用逗号，语句以分号结束；只导入类型写 import type。
 
+## 写完后自检
+
+- 把其中一个分数改为边界值 `60`，你预计 `formatScore` 返回哪条结果？判断规则应由入口还是工具模块负责？
+- 如果把 `Student` 改成普通值导入，生成的 JavaScript 与依赖关系可能多出什么？为什么这里使用 `import type`？
+- 为什么 NodeNext 项目的 TypeScript 源码相对导入仍写 `.js`，而不是照着磁盘文件写 `.ts`？
+
 ## 文件
 
 - 在 `practice.ts` 中独立作答。

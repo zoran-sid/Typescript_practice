@@ -39,7 +39,7 @@ rawProfiles
 
 必须实现：
 
-- `isRecord(value: unknown): value is Record<string, unknown>`：确认非 `null` 对象。
+- `isRecord(value: unknown): value is Record<string, unknown>`：确认值是非 `null`、非数组的普通记录对象。
 - `isLesson(value: unknown): value is Lesson`。
 - `isProfile(value: unknown): value is Profile`：逐层验证 name、contact.email、lessons 数组及每个元素。
 - `parseProfile(raw: string): ParseResult<Profile>`：
@@ -68,7 +68,7 @@ rawProfiles
 - 不得使用 `any`、类型断言、非空断言或 `as Profile`。
 - 每个类型谓词的检查必须与承诺完全一致。
 - JSON 解析结果必须先存为 `unknown`。
-- `contact` 必须单独确认是非空对象；`lessons` 必须检查数组中的每一项。
+- `contact` 必须单独确认是非 `null`、非数组的普通记录对象；`lessons` 必须检查数组中的每一项。
 - 只捕获 `JSON.parse` 的语法失败，不能把字段错误混成同一原因。
 
 完成标准：右键运行后显示 PASS；能解释“编译通过”为什么不代表外部数据可信。
@@ -76,6 +76,12 @@ rawProfiles
 ## 本题易漏语法
 
 JSON.parse 接收字符串，结果先当 unknown；验证对象要先排除 null，因为 typeof null 也是 object。
+
+## 写完后自检
+
+- 把 `lessons` 改成 `[null]` 或把 `contact` 改成 `null`，预测是哪一层守卫返回 `false`，最终错误应属于哪一种？
+- 如果 JSON 文本语法正确但缺少 `email`，为什么不能和 `JSON.parse` 的语法错误共用同一个失败原因？
+- 为什么这里写类型谓词和逐层验证，而不是直接把解析结果断言成 `Profile`？
 
 ## 文件
 

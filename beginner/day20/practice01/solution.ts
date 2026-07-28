@@ -5,7 +5,7 @@ type ParseResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: string };
 function isRecord(value: unknown): value is Record<string, unknown> {
-  // TODO：当且仅当当前 value 的 typeof 是 object 且 value 不是 null 时返回 true。
+  // TODO：当且仅当 value 的 typeof 是 object、不是 null、也不是数组时返回 true。
   // true 表示该输入可按普通对象继续查字段；false 表示拒绝当前输入。下面固定 false 会拒绝所有值，只是占位。
   return false;
 }

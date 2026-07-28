@@ -1,4 +1,4 @@
-# DAY01 · Practice 01：Day 01：学习档案
+# DAY01 · Practice 01：学习档案
 
 [返回当天课程](../README.md)
 
@@ -67,6 +67,12 @@ completedLessons ──┘
 ## 本题易漏语法
 
 声明用 const name = value; 或 let count = value;。冒号连接名称与类型，等号才赋值；模板字符串用反引号。
+
+## 写完后自检
+
+- 如果 `completedLessons` 从 5 开始，仍连续增加两次，第三行应显示多少？
+- 为什么完成数使用 `let`，而姓名、课程和初学者状态使用 `const`？
+- 如果把 `true` 写成 `"true"`，值的类型发生了什么变化？
 
 ## 文件
 

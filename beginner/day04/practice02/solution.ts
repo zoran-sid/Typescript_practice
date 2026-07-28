@@ -1,18 +1,24 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-const ageText = "20";
-const age = 0; // TODO：0 只是 number 类型占位；用 Number(...) 转换 ageText，并把数字年龄保存到 age。
-const hasStudentCard = true;
-let ticketPrice = 0; // TODO：0 是票价的临时占位；下面每条实际分支都要把对应票价赋值到 ticketPrice。
-if (false) { // TODO：false 是条件占位；替换为“age 小于 12”的儿童条件。
-  // TODO：儿童条件成立时，把票价 15 赋值给 ticketPrice。
-} else if (false) { // TODO：false 是条件占位；替换为“age 大于或等于 65”的老年条件。
-  // TODO：老年条件成立时，把票价 20 赋值给 ticketPrice。
-} else if (false) { // TODO：false 是条件占位；同时检查 hasStudentCard 为 true 且 age 小于或等于 25。
-  // TODO：学生条件成立时，把票价 30 赋值给 ticketPrice。
+const failedChecks = 0;
+const hasApproval = true;
+const isHotfix = true;
+
+const hasFailure = false; // TODO：让它表示“至少有一项检查失败”。
+const canFastTrack = false; // TODO：让它表示“这是热修复，并且已经得到审批”。
+
+let decision = "";
+if (hasFailure) {
+  // TODO：失败检查优先级最高，把 decision 更新为 "Blocked"。
+} else if (canFastTrack) {
+  // TODO：没有失败且满足快速通道条件，把 decision 更新为 "Fast track"。
+} else if (hasApproval) {
+  // TODO：没有失败、不是快速通道，但已有审批，把 decision 更新为 "Ready"。
 } else {
-  // TODO：前三个条件都不成立时，把普通票价 40 赋值给 ticketPrice。
+  // TODO：前面都不成立，把 decision 更新为 "Waiting approval"。
 }
-const canEnterAlone = false; // TODO：false 只是 boolean 类型占位；同时检查 age >= 18 和 ticketPrice > 0，并把结果保存到 canEnterAlone。
-console.log(`年龄: ${age}`);
-console.log(`票价: ${ticketPrice}`);
-console.log(`允许独自入场: ${canEnterAlone}`);
+
+const canDeploy = false; // TODO：同时检查“没有失败”与“已经审批”，保存最终布尔结果。
+
+console.log(`Decision: ${decision}`);
+console.log(`Can deploy: ${canDeploy}`);
+console.log(`Failed checks: ${failedChecks}`);

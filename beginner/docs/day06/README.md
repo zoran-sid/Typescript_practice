@@ -12,6 +12,32 @@
 - 使用循环处理对象中的数组。
 - 理解对象赋值复制的是引用。
 
+## 今天第一次见到的 JavaScript 工具
+
+**数组的 `.push(...)`：把新项追加到末尾**
+
+`push` 是数组提供的方法。点号左边是要修改的数组，圆括号里放要追加的值；它会修改原数组，并返回追加后的新长度：
+
+```ts
+const scores: number[] = [70];
+const newLength = scores.push(80);
+
+console.log(scores[1]);
+console.log(newLength);
+```
+
+实际输出：
+
+```text
+80
+2
+```
+
+- 可以一次传入多个值，例如 `scores.push(80, 90)`。
+- 对空数组调用也可以，第一项会放到索引 0。
+- `const result = scores.push(80)` 得到的是数字长度，不是新数组。
+- 方法名全小写。点号左边必须是允许修改的数组；`ReadonlyArray` 不能调用 `push`。
+
 ## 对象与属性
 
 ```ts
@@ -163,6 +189,10 @@ flowchart TD
   D["组合多行字符串并输出"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 06 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-06) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -240,8 +270,3 @@ copiedTask.scores.push(100); // ✅ 只修改副本的数组。
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，并尝试画出两套对象结构。
-
-## 官方资料
-
-- [Everyday Types：Object Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#object-types)
-- [Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html)

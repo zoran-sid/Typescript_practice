@@ -29,7 +29,11 @@ originalCart + copiedCart ──> 比较输出
 
 ## 要求
 
-- 从空白文件完成本题需要的类型、函数、固定输入与输出。
+- 声明 `type Cart = { customer: { name: string }; prices: number[] }`。
+- `copyPrices(source: number[]): number[]` 从空数组开始，用 `for...of` 与 `push` 返回新的价格数组。
+- `totalPrices(prices: number[]): number` 用局部累加器返回总价。
+- `originalCart` 固定为顾客 `"Lin"`、价格 `[10, 20]`；`copiedCart` 使用新的 `customer` 对象与 `copyPrices` 的结果。
+- 只向 `copiedCart.prices` 追加价格 30，再从两份购物车计算输出。本题按已知的两层结构逐层复制，不代表这个函数能深复制任意对象。
 - 不得导入其他 practice 文件夹。
 - 计算必须来自参数和局部变量；函数用 return 交付结果。
 - 保持原数据不变，并按流程图处理边界或状态。
@@ -42,6 +46,12 @@ Copied items: 3
 Copied total: 60
 Customer: Lin
 ```
+
+## 写完后自检
+
+- 如果追加价格从 30 改成 5，原件数量、副本数量和副本总价分别会是什么？
+- 修改 `copiedCart.customer.name` 或向 `copiedCart.prices` 再追加一项时，为什么原购物车不应变化？
+- 为什么这里只复制外层对象、`customer` 和 `prices` 三个已知层级，而不能把这种写法称为适用于任意数据的通用深复制？
 
 ## 文件
 

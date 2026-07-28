@@ -1,4 +1,4 @@
-# DAY24 · Practice 01：Day 24 · 结课项目（一）独立综合题
+# DAY24 · Practice 01：任务 JSON 导入审查器
 
 [返回当天课程](../README.md)
 
@@ -60,6 +60,12 @@ Invalid JSON: JSON format is invalid
 ## 本题易漏语法
 
 守卫返回类型写 value is Task；只有返回 true 的路径后才能把 unknown 当 Task。
+
+## 写完后自检
+
+- 给 `done` 状态删掉 `completedAt`，或把顶层 JSON 改成对象而不是数组时，结果应该进入哪条失败路线？
+- 为什么 `JSON.parse(text) as StudyTask[]` 不能代替 `isStudyTask` 的逐字段检查？
+- 如果以后增加 `cancelled` 状态，哪些类型、守卫和描述分支必须一起修改，才能避免静默遗漏？
 
 ## 文件
 

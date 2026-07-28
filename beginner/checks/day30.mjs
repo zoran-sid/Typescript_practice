@@ -9,7 +9,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 30 · 声明文件与旧代码独立综合题",
+      "title": "旧计分模块兼容入口",
       "expected": [
         "Score: 60",
         "Declarations: 35 minutes",
@@ -28,18 +28,22 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "旧模块声明适配",
+      "title": "模块增强与运行时补丁",
       "expected": [
-        "Legacy total: 60",
-        "Legacy version: 1.0",
-        "Merged: Declarations/40",
-        "Modern status: published"
+        "Module total: 60",
+        "Module version: 1.0",
+        "Before patch: undefined",
+        "User label: Ada (legacy)"
       ],
-      "success": "你已闭卷重建 旧模块声明适配 的完整数据流。",
+      "success": "你已区分模块命名空间导入、模块增强和运行时原型补丁。",
       "hints": [
-        "让 .d.ts 诚实描述旧 JavaScript 的真实导出与返回值。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "import * as 得到模块对象，不是 namespace 关键字声明。",
+        "先在补丁前读取 typeof LegacyUser.prototype.label。",
+        "declare module 只补类型；原型赋值才提供运行时函数。",
+        "label 用普通 function 读取实例 this.name。"
+      ],
+      "typeHints": [
+        "增强声明与运行时实现的成员名、参数和返回值必须一致。"
       ]
     }
   ]

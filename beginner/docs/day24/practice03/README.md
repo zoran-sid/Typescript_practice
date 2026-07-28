@@ -27,9 +27,12 @@
 orders.length + rejected + total ──> 导入报告
 ```
 
-## 要求
+## 任务要求
 
-- 从空白文件完成本题需要的类型、函数、固定输入与输出。
+- 声明 `Order`，包含只读字符串 `id`、大于 `0` 的数字 `quantity` 和有限且不小于 `0` 的数字 `unitPrice`。
+- 实现 `isRecord` 与 `isOrder`。JSON 解析结果先保留为 `unknown`，确认顶层为数组后再用守卫筛选。
+- 固定订单为 A（2 × 30）、B（1 × 100）和数量写成字符串的 C；只有 A、B 能进入 `orders`。
+- 从通过验证的订单计算总额，并用原始项数与合法项数之差计算拒绝数。
 - 不得导入其他 practice 文件夹。
 - 计算必须来自参数和局部变量；函数用 return 交付结果。
 - 保持原数据不变，并按流程图处理边界或状态。
@@ -41,6 +44,12 @@ Accepted orders: 2
 Rejected orders: 1
 Order total: 160
 ```
+
+## 写完后自检
+
+- 如果新增 `{ id: "D", quantity: 1, unitPrice: Number.NaN }`，它会被接受还是拒绝？你的检查依据是什么？
+- 为什么要先把解析结果保留为 `unknown`，而不是直接声明成 `Order[]`？
+- 本题用 `filter(isOrder)` 跳过坏项。如果这是支付扣款接口，你是否仍会选“部分接受”，还是让整批失败？说明你的选择。
 
 ## 文件
 

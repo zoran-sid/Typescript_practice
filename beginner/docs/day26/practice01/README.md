@@ -1,4 +1,4 @@
-# DAY26 · Practice 01：Day 26 · 结课项目（三）独立综合题
+# DAY26 · Practice 01：异步任务仪表板
 
 [返回当天课程](../README.md)
 
@@ -60,6 +60,12 @@ Tests passed: 4/4
 ## 本题易漏语法
 
 判别联合靠共同字段连接；对象值属性用逗号，类型联合成员用 |。
+
+## 写完后自检
+
+- 仓库返回合法空数组、`minutes: Number.NaN`、以及拒绝值 `"offline"` 时，最终状态分别应该是什么？
+- 为什么 `await repository.load()` 之后仍要运行 `parseTasks`，不能把等待成功等同于数据可信？
+- 如果新增 `empty` 状态，`render` 和回归测试中哪些位置必须一起增加分支？
 
 ## 文件
 

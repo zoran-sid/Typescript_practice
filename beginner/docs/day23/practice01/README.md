@@ -1,4 +1,4 @@
-# DAY23 · Practice 01：Day 23 · 严格配置下的独立练习
+# DAY23 · Practice 01：严格模式下的课程入口
 
 [返回当天课程](../README.md)
 
@@ -59,6 +59,12 @@ unknown value ──> typeof ──> double ──> number | undefined
 ## 本题易漏语法
 
 JSON 配置中属性名与值用冒号、项目用逗号；尾随逗号是否允许取决于文件格式。
+
+## 写完后自检
+
+- 把 `scores` 改成 `[0]`、把关键词改成空字符串时，各自会走哪个分支？先预测再运行。
+- 为什么 `scores[0]!` 只能消除提示，却不能让空数组真的出现第一项？
+- `clearTheme` 为什么要返回一个没有 `theme` 键的新对象，而不是写成 `{ ...preferences, theme: undefined }`？
 
 ## 文件
 

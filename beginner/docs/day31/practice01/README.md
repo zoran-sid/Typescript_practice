@@ -1,4 +1,4 @@
-# DAY31 · Practice 01：Day 31 · 迭代器、生成器与 bigint 独立综合题
+# DAY31 · Practice 01：惰性序列与大整数编号
 
 [返回当天课程](../README.md)
 
@@ -55,6 +55,12 @@ JSON: {"id":"9007199254740994"}
 ## 本题易漏语法
 
 generator 写 function* name()，暂停点写 yield value;；yield 与结束函数的 return 不同。
+
+## 写完后自检
+
+- `evenNumbers(6, 1)`、`createCountdown(0)` 各会产出什么？你的终止条件会不会进入死循环？
+- 为什么倒计时的 `current` 要放在 `[Symbol.iterator]()` 内部，而不是所有遍历共享的外层？
+- `bigint` 进入 JSON 前为什么转成字符串，而不能先转成 `number` 再序列化？
 
 ## 文件
 

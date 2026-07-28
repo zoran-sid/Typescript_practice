@@ -8,7 +8,7 @@
 - 结构提示代码：[solution.ts](../../../day24/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
-这是一道与 Practice 01 文件完全分开的闭卷迁移题。先理解并运行当天 `example.ts`，然后关闭它；不要复制代码，仅根据下面的流程与输出从空白重新实现。
+这题采用“整批通过或整批拒绝”的导入协议。成功批次用于报表，另一个字段类型错误的批次用来确认失败边界。
 
 ## 场景背景
 
@@ -27,9 +27,18 @@ text ──> importTasks ──> parsed: unknown
 任一非法/坏 JSON ──> result.message
 ```
 
-## 必须练到的能力
+## 和 Practice 01 的区别
 
-建立模型、unknown 边界、类型守卫和判别联合。
+Practice 01 允许部分成功：保留合法任务，并用 `rejected` 记录坏项。本题用于迁移事务，任何一项不合法都让整批失败；除了成功批次，还必须运行一份坏 `minutes` 批次，控制流会进入 `ImportResult` 的 failure 分支。
+
+## 任务要求
+
+1. 声明 `TaskState`、`StudyTask` 与成功/失败两分支的 `ImportResult`；`doing`、`done` 必须携带各自需要的时间字段。
+2. 实现 `isRecord`、`isTaskState`、`isStudyTask`，逐层验证对象、字段类型、有限非负分钟数和嵌套状态。
+3. `importTasks(text)` 先捕获 JSON 语法错误，再要求顶层数组中的每一项都合法；任一项失败就返回失败结果。
+4. `describeState` 根据 `status` 读取该分支才有的字段。固定数据为 `Validate data / 45 / doing since 09:00` 与 `Build report / 60 / todo`。
+5. 成功后安全读取第一项，并从已验证任务中计算总分钟；不要在验证前断言成 `StudyTask[]`。
+6. 再导入一批 `minutes: "45"` 的数据，输出消息为 `Task data is invalid` 的失败结果。
 
 - 不得导入 `practice01` 或直接调用其他练习的实现。
 - 输出必须由变量、计算或函数返回值产生，不把整行结果写死。
@@ -41,7 +50,14 @@ text ──> importTasks ──> parsed: unknown
 Import succeeded: 2 tasks
 First: Validate data (doing since 09:00)
 Total planned minutes: 105
+Invalid import: Task data is invalid
 ```
+
+## 写完后自检
+
+- 把第二项的 `minutes` 改成 `-1`，或者把输入改成合法空数组 `[]` 时，程序分别应该返回什么？
+- 为什么本题选择“任一坏项则整体失败”，而 Practice 01 选择“保留好项并统计 rejected”？这两种策略各适合什么导入场景？
+- `switch (state.status)` 后为什么能读取 `startedAt`，在分支外却不能直接读取？
 
 ## 文件
 

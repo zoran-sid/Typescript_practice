@@ -27,9 +27,12 @@ original + 商品 id + 增量
 original + updated + low + total ──> 库存报告
 ```
 
-## 要求
+## 任务要求
 
-- 从空白文件完成本题需要的类型、函数、固定输入与输出。
+- 声明 `Product`，包含只读 `id`、`name` 和 `stock`；实现 `restock(items, id, amount)`，只为命中商品创建新对象。
+- 实现 `lowStock(items)`：保留库存小于 `5` 的商品，并按库存升序返回新数组。
+- 固定库存为 Mouse / 2、Keyboard / 8、Cable / 1；给 Cable 补货 `5`。
+- 从 `updated` 计算总库存，并分别从 `original`、`updated` 读取 Cable 的旧数量和新数量。
 - 不得导入其他 practice 文件夹。
 - 计算必须来自参数和局部变量；函数用 return 交付结果。
 - 保持原数据不变，并按流程图处理边界或状态。
@@ -42,6 +45,12 @@ Updated cable: 6
 Low stock: Mouse
 Total stock: 16
 ```
+
+## 写完后自检
+
+- 如果给不存在的商品 id 补货，函数应该返回怎样的数组和引用关系？当前题目是否需要把它当错误？
+- 为什么 `lowStock` 可以直接排序 `filter` 返回的结果，却不应对参数 `items` 直接调用 `sort`？
+- 把补货数量改成 `-3` 会发生什么？真实库存接口应在类型、运行时校验还是两处共同限制？
 
 ## 文件
 

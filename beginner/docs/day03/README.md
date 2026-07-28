@@ -4,6 +4,31 @@
 
 一周有多次学习记录时，不必声明 `mondayMinutes`、`tuesdayMinutes` 等许多变量。数组可以把 `[30, 45, 60]` 这组数据放在一起，循环再一项一项处理它们。
 
+## 今天第一次见到的 JavaScript 工具
+
+**数组的 `.length`：读取当前有几项**
+
+数组提供 `length` 属性。点号左边是要查看的数组，右边是属性名；它直接得到一个数字，不需要圆括号：
+
+```ts
+const minutes = [30, 45, 60];
+
+console.log(minutes.length);
+console.log([].length);
+```
+
+实际输出：
+
+```text
+3
+0
+```
+
+- `length` 返回项数，不是最后一项的索引。三项数组的最后索引是 `length - 1`，也就是 2。
+- 空数组的长度是 0。
+- 不要写成 `minutes.length()`：`length` 是属性，不是函数。
+- 拼写是全小写 `length`；`lenght` 是常见笔误。
+
 ## 完成后你会做到
 
 - 使用数组保存一组同类值。
@@ -120,6 +145,10 @@ flowchart TD
   D["输出数量、总和、最高值"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 03 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-03) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -127,7 +156,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | Day 03：学习时长报告 | 主任务 |
-| [practice02](./practice02/README.md) | 温度观测报告 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 慢任务位置报告 | 独立迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day03 practice02`。
 
@@ -185,9 +214,3 @@ console.log(studyMinutes[studyMinutes.length - 1]); // ✅ 最后索引是数量
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照循环每一轮如何更新状态。
-
-## 官方资料
-
-- [Everyday Types：数组](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays)
-- [MDN：Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)
-- [MDN：for...of](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...of)

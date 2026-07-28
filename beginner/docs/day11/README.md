@@ -4,6 +4,27 @@
 
 今天用“页面正在等待、加载成功或加载失败”来理解状态。一个状态对象在同一时间只会是其中一种情况：成功时带数据，失败时带错误信息，等待时不需要这两类内容。TypeScript 可以根据状态标签检查你有没有读错字段，也能提醒你漏写了哪种情况。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `new Error(message)`：创建标准错误对象
+
+`Error` 是 JavaScript 运行环境提供的构造函数，首字母必须大写。`new Error("状态遗漏")` 把括号里的字符串保存为错误对象的 `message`；返回的是一个对象，不是普通字符串。
+
+只创建 `Error` 不会自动停止程序。`throw error` 才会立即结束当前调用路径，并把错误交给外层的 `catch`。错误对象通常还有 `name` 和调用位置等信息，所以不要用 `throw "出错了"` 代替。
+
+```ts
+const problem = new Error("状态遗漏");
+console.log(problem.name);
+console.log(problem.message);
+```
+
+实际输出：
+
+```text
+Error
+状态遗漏
+```
+
 ## 核心讲解
 
 先看类型允许的数据形状。下面三种对象形状都有 `status`，但 `status` 的值不同，其他字段也跟着不同：
@@ -90,6 +111,10 @@ flowchart TD
   D["依次输出四种状态"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 11 对应阅读](../OFFICIAL-READING.md#day-11) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -97,7 +122,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 判别联合、switch 与完整分支 | 主任务 |
-| [practice02](./practice02/README.md) | 加载状态渲染器 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 通知投递决策 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day11 practice02`。
 
@@ -161,8 +186,3 @@ type State =
 ## 拓展思考（不要求写代码）
 
 如果以后加入 `{ status: "paused"; title: string; reason: string }`，哪些位置应该发生类型错误？为什么这些错误是在帮助你，而不是阻碍你？
-
-## 官方资料
-
-- [Narrowing：Discriminated unions](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
-- [Narrowing：The never type](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#the-never-type)

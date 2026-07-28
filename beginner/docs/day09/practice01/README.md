@@ -1,4 +1,4 @@
-# DAY09 · Practice 01：Day 09：项目进度摘要
+# DAY09 · Practice 01：项目进度摘要
 
 [返回当天课程](../README.md)
 
@@ -80,6 +80,12 @@ P-01 | TypeScript 练习
 ## 本题易漏语法
 
 interface 内写 field: string;；创建值写 const value: Name = { field: "x" };。类型成员用分号，值属性用逗号。
+
+## 写完后自检
+
+- 如果 `note` 明确保存空字符串，`project.note ?? "无"` 会显示空字符串还是“无”？它和属性缺失有什么区别？
+- `readonly progress` 为什么只能阻止替换整个 `progress` 属性，却不自动阻止修改 `progress.completed`？
+- 为什么成员使用 `ReadonlyArray<string>`，而描述函数仍然可以调用 `.join(", ")`？
 
 ## 文件
 

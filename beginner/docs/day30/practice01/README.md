@@ -1,4 +1,4 @@
-# DAY30 · Practice 01：Day 30 · 声明文件与旧代码独立综合题
+# DAY30 · Practice 01：旧计分模块兼容入口
 
 [返回当天课程](../README.md)
 
@@ -54,6 +54,12 @@ Modern: draft
 ## 本题易漏语法
 
 .d.ts 只写声明不写实现；声明以分号结束，并与 JS 的真实导出和结果一致。
+
+## 写完后自检
+
+- 如果 `score.js` 开始返回字符串，但 `.d.ts` 仍声明 number，类型检查和运行时会各自相信什么？
+- 为什么两个同名 `interface LessonInfo` 能合并，而重复声明两个同名 `type LessonInfo` 不行？
+- `normalizeStatus` 为什么需要运行时代码，`ModernStatus` 的字面量联合本身不能完成哪一步转换？
 
 ## 文件
 

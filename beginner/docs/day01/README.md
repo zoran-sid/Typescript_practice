@@ -116,6 +116,10 @@ flowchart TD
   D["输出两条进度"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 01 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-01) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -123,7 +127,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | Day 01：学习档案 | 主任务 |
-| [practice02](./practice02/README.md) | 学习进度卡 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 键盘库存快照 | 独立迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day01 practice02`。
 
@@ -168,8 +172,3 @@ console.log(`已完成: ${completedLessons}`); // ✅ 模板字符串使用反�
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`。先比较自己的变量选择和更新过程，再比较输出格式。
-
-## 官方资料
-
-- [Everyday Types：基础类型与类型推断](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
-- [The Basics：静态类型检查](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)

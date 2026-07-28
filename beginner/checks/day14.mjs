@@ -30,18 +30,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "课程模块组合",
+      "title": "库存入口与模块边界",
       "expected": [
-        "课程：TypeScript 零基础课（21 课）",
-        "80：通过",
-        "及格线：60",
-        "Ada：完成 12 课（beginner）"
+        "仓库：华东一号",
+        "商品：机械键盘（SKU-KB）",
+        "价格：¥399",
+        "库存：可下单（8 件）"
       ],
-      "success": "你已闭卷重建 课程模块组合 的完整数据流。",
+      "success": "类型、默认导出、具名导出与本地别名都已在库存入口正确组合。",
       "hints": [
-        "使用具名/默认导入导出，并把类型导入写成 import type。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "Product 从 ./inventory-types.js 使用 import type 导入。",
+        "inventory-data 的默认导出是商品，warehouseName 是具名导出并要改名为 warehouse。",
+        "inventory-tools 的 formatPrice 是默认导出，stockLabel 是具名导出。",
+        "不要复制辅助模块内容；入口只调用导入的值与函数。"
       ]
     }
   ]

@@ -27,17 +27,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "端口配置校验",
+      "title": "批量价格导入：把异常转成 Result",
       "expected": [
-        "端口: 3000",
-        "错误: 端口必须是 1 到 65535 的整数",
-        "保存结果: 成功"
+        "价格：19.9",
+        "错误：价格必须是非负数字",
+        "价格：0",
+        "有效数量：2"
       ],
-      "success": "你已闭卷重建 端口配置校验 的完整数据流。",
+      "success": "解析异常已在批处理边界转成 Result，坏数据没有阻断后续项，价格 0 也保留为成功。",
       "hints": [
-        "失败用 throw 或 Result 表达；catch 值保持 unknown 直到收窄。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "parsePrice 先检查 text.trim()，再用 Number 和 Number.isFinite 验证非负数字。",
+        "toPriceResult 负责 try/catch，并把 unknown 错误交给 errorMessage。",
+        "循环只按 result.ok 分支读取 value 或 error。",
+        "不要用 if (!value)，因为 0 是合法价格。"
       ]
     }
   ]

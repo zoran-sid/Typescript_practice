@@ -31,18 +31,19 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "内容发布配置",
+      "title": "角色权限矩阵",
       "expected": [
-        "原标题：旧标题",
-        "新标题：TypeScript 工具类型",
-        "状态：published=已发布",
-        "可用状态：draft、published、archived"
+        "viewer 可编辑：false",
+        "editor 可关闭：false",
+        "admin 可关闭：true",
+        "成员：Ada / editor"
       ],
-      "success": "你已闭卷重建 内容发布配置 的完整数据流。",
+      "success": "角色与动作来自唯一数据源，权限表完整，运行时授权判断也与配置一致。",
       "hints": [
-        "使用 Utility Types、as const 或 satisfies 保留约束与推断。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "Role 与 Action 分别从 roles、actions 的 as const 元组派生。",
+        "permissions 使用 satisfies Record<Role, readonly Action[]> 检查完整性。",
+        "can 遍历 permissions[role]，不要按角色硬编码分支。",
+        "MemberCard 用 Pick<Member, \"name\" | \"role\"> 派生。"
       ]
     }
   ]

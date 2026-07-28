@@ -8,7 +8,7 @@ export default {
   "exercises": [
     {
       "id": "practice01",
-      "title": "Day 24 · 结课项目（一）独立综合题",
+      "title": "任务 JSON 导入审查器",
       "expected": [
         "Import succeeded: 3 tasks",
         "Rejected: 1",
@@ -35,13 +35,14 @@ export default {
       "expected": [
         "Import succeeded: 2 tasks",
         "First: Validate data (doing since 09:00)",
-        "Total planned minutes: 105"
+        "Total planned minutes: 105",
+        "Invalid import: Task data is invalid"
       ],
-      "success": "你已闭卷重建 任务导入边界 的完整数据流。",
+      "success": "你已完成整批导入协议，并分别验证成功与字段错误两条路径。",
       "hints": [
-        "建立模型、unknown 边界、类型守卫和判别联合。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "成功批次要求每一项都通过 isStudyTask。",
+        "minutes 为字符串的批次必须整体返回 failure。",
+        "ok 为 true 读取 tasks，false 读取 message。"
       ]
     },
     {

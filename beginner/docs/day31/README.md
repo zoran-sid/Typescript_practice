@@ -1,5 +1,53 @@
 # Day 31（选修）｜迭代协议、生成器与 `bigint`
 
+## 今天第一次见到的 JavaScript 工具
+
+### `[Symbol.iterator]()` 与 `next()`：约定“下一个值怎样拿”
+
+`Symbol.iterator` 是 JavaScript 提供的标准符号，`for...of` 和展开语法都认识它。对象上的 `[Symbol.iterator]()` 不接收参数，返回一次新的迭代器；迭代器的 `.next()` 也通常不接收参数，每调用一次就返回 `{ value, done }`。
+
+```ts
+const values = [10, 20];
+const iterator = values[Symbol.iterator]();
+
+console.log(iterator.next());
+console.log(iterator.next());
+console.log(iterator.next());
+```
+
+实际输出的字段是：
+
+```text
+{ value: 10, done: false }
+{ value: 20, done: false }
+{ value: undefined, done: true }
+```
+
+点号左边的 `values` 是可迭代对象，点号左边的 `iterator` 保存这一次遍历走到哪里。方括号不能省略，拼写是大写的 `Symbol`、小写的 `iterator`。若把当前位置放在可迭代对象外层，两次遍历会错误地共用进度；每次调用 `[Symbol.iterator]()` 都应得到独立状态。
+
+### `BigInt` 与 JSON 的转换边界
+
+`bigint` 是 JavaScript 的精确整数类型。可以写 `9007199254740993n`，也可以调用内置函数 `BigInt("9007199254740993")`；后者接收可转换的整数文本并返回 `bigint`。不能写 `new BigInt(...)`，也不能把 `bigint` 与普通 `number` 直接相加。
+
+`JSON.stringify(value, replacer)` 由 JavaScript 内置的 `JSON` 对象提供。第一个参数是要变成 JSON 文本的值；可选的第二个参数 `replacer` 会逐项接收键和值，并把它返回的内容写入 JSON；最终返回 JSON 字符串。原生 JSON 不认识 `bigint`，所以本例在边界处明确转成字符串：
+
+```ts
+const payload = { id: 9_007_199_254_740_993n };
+const text = JSON.stringify(payload, (_key, value: unknown) =>
+  typeof value === "bigint" ? value.toString() : value,
+);
+
+console.log(text);
+```
+
+实际输出：
+
+```text
+{"id":"9007199254740993"}
+```
+
+`value.toString()` 中点号左边是当前 `bigint`，不传参数时返回十进制字符串。这个转换解决了 JSON 无法序列化 `bigint` 的问题，但读取 JSON 后得到的仍是字符串，不会自动恢复成 `bigint`；发送方和接收方必须共同约定该字段的格式。
+
 调用 `range(2, 4)` 时，程序不会立刻一次算出 `[2, 3, 4]`。它先返回一个能“交出下一个值”的对象；展开语法每要一次值，函数才运行到下一个 `yield`。这适合按需产生序列。
 
 今天还会处理超过普通 `number` 精确范围的整数。`9_007_199_254_740_993n + 1n` 两边都带 `n`，结果仍是 `bigint`；进入 JSON 前要明确转成字符串。
@@ -75,13 +123,17 @@ flowchart TD
   E["输出三类结果"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 31 官方手册索引](../OFFICIAL-READING.md#day-31) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 31 · 迭代器、生成器与 bigint 独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 惰性序列与大整数编号 | 主任务 |
 | [practice02](./practice02/README.md) | 数字序列生成器 | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day31 practice02`。
@@ -135,9 +187,3 @@ const json = JSON.stringify({ id: nextId.toString() });
 ## 拓展思考（不要求写代码）
 
 如果序列没有终点，哪些消费方式仍可能安全，哪些写法（例如直接展开成数组）会导致程序无法结束？
-
-## 官方资料
-
-- [Iterators and Generators](https://www.typescriptlang.org/docs/handbook/iterators-and-generators.html)
-- [Symbols 与 Symbol.iterator](https://www.typescriptlang.org/docs/handbook/symbols.html#symboliterator)
-- [BigInt](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-2.html#bigint)

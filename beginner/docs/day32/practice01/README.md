@@ -1,4 +1,4 @@
-# DAY32 · Practice 01：Day 32 · 标准装饰器、Mixin 与组合独立综合题
+# DAY32 · Practice 01：带追踪的价格服务
 
 [返回当天课程](../README.md)
 
@@ -58,6 +58,12 @@ message ──> MessageService ──> Formatter ──> 最终文字
 ## 本题易漏语法
 
 标准方法装饰器接收原方法与 context；用 target.call(this, ...args) 保留 this、参数和返回值。
+
+## 写完后自检
+
+- 把 `total` 改成三个参数或 Promise 返回值后，包装器的 `Args`、`Return` 会怎样跟随？
+- 为什么标准装饰器用 `(value, context)`，旧文章里的 `(target, key, descriptor)` 不能直接复制进本题？
+- 格式器为什么使用构造器组合，而标签使用 Mixin？如果标签也需要随时替换，哪种设计会更清楚？
 
 ## 文件
 

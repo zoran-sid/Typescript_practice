@@ -8,14 +8,14 @@ const originalTask = {
   },
   scores: [88, 92, 90],
 };
-// 方案一骨架：全局循环直接修改外部数组。
-const scoresFromGlobalLoop: number[] = [];
+// 方案一（题目必做）：全局循环直接填充 copiedScores。
+const copiedScores: number[] = [];
 // 上面的 [] 是准备接收分数的真实空数组，不是占位答案。
 for (const score of originalTask.scores) {
   // score 是每轮的局部绑定；目标数组在循环外，因此循环结束后仍可访问。
-  // TODO：本轮输入是 originalTask.scores 中的 score；把它追加到外部数组 scoresFromGlobalLoop。
+  // TODO 1：本轮输入是 originalTask.scores 中的 score；把它追加到外部数组 copiedScores。
 }
-// 方案二骨架：源数组经参数进入函数，局部 result 经 return 离开函数。
+// 方案二（写完后比较）：源数组经参数进入函数，局部 result 经 return 离开函数。
 function copyScores(source: number[]): number[] {
   const result: number[] = [];
   // 上面的 [] 是本次调用用来收集副本的真实空数组，不是占位答案。
@@ -25,7 +25,9 @@ function copyScores(source: number[]): number[] {
   }
   return result;
 }
-const copiedScores = copyScores(originalTask.scores);
+const scoresFromFunction = copyScores(originalTask.scores);
+// 这份函数副本只用于比较作用域和复用方式；本题 copiedTask 仍使用必做的 copiedScores。
+void scoresFromFunction;
 const copiedTask = {
   title: "", // TODO：空字符串只是 string 类型占位；读取 originalTask.title，并把它保存为 copiedTask.title。
   done: false, // TODO：false 是 boolean 类型占位；读取 originalTask.done 作为副本初始状态，不要在这里写死结果。

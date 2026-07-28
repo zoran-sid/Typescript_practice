@@ -76,13 +76,17 @@ flowchart TD
   D["比较原数组与新数组并输出"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 25 官方手册索引](../OFFICIAL-READING.md#day-25) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 25 · 结课项目（二）独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 学习任务快照更新 | 主任务 |
 | [practice02](./practice02/README.md) | 任务更新与统计 | 闭卷迁移 |
 | [practice03](./practice03/README.md) | 库存不可变更新 | 综合应用 |
 
@@ -130,10 +134,3 @@ function completeFirst(tasks: readonly StudyTask[]): StudyTask[] {
 ## 拓展思考（不要求写代码）
 
 如果任务新增可修改的 `details: { notes: string[] }`，更新其中一条 notes 时需要复制哪几层，才能保证旧任务完全不变？
-
-## 官方资料
-
-- [Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html)
-- [Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)
-- [Utility Types：Record](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)
-- [Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)

@@ -1,16 +1,28 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-type Id = string | number;
-type Alignment = "left" | "center" | "right";
-function formatId(id: Id): string {
-  if (typeof id === "string") {
-    // id 已收窄为 string，可以使用字符串专属方法。
-    return ""; // TODO：空字符串只是 string 占位；把当前 string 类型的 id 转成大写并返回。
+type ToggleInput = boolean | "on" | "off";
+type Environment = "development" | "staging" | "production";
+
+function normalizeToggle(input: ToggleInput): boolean {
+  if (typeof input === "boolean") {
+    const booleanResult = false; // TODO：false 只是占位；布尔输入已经是标准结果，应使用本次传入的 input。
+    return booleanResult;
   }
-  return ""; // TODO：空字符串只是 string 占位；把当前 number 类型的 id 放在 "#" 后并返回字符串。
+
+  const textResult = false; // TODO：比较收窄后的字符串是否为 "on"，把比较结果保存到 textResult。
+  return textResult;
 }
-function describeAlignment(alignment: Alignment): string {
-  return ""; // TODO：空字符串只是 string 占位；把合法的 alignment 放在 "对齐方式: " 后并返回完整说明。
+
+function describeDebug(environment: Environment, input: ToggleInput): string {
+  const requested = normalizeToggle(input);
+  const canEnable = false; // TODO：同时要求 requested 为 true，并且 environment 不是 "production"。
+
+  let status = "disabled";
+  if (canEnable) {
+    // TODO：允许开启时，把 status 更新为 "enabled"。
+  }
+
+  return `${environment} debug: ${status}`;
 }
-console.log(formatId("ts-10"));
-console.log(formatId(42));
-console.log(describeAlignment("center"));
+
+console.log(describeDebug("staging", "on"));
+console.log(describeDebug("production", true));

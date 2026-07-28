@@ -12,6 +12,30 @@
 - 能区分“类型检查”和“程序运行”。
 - 能独立写出并运行一个最小程序。
 
+## 今天第一次见到的 JavaScript 工具
+
+**`console.log(...)`：把值显示在终端**
+
+`console` 是 Node.js 运行环境提供的全局对象，负责与控制台交互；点号左边的 `console` 是“谁提供功能”，点号右边的 `log` 是它的输出方法。圆括号里放要查看的值：
+
+```ts
+const message = "Hello";
+console.log(message);
+console.log("库存", 3);
+```
+
+实际输出：
+
+```text
+Hello
+库存 3
+```
+
+- 可以传入一个或多个值，多个参数通常会隔开显示。
+- 它负责“显示”，不会替你保存或计算数据；调用结果是 `undefined`，不要把它当成业务返回值。
+- 名字全部小写，必须写成 `console.log(...)`。常见拼错有 `Console.log`、`console.Log`，以及漏掉圆括号。
+- `console.log("3 + 2")` 输出的是引号里的文字；`console.log(3 + 2)` 才会先计算再输出 5。
+
 ## 先认清四个工具
 
 这四个名字经常一起出现，但它们做的事不同：
@@ -90,6 +114,10 @@ flowchart TD
   C["终端显示问候语"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如想继续确认概念，只选 [Day 00 对应的 1 篇官方阅读](../OFFICIAL-READING.md#day-00) 即可。它不是练习前置，不需要先读完才能作答。
+
 ## 独立练习导航
 
 本日共有 1 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
@@ -148,9 +176,3 @@ console.log(total);
 代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
 
 独立完成并核对输出后，再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`。结构提示用于复盘，不是可复制答案。
-
-## 官方资料
-
-- [TypeScript Handbook：TypeScript 是什么](https://www.typescriptlang.org/docs/handbook/intro.html)
-- [TypeScript Handbook：The Basics](https://www.typescriptlang.org/docs/handbook/2/basic-types.html)
-- [Node.js：运行 TypeScript 与类型擦除](https://nodejs.org/api/typescript.html)

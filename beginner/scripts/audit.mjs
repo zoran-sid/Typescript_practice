@@ -7,12 +7,68 @@ import ts from "typescript";
 const beginnerRoot = fileURLToPath(new URL("..", import.meta.url));
 const docsRoot = path.join(beginnerRoot, "docs");
 const errors = [];
+const allowAnswers = process.argv.includes("--allow-answers");
+const daysIntroducingJavaScriptTools = new Set([
+  "day00",
+  "day02",
+  "day03",
+  "day06",
+  "day07",
+  "day08",
+  "day10",
+  "day11",
+  "day12",
+  "day19",
+  "day20",
+  "day21",
+  "day22",
+  "day24",
+  "day26",
+  "day27",
+  "day28",
+  "day29",
+  "day30",
+  "day31",
+  "day32",
+]);
 const expectedDays = Array.from({ length: 33 }, (_, index) =>
   `day${String(index).padStart(2, "0")}`,
 );
 
-if (!existsSync(path.join(docsRoot, "README.md"))) {
-  errors.push("beginner/docs/README.md 文档中心入口不存在。");
+for (const file of ["README.md", "OFFICIAL-READING.md", "VALUE-CHECKS.md"]) {
+  if (!existsSync(path.join(docsRoot, file))) {
+    errors.push(`beginner/docs/${file} 文档中心资料不存在。`);
+  }
+}
+
+for (const file of [
+  "build-official-reader.mjs",
+  "sync-official-docs.mjs",
+]) {
+  if (!existsSync(path.join(beginnerRoot, "scripts", file))) {
+    errors.push(`beginner/scripts/${file} 官方文档工具不存在。`);
+  }
+}
+
+const officialReadingIndexPath = path.join(
+  docsRoot,
+  "OFFICIAL-READING.md",
+);
+if (existsSync(officialReadingIndexPath)) {
+  const officialReadingIndex = readFileSync(officialReadingIndexPath, "utf8");
+  if (
+    !officialReadingIndex.includes("../../official-reference/reader/") ||
+    officialReadingIndex.includes(
+      "../../official-reference/typescript-website/",
+    ) ||
+    officialReadingIndex.includes(
+      "../../official-reference/typescript-localizations/",
+    )
+  ) {
+    errors.push(
+      "beginner/docs/OFFICIAL-READING.md 的本地链接必须指向自动生成的 reader 阅读版。",
+    );
+  }
 }
 
 const codeDays = directoryNames(beginnerRoot, /^day\d{2}$/);
@@ -69,6 +125,36 @@ for (const day of expectedDays) {
     errors.push(
       `docs/${day}/README.md 必须有且只有一个结合当天知识、包含具体问答与边界的面试章节。`,
     );
+  }
+  const officialReading = readSection(
+    dayReadme,
+    "## 官方手册扩展阅读（可选）",
+  ).trim();
+  if (
+    countText(dayReadme, "## 官方手册扩展阅读（可选）") !== 1 ||
+    !officialReading.includes(`../OFFICIAL-READING.md#${day.replace("day", "day-")}`)
+  ) {
+    errors.push(
+      `docs/${day}/README.md 必须有且只有一个指向当天官方阅读索引的可选章节。`,
+    );
+  }
+  if (countText(dayReadme, "## 官方资料") > 0) {
+    errors.push(`docs/${day}/README.md 不应再保留与统一索引重复的“官方资料”列表。`);
+  }
+  if (daysIntroducingJavaScriptTools.has(day)) {
+    const toolsHeading = "## 今天第一次见到的 JavaScript 工具";
+    const toolsSection = readSection(dayReadme, toolsHeading).trim();
+    const exampleOutputIndex = dayReadme.indexOf("## Example 实际输出");
+    if (
+      countText(dayReadme, toolsHeading) !== 1 ||
+      toolsSection.length < 180 ||
+      !toolsSection.includes("```text") ||
+      dayReadme.indexOf(toolsHeading) > exampleOutputIndex
+    ) {
+      errors.push(
+        `docs/${day}/README.md 必须在 Example 前解释当天首次出现的 JavaScript 工具，并给出实际输出。`,
+      );
+    }
   }
 
   const badExample = readSection(dayReadme, "### 错误代码示例");
@@ -138,6 +224,52 @@ for (const day of expectedDays) {
       if (countText(practiceReadme, "## 场景背景") !== 1 || background.length < 30) {
         errors.push(`docs/${day}/${id}/README.md 必须有且只有一个完整的场景背景。`);
       }
+      const selfCheck = readSection(practiceReadme, "## 写完后自检").trim();
+      const selfCheckQuestions = selfCheck.match(/[？?]/g) ?? [];
+      if (
+        countText(practiceReadme, "## 写完后自检") !== 1 ||
+        selfCheck.length < 60 ||
+        selfCheckQuestions.length < 2
+      ) {
+        errors.push(
+          `docs/${day}/${id}/README.md 必须有且只有一个包含至少两个具体问题的“写完后自检”。`,
+        );
+      }
+      if (id === "practice02") {
+        const difference = readSection(
+          practiceReadme,
+          "## 和 Practice 01 的区别",
+        ).trim();
+        const designDimensions = [
+          "业务",
+          "输入",
+          "数据",
+          "类型",
+          "状态",
+          "分支",
+          "控制",
+          "调用",
+          "模块",
+          "阶段",
+          "实现",
+          "运行时",
+          "失败",
+          "边界",
+          "返回",
+          "输出",
+          "函数",
+          "流程",
+        ].filter((word) => difference.includes(word));
+        if (
+          countText(practiceReadme, "## 和 Practice 01 的区别") !== 1 ||
+          difference.length < 50 ||
+          designDimensions.length < 2
+        ) {
+          errors.push(
+            `docs/${day}/${id}/README.md 必须具体说明它与 Practice 01 在至少两个设计维度上的区别。`,
+          );
+        }
+      }
       if (!dayReadme.includes(`./${id}/README.md`)) {
         errors.push(`docs/${day}/README.md 缺少 ${id} 文档链接。`);
       }
@@ -191,19 +323,21 @@ for (const day of expectedDays) {
     const practicePath = path.join(codePracticeDir, "practice.ts");
     if (existsSync(practicePath)) {
       const source = readFileSync(practicePath, "utf8");
-      const parsed = ts.createSourceFile(
-        practicePath,
-        source,
-        ts.ScriptTarget.Latest,
-        true,
-        ts.ScriptKind.TS,
-      );
-      if (parsed.statements.length > 0) {
-        errors.push(`${day}/${id}/practice.ts 必须只含注释，不能提供实现。`);
-      }
-      const lines = source.split(/\r?\n/).filter((line) => line.trim()).length;
-      if (lines < 2 || lines > 8) {
-        errors.push(`${day}/${id}/practice.ts 应只有 2–8 行简短注释。`);
+      if (!allowAnswers) {
+        const parsed = ts.createSourceFile(
+          practicePath,
+          source,
+          ts.ScriptTarget.Latest,
+          true,
+          ts.ScriptKind.TS,
+        );
+        if (parsed.statements.length > 0) {
+          errors.push(`${day}/${id}/practice.ts 必须只含注释，不能提供实现。`);
+        }
+        const lines = source.split(/\r?\n/).filter((line) => line.trim()).length;
+        if (lines < 2 || lines > 8) {
+          errors.push(`${day}/${id}/practice.ts 应只有 2–8 行简短注释。`);
+        }
       }
       const expectedDocReference = `../../docs/${day}/${id}/README.md`;
       if (!source.includes(expectedDocReference)) {
@@ -253,7 +387,7 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    "PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、面试问答、场景背景、关联数据流、空白作答入口、明确的 TODO 占位说明和匹配检查。",
+    `PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、首次 JS 工具说明、官方扩展索引、面试问答、场景背景、关联数据流、迁移自检、${allowAnswers ? "可保留作答的练习入口" : "空白作答入口"}、明确的 TODO 占位说明和匹配检查。`,
   );
 }
 
@@ -282,7 +416,8 @@ function readSection(text, heading) {
   if (start < 0) return "";
   const bodyStart = start + heading.length;
   const rest = text.slice(bodyStart);
-  const next = rest.search(/\n#{1,3} /);
+  const headingLevel = heading.match(/^#+/)?.[0].length ?? 2;
+  const next = rest.search(new RegExp(`\\n#{1,${headingLevel}} `));
   return next < 0 ? rest : rest.slice(0, next);
 }
 

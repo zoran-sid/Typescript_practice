@@ -14,6 +14,40 @@
 - 比较“整批通过才导入”和“保留有效项并统计拒绝项”两种汇总策略；
 - 用完整 `switch` 安全读取不同状态的字段。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `reduce`：把数组中的多项累计成一个结果
+
+`.reduce` 是 JavaScript 数组提供的方法。在 `tasks.reduce(callback, 0)` 中，点号左边的 `tasks` 是任务数组；第二个参数 `0` 是累计值的初始值；回调每轮接到“上轮累计值”和“当前数组项”，并返回新的累计值。数组处理完后，`reduce` 返回一个最终值，而不是新数组。
+
+```ts
+const minutes = [30, 45, 15];
+const total = minutes.reduce(
+  (sum, currentMinutes) => sum + currentMinutes,
+  0,
+);
+
+const emptyMinutes: number[] = [];
+const emptyTotal = emptyMinutes.reduce(
+  (sum, currentMinutes) => sum + currentMinutes,
+  0,
+);
+
+console.log(total);
+console.log(emptyTotal);
+```
+
+实际输出：
+
+```text
+90
+0
+```
+
+第一轮中，`sum` 是初始值 `0`，`currentMinutes` 是 `30`，回调交回 `30`；下一轮的 `sum` 就变成 `30`。本日的写法同理：`sum` 保存已经累计的分钟，`task` 是当前任务，`task.minutes` 加入后必须交回给下一轮。
+
+初始值不能随手省略。空数组没有“第一项”可拿来充当累计值，不传初始值会在运行时报 `TypeError`；传入 `0` 后，空数组会稳定返回 `0`。拼写是小写的 `reduce`，回调使用花括号时还必须明确写 `return`。
+
 ## 核心讲解
 
 ```text
@@ -65,13 +99,17 @@ flowchart TD
   D["描述首项状态并统计分钟"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，如果还想加深理解，再到 [Day 24 官方手册索引](../OFFICIAL-READING.md#day-24) 只选 1 篇阅读；这不是开始练习前的必修内容。
+
 ## 独立练习导航
 
 本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
-| [practice01](./practice01/README.md) | Day 24 · 结课项目（一）独立综合题 | 主任务 |
+| [practice01](./practice01/README.md) | 任务 JSON 导入审查器 | 主任务 |
 | [practice02](./practice02/README.md) | 任务导入边界 | 闭卷迁移 |
 | [practice03](./practice03/README.md) | 订单 JSON 导入边界 | 综合应用 |
 
@@ -132,9 +170,3 @@ const tasks = Array.isArray(parsed) && parsed.every(isStudyTask) ? parsed : [];
 ## 拓展思考（不要求写代码）
 
 如果新增 `{ status: "paused"; reason: string }`，模型、运行时验证器和 `describeState` 分别会在哪些位置提醒你补充逻辑？
-
-## 官方资料
-
-- [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
-- [Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
-- [Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html)

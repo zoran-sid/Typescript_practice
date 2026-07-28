@@ -23,17 +23,17 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "电影院票价判断",
+      "title": "部署闸门判断",
       "expected": [
-        "年龄: 20",
-        "票价: 30",
-        "允许独自入场: true"
+        "Decision: Fast track",
+        "Can deploy: true",
+        "Failed checks: 0"
       ],
-      "success": "你已闭卷重建 电影院票价判断 的完整数据流。",
+      "success": "你已经能按优先级解释部署决策，并把显示状态与布尔权限分别计算。",
       "hints": [
-        "使用比较、布尔运算和互斥的 if / else if / else。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "只要 failedChecks 大于 0，就应先进入 Blocked 分支。",
+        "快速通道同时要求 isHotfix 和 hasApproval。",
+        "canDeploy 只关心没有失败并且已经审批。"
       ]
     }
   ]

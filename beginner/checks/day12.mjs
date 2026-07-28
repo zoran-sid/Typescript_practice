@@ -31,18 +31,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "学习记录格式器",
+      "title": "消息格式化与多路投递",
       "expected": [
-        "学习记录",
-        "第 1 项：30 分钟",
-        "第 2 项：45 分钟",
-        "主题：函数 / 回调 / void"
+        "[课程] 课程已更新",
+        "投递数量：2",
+        "存档：[课程] 课程已更新"
       ],
-      "success": "你已闭卷重建 学习记录格式器 的完整数据流。",
+      "success": "消息只格式化一次，并通过 rest 回调同时投递到终端和存档。",
       "hints": [
-        "使用函数类型、箭头函数、默认/可选/rest 参数与回调。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "createFormatter 返回一个箭头函数，让它使用创建时的 prefix。",
+        "dispatch 先保存 formatter(message) 的结果，再遍历 ...sinks。",
+        "console.log 可直接作为 MessageSink；archiveSink 则把消息加入 archived。",
+        "投递数量来自实际调用 sink 的次数，不是写死的 2。"
       ]
     }
   ]

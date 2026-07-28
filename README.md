@@ -5,7 +5,7 @@
 ## 最方便的学习方式：右键运行
 
 1. 第一次在项目根目录运行 `npm install`。
-2. 用 VS Code 或 Cursor 打开整个 `F:\typescript_practice` 文件夹并安装推荐的 **Code Runner**；不要只打开某个 day 或 practice 子文件夹。
+2. 用 VS Code 或 Cursor 打开克隆后的项目根目录并安装推荐的 **Code Runner**；不要只打开某个 day 或 practice 子文件夹。
 3. 从 [每日文档中心](./beginner/docs/README.md) 选择当天课程，先沿 Example Mermaid 流程图预测执行顺序。
 4. 右击对应代码目录中的 `beginner/dayXX/example.ts`，选择 **Run Code**，再把流程图节点对应到代码行。
 5. 从当天文档导航进入 `practice01`、`practice02` 或 `practice03` 的独立题目。
@@ -29,8 +29,11 @@ npm run beginner -- day06 practice01
 npm run beginner -- day06 practice02
 npm run beginner:solution -- day06 practice02
 npm run beginner:verify -- day06
+npm run test:practice
 npm test
 ```
+
+`npm run test:practice` 适合这个保存了你个人答案的练习仓库；`npm test` 还会检查所有 `practice.ts` 是否保持初始空白，主要用于维护干净模板。
 
 ## 课程导航
 

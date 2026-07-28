@@ -4,6 +4,78 @@
 
 今天从一段端口文字得到可用端口。输入可能不是数字，也可能超出范围；端口即使合法，保存时仍可能遇到普通业务失败。我们会把这两类失败分开，让调用者知道是程序无法继续，还是这次业务操作没有成功。
 
+## 今天第一次见到的 JavaScript 工具
+
+### `text.trim()`：去掉字符串两端空白
+
+`trim` 由字符串提供，点号左边是要处理的字符串，括号里不传参数。它返回一个新字符串，不会修改原字符串，也不会删除文字中间的空格。
+
+输入验证时要先处理空白，因为 `Number("   ")` 会得到 `0`。如果空文本不允许，先检查 `text.trim() === ""`，再做数字转换。
+
+```ts
+const raw = "  19.9  ";
+console.log(JSON.stringify(raw.trim()));
+console.log(JSON.stringify(raw));
+```
+
+实际输出：
+
+```text
+"19.9"
+"  19.9  "
+```
+
+这里用 `JSON.stringify` 给字符串补上引号，只是为了让两端空格看得见；`trim` 自己返回的仍然是普通字符串。
+
+### 数字判断：没有内置的 `isNumber`
+
+JavaScript 没有全局 `isNumber(value)`。面对 `unknown`，先用 `typeof value === "number"` 确认它是 number，再按业务需要选择 `Number` 提供的判断函数：
+
+| 写法 | 括号传入什么 | 返回什么 | 解决什么问题 |
+| --- | --- | --- | --- |
+| `Number.isNaN(value)` | 一个值 | boolean | 只判断是否为真正的 `NaN` |
+| `Number.isFinite(value)` | 一个值 | boolean | 排除 `NaN`、`Infinity`、`-Infinity` |
+| `Number.isInteger(value)` | 一个值 | boolean | 判断是否为有限整数，不负责检查业务范围 |
+
+这些函数不会把字符串自动转成数字。`Number.isFinite("12")` 是 `false`；要转换文本，应先明确调用 `Number(text)`。
+
+```ts
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+console.log(isFiniteNumber(12));
+console.log(isFiniteNumber("12"));
+console.log(Number.isInteger(12.5));
+console.log(Number.isNaN(NaN));
+```
+
+实际输出：
+
+```text
+true
+false
+false
+true
+```
+
+### `RangeError` 与 `instanceof Error`
+
+`RangeError` 是 JavaScript 提供的标准错误类型，用来表示“值的范围不符合要求”。它属于 `Error` 家族。`instanceof` 是判断运算符，不是函数：左边放待检查的值，右边放构造函数，结果是 boolean。
+
+```ts
+const problem = new RangeError("端口超出范围");
+console.log(problem instanceof Error);
+console.log(problem.message);
+```
+
+实际输出：
+
+```text
+true
+端口超出范围
+```
+
 ## 核心讲解
 
 函数发现问题后有两种常见做法：
@@ -106,6 +178,10 @@ flowchart TD
   E["输出成功与失败"]
 ```
 
+## 官方手册扩展阅读（可选）
+
+完成当天教程后，可从 [Day 19 对应阅读](../OFFICIAL-READING.md#day-19) 中只选 1 篇继续看。它不是练习前置，不需要在写 Practice 前读完。
+
 ## 独立练习导航
 
 本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
@@ -113,7 +189,7 @@ flowchart TD
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
 | [practice01](./practice01/README.md) | 错误不是字符串：throw、unknown 与 Result | 主任务 |
-| [practice02](./practice02/README.md) | 端口配置校验 | 闭卷迁移 |
+| [practice02](./practice02/README.md) | 批量价格导入：把异常转成 Result | 闭卷迁移 |
 
 右击任意练习目录中的 `practice.ts` 即可单独检查；命令行也可运行 `npm run beginner -- day19 practice02`。
 
@@ -170,8 +246,3 @@ TypeScript 负责在 `instanceof` 成功分支开放 `message`，开发者仍要
 ## 拓展思考（不要求写代码）
 
 如果保存端口要访问网络，临时断网、端口已占用和程序内部 bug 分别更适合“重试结果”“业务 Result”还是“异常”？请给出你的分类理由。
-
-## 官方资料
-
-- [Narrowing：instanceof](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#instanceof-narrowing)
-- [TSConfig：useUnknownInCatchVariables](https://www.typescriptlang.org/tsconfig/useUnknownInCatchVariables.html)

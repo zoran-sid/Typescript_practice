@@ -1,12 +1,17 @@
 // 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-const unitPriceText = "12";
-const itemCount = 2;
-const unitPrice = 0; // TODO：0 只是 number 类型占位；用 Number(...) 转换 unitPriceText，并把数字结果保存到 unitPrice。
-const totalPrice = 0; // TODO：0 只是 number 类型占位；用 unitPrice 乘 itemCount，并把本单总价保存到 totalPrice。
-let status = "Small order";
-const isLargeOrder = false; // TODO：false 只是 boolean 类型占位；判断 totalPrice 是否大于或等于 20，并把结果保存到 isLargeOrder。
-if (isLargeOrder) {
-  status = "Large order";
-}
-console.log(`Total price: ${totalPrice}`);
-console.log(`Status: ${status}`);
+const weightText = "2.5";
+const distanceText = "30";
+
+const weight = 0; // TODO：把 weightText 显式转换为数字，保存到 weight。
+const distance = 0; // TODO：把 distanceText 显式转换为数字，保存到 distance。
+
+const baseFee = 8;
+const deliveryFee = 0; // TODO：计算 baseFee + weight * 2 + distance / 10。
+
+let route = "Standard";
+// TODO：当 distance 达到或超过 30 时，把 route 更新为 "Long distance"。
+
+console.log(`Weight: ${weight} kg`);
+console.log(`Distance: ${distance} km`);
+console.log(`Fee: ${deliveryFee}`);
+console.log(`Route: ${route}`);

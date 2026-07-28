@@ -1,4 +1,4 @@
-# DAY06 · Practice 01：Day 06：学习任务副本与成绩报告
+# DAY06 · Practice 01：学习任务副本与成绩报告
 
 [返回当天课程](../README.md)
 
@@ -20,13 +20,14 @@
 
 ```text
 originalTask.scores
-   ├── 顶层 for...of + push ──> scoresFromGlobalLoop
-   └── copyScores(...) ──> copiedScores ──┐
-                                          └── 组成 copiedTask
+   ├── 顶层 for...of + push ──> copiedScores ──> 组成 copiedTask
+   └── copyScores(source) ──> 函数局部 result ──> 返回另一份数组
 copiedTask.scores ──> calculateAverage ──> averageScore
 
 originalTask 与 copiedTask ──> 修改副本后比较输出
 ```
+
+`practice.ts` 的必做路线是第一条：在全局循环中得到 `copiedScores`。完成后再看 `SOLUTION.md` 中的函数路线，比较 `source`、局部 `result` 和返回值怎样让同一段复制逻辑可以处理别的数组；函数路线不增加本题的必做输出。
 
 在 `practice.ts` 中从零完成“学习任务副本与成绩报告”。
 
@@ -70,6 +71,12 @@ originalTask 与 copiedTask ──> 修改副本后比较输出
 ## 本题易漏语法
 
 对象值写 `const student = { name: "Mei", scores: [88] };`：变量名后用 `=`，值属性内部用 `:`，属性之间用逗号，数组用 `[]`。对象参数类型写 `{ name: string; scores: number[] }`：属性名与类型之间仍用 `:`，类型属性推荐用分号。对象值关闭后是 `};`，函数或循环代码块关闭后通常只有 `}`。
+
+## 写完后自检
+
+- 如果把成绩改成 `[88, 92, 100]`，平均分会怎样变化？如果数组为空，当前除法会产生什么结果，函数需要怎样的输入约定？
+- 为什么只创建新的外层 `copiedTask` 还不够，`student` 和 `scores` 也要分别创建新数据？
+- 顶层循环与 `copyScores(source)` 都能复制数组；为什么需要复用时更适合把来源放进参数，并从函数返回局部 `result`？
 
 ## 文件
 

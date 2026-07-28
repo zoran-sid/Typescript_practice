@@ -25,15 +25,16 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "书桌面积函数",
+      "title": "配送时效评估",
       "expected": [
-        "书桌面积: 120"
+        "A01: On time",
+        "B02: Late by 10 minutes"
       ],
-      "success": "你已闭卷重建 书桌面积函数 的完整数据流。",
+      "success": "你已经能让同一个函数处理不同输入，并把返回结果继续交给另一个函数。",
       "hints": [
-        "声明参数类型与返回类型，用 return 交付计算结果。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "actualMinutes 没有超过 estimatedMinutes 时都算 On time。",
+        "超时分钟数由实际时间减预计时间得到。",
+        "createDeliveryLine 只负责格式化，不重新计算是否超时。"
       ]
     }
   ]

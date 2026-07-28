@@ -28,17 +28,18 @@ export default {
     },
     {
       "id": "practice02",
-      "title": "学习时段类",
+      "title": "存储配额与状态边界",
       "expected": [
-        "Types: 45 minutes",
-        "Modules: 20 minutes",
-        "Dashboard | Types: 45 minutes"
+        "团队盘：已用 30/100 GB",
+        "超额写入：拒绝",
+        "配额 | 团队盘：已用 30/100 GB"
       ],
-      "success": "你已闭卷重建 学习时段类 的完整数据流。",
+      "success": "配额对象守住了容量上限，拒绝请求未污染状态，面板也只依赖摘要接口。",
       "hints": [
-        "用 class、constructor、字段和方法组织实例状态。",
-        "沿 README 流程图逐个检查输入、处理、分支/循环和输出。",
-        "不要导入其他 practice 文件夹；每题必须独立运行。"
+        "consume 先检查正数和 used + gigabytes <= limit，通过后才更新 used。",
+        "拒绝分支返回 false，不要先修改再撤销。",
+        "summary 读取当前实例状态；QuotaPanel 只调用 provider.summary()。",
+        "第三次写入 80 GB 会超过上限，used 应保持 30。"
       ]
     }
   ]
