@@ -29,17 +29,85 @@ incomingText
 坏 JSON ──> message
 ```
 
+## 要完成的功能
+
 在 `practice.ts` 中从零完成“任务 JSON 导入器”。
 
-必须名称：`TaskState`、`StudyTask`、`ImportResult`、`isRecord`、`isTaskState`、`isStudyTask`、`importTasks`、`describeState`。
+先在文件顶层**分别声明**下面三个类型：
 
-需求：
+```ts
+type TaskState =
+  | { status: "todo" }
+  | { status: "doing"; startedAt: string }
+  | {
+      status: "done";
+      startedAt: string;
+      completedAt: string;
+    };
 
-1. `TaskState` 包含 todo、doing、done；doing 有 `startedAt`，done 有 `startedAt` 和 `completedAt`。
-2. `StudyTask` 含只读字符串 `id`、字符串 `title`、非负有限数字 `minutes` 和 `state`。
-3. `importTasks(text)` 捕获坏 JSON；顶层不是数组时返回失败；数组中保留通过验证的元素并计算 `rejected`。
-4. `describeState` 用 `switch` 生成 `todo`、`doing since 时间`、`done at 时间`。
-5. 固定输入包含 Plan（todo，30）、Practice（doing since 09:00，45）、Review（done at 10:30，30），以及一条 `minutes: "20"` 的坏数据；另用字符串 `{` 测试坏 JSON。
+type StudyTask = {
+  readonly id: string;
+  title: string;
+  minutes: number;
+  state: TaskState;
+};
+
+type ImportResult =
+  | {
+      ok: true;
+      tasks: StudyTask[];
+      rejected: number;
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+```
+
+- `TaskState` 是状态类型：`status` 决定当前对象还能读取哪些时间字段。
+- `StudyTask` 是任务类型：`state` 字段必须使用刚才声明的 `TaskState`。
+- `ImportResult` 是函数返回对象的类型：成功对象有 `tasks` 和 `rejected`，失败对象有 `message`。
+
+把这些对象结构直接写进变量或函数签名，在 TypeScript 中可能仍然合法，但不符合本题“声明并复用三个命名类型”的结构练习。
+
+接着实现五个函数：
+
+1. 类型守卫函数 `isRecord(value: unknown): value is Record<string, unknown>`：判断未知值能否作为普通对象读取字段。
+2. 类型守卫函数 `isTaskState(value: unknown): value is TaskState`：分别验证 todo、doing、done 三个分支及其时间字段。
+3. 类型守卫函数 `isStudyTask(value: unknown): value is StudyTask`：验证 `id`、`title`、非负有限数字 `minutes`，并把 `state` 交给 `isTaskState`。
+4. 函数 `importTasks(text: string): ImportResult`：
+   - 捕获无法解析的 JSON，返回含 `message` 的失败对象；
+   - 顶层不是数组时也返回失败对象；
+   - 顶层是数组时保留通过 `isStudyTask` 的元素，并把坏数据数量放进成功对象的 `rejected` 字段。
+5. 函数 `describeState(state: TaskState): string`：用 `switch` 返回 `todo`、`doing since 时间` 或 `done at 时间`。
+
+可以先用下面的签名确定“谁接收什么、返回什么”，函数体仍由你完成：
+
+```ts
+function isTaskState(
+  value: unknown,
+): value is TaskState {
+  // TODO：验证三个状态分支。
+}
+
+function importTasks(
+  text: string,
+): ImportResult {
+  // TODO：解析、验证和汇总。
+}
+
+function describeState(
+  state: TaskState,
+): string {
+  // TODO：根据 state.status 生成文字。
+}
+```
+
+最后声明这些变量：
+
+- `incomingText`：包含 Plan（todo，30）、Practice（doing since 09:00，45）、Review（done at 10:30，30），以及一条 `minutes: "20"` 的坏数据。
+- `result`：保存 `importTasks(incomingText)` 的返回对象。
+- `invalidJson`：保存 `importTasks("{")` 的返回对象，用来测试坏 JSON。
 
 精确输出：
 

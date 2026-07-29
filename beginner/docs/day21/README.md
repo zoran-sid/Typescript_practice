@@ -4,7 +4,7 @@
 
 网络请求、定时器和文件读取都要等一段时间。调用这类函数时，程序先拿到一个 `Promise`：它不是最终数据，而是一份“稍后会成功给值，或者失败给错误”的结果。`async/await` 是配套写法，其中 `await` 用来等待这份结果，再决定继续正常步骤还是进入错误处理。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `Promise.resolve(value)`：得到一个成功 Promise
 
@@ -115,11 +115,37 @@ const [lesson, progress] = await Promise.all([
 
 ```mermaid
 flowchart TD
-  A["启动两个异步请求"] --> B
-  B["Promise.all 并行等待"] --> C
-  C["成功值组合成结果"] --> D
-  D["失败 Promise 进入 catch"] --> E
-  E["输出成功与错误"]
+  A["执行 await main()，进入 main"] --> B["从左到右计算 Promise.all 的数组元素"]
+  B --> C["先调用 fetchText('课程')<br/>shouldFail 使用默认值 false<br/>运行到 await 后交回课程 Promise"]
+  C --> D["再调用 fetchText('进度')<br/>shouldFail 使用默认值 false<br/>运行到 await 后交回进度 Promise"]
+  D --> E["调用 Promise.all<br/>一起等待两个已经创建的 Promise"]
+  E --> F["课程调用从自己的 await 恢复"]
+  E --> G["进度调用从自己的 await 恢复"]
+  F --> H{"课程调用的 shouldFail？"}
+  G --> I{"进度调用的 shouldFail？"}
+  H -- "false，本例走这里" --> J["课程调用 return '课程'"]
+  I -- "false，本例走这里" --> K["进度调用 return '进度'"]
+  H -- "true" --> L["课程调用抛出 Error"]
+  I -- "true" --> L
+  L --> M["Promise.all 变为 rejected<br/>main 在此停止"]
+  J --> N["Promise.all 继续等待另一个 Promise"]
+  K --> N
+  N --> O["两个 Promise 都完成<br/>结果数组是 ['课程', '进度']"]
+  O --> P["按位置解构<br/>lesson = '课程'，progress = '进度'"]
+  P --> Q["console.log 输出并行结果"]
+  Q --> R["进入 try<br/>调用 fetchText('通知', true)"]
+  R --> S["通知调用等待 Promise.resolve()"]
+  S --> T{"shouldFail？"}
+  T -- "false" --> U["return '通知'<br/>离开 try"]
+  T -- "true，本例走这里" --> V["throw new Error('网络不可用')"]
+  V --> W["catch 接住 error<br/>在 catch 中先把它当作 unknown"]
+  W --> X{"error instanceof Error？"}
+  X -- "是，本例走这里" --> Y["message = error.message<br/>也就是 '网络不可用'"]
+  X -- "否" --> Z["message = '未知错误'"]
+  Y --> AA["console.log 输出错误: 网络不可用"]
+  Z --> AA
+  U --> AB["main 完成<br/>await main() 得到 Promise<void> 的完成结果"]
+  AA --> AB
 ```
 
 ## 官方手册扩展阅读（可选）

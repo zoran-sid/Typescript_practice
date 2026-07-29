@@ -81,11 +81,27 @@ TypeScript 负责根据实参推断类型，并检查函数体是否对所有允
 
 ```mermaid
 flowchart TD
-  A["字符串或数字数组进入泛型函数"] --> B
-  B["T 从实参推断"] --> C
-  C["返回首项并保持具体类型"] --> D
-  D["泛型对象保存标签"] --> E
-  E["输出结果"]
+  A["调用 firstOrUndefined([Ada, Lin])<br/>Item 根据数组内容推断为 string"] --> B["函数读取 items[0]"]
+  B --> C["return 'Ada'<br/>firstName = 'Ada'"]
+  C --> D["调用 firstOrUndefined([80, 90])<br/>Item 推断为 number"]
+  D --> E["函数读取 items[0]"]
+  E --> F["return 80<br/>firstScore = 80"]
+  F --> G["调用 labelValue('课程', 'TypeScript')<br/>Value 推断为 string"]
+  G --> H["return { label, value }"]
+  H --> I["course = { label: '课程', value: 'TypeScript' }"]
+  I --> J{"firstName 是 undefined 吗？"}
+  J -- "是" --> K["?? 改用备用文字 '无'"]
+  J -- "否，本例走这里" --> L["保留 firstName，也就是 'Ada'"]
+  K --> M["console.log 输出第一位"]
+  L --> M
+  M --> N{"firstScore 是 undefined 吗？"}
+  N -- "是" --> O["?? 改用备用文字 '无'"]
+  N -- "否，本例走这里" --> P["保留 firstScore，也就是 80"]
+  O --> Q["console.log 输出第一个分数"]
+  P --> Q
+  Q --> R["读取 course.label 与 course.value"]
+  R --> S["拼成 '标签：课程=TypeScript'"]
+  S --> T["console.log 输出标签和值"]
 ```
 
 ## 官方手册扩展阅读（可选）

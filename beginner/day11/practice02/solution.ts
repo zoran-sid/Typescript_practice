@@ -1,4 +1,4 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
+// 这是解题结构，不是完整答案。只有旁边明确写着 TODO 的空字符串、0、false、[] 等才是占位值，完成时要替换或删除。
 type Channel = "email" | "sms" | "push";
 type DeliveryEvent =
   | { status: "queued"; id: string; channel: Channel }
@@ -6,23 +6,27 @@ type DeliveryEvent =
   | { status: "retrying"; id: string; channel: Channel; retryAfterSeconds: number }
   | { status: "rejected"; id: string; channel: Channel; reason: string };
 type DeliveryDecision = { text: string; shouldRetry: boolean };
-// TODO：删除 declare 并实现 assertNever；运行时意外到达时抛出包含当前值的错误。
-// never 用来检查所有 DeliveryEvent 是否都有分支，新增状态却漏写 case 时应在调用处报错。
-declare function assertNever(value: never): never;
+function assertNever(value: never): never {
+  // 这是穷尽检查的固定实现，不是本题核心答案。
+  throw new Error("未处理的投递事件：" + JSON.stringify(value));
+}
 function decideDelivery(event: DeliveryEvent): DeliveryDecision {
   switch (event.status) {
     case "queued":
-      // TODO：用当前 id、channel 生成排队文字；尚未发送，不需要重试。
+      // TODO：用当前 id、channel 生成排队文字并替换 text 的空字符串。
+      // queued 在等第一次发送，不属于“再次发送”，所以 shouldRetry 的 false 是业务结果，不是占位。
       return { text: "", shouldRetry: false };
     case "sent":
-      // TODO：读取 sent 分支的 deliveredAt，生成已发送文字；不需要重试。
+      // TODO：读取 sent 分支的 deliveredAt，生成已发送文字并替换 text。
+      // 已经发送成功，所以 shouldRetry 保持 false。
       return { text: "", shouldRetry: false };
     case "retrying":
-      // TODO：读取 retryAfterSeconds 生成稍后重试文字，并把 shouldRetry 设为 true。
-      // 下面的 false 只是未完成分支的占位，完成时必须替换。
-      return { text: "", shouldRetry: false };
+      // TODO：读取 retryAfterSeconds 生成稍后重试文字并替换 text。
+      // retrying 表示临时失败后需要再次发送，所以 shouldRetry 是 true。
+      return { text: "", shouldRetry: true };
     case "rejected":
-      // TODO：读取 reason 生成永久拒绝文字；永久失败不能计入重试。
+      // TODO：读取 reason 生成永久拒绝文字并替换 text。
+      // rejected 是永久失败，不能再次发送，所以 shouldRetry 保持 false。
       return { text: "", shouldRetry: false };
     default:
       return assertNever(event);
@@ -36,7 +40,8 @@ const events: DeliveryEvent[] = [
 ];
 let retryCount = 0;
 for (const event of events) {
-  // TODO：把当前 event 交给 decideDelivery，输出 decision.text；
-  // decision.shouldRetry 为 true 时增加 retryCount，不要在循环里重新判断 event.status。
+  // TODO 1：调用 decideDelivery(event)，用名为 decision 的局部变量接住整个返回对象。
+  // TODO 2：输出 decision.text。
+  // TODO 3：decision.shouldRetry 为 true 时增加 retryCount；不要重新判断 event.status。
 }
 // TODO：输出最终 retryCount。上面的 0 是真实初始计数，不是答案占位。

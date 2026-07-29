@@ -110,10 +110,16 @@ Zoran completed 2 and Lesson Beginner is: true
 
 ```mermaid
 flowchart TD
-  A["声明姓名、完成数和布尔值"] --> B
-  B["用 let 更新完成数"] --> C
-  C["模板字符串插入变量"] --> D
-  D["输出两条进度"]
+  A["声明 learnerName、completedLessons、isBeginner"] --> B
+  B["completedLessons = completedLessons + 1"] --> C
+  C["completedLessons 从 0 更新为 1"] --> D
+  D["模板字符串读取三个变量，生成 summary"] --> E
+  E["console.log(summary) 输出第一条进度"] --> F
+  F["声明 studentname、completedLesson、isBeginner2"] --> G
+  G["completedLesson = completedLesson + 1"] --> H
+  H["completedLesson 从 1 更新为 2"] --> I
+  I["模板字符串读取三个变量，生成 summary2"] --> J
+  J["console.log(summary2) 输出第二条进度"]
 ```
 
 ## 官方手册扩展阅读（可选）

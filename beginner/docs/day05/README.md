@@ -104,10 +104,16 @@ function addBonus(points: number, bonus: number): number {
 
 ```mermaid
 flowchart TD
-  A["宽和高进入 calculateArea"] --> B
-  B["相乘并 return 面积"] --> C
-  C["createLabel 生成文字"] --> D
-  D["console.log 输出标签"]
+  A["声明 calculateArea 和 createLabel 两个函数"] --> B
+  B["调用 calculateArea(12, 10)"] --> C
+  C["参数 width = 12；height = 10"] --> D
+  D["return width * height，返回 120"] --> E
+  E["deskArea 接住返回值 120"] --> F
+  F["调用 createLabel('书桌', deskArea)"] --> G
+  G["参数 name = '书桌'；area = 120"] --> H
+  H["return 模板字符串，返回标签文字"] --> I
+  I["label 接住 createLabel 的返回值"] --> J
+  J["console.log(label) 输出标签"]
 ```
 
 ## 官方手册扩展阅读（可选）

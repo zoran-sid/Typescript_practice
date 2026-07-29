@@ -81,10 +81,24 @@ TypeScript 负责计算 `Pick`、`Omit`、`Partial` 等派生结果，并在编�
 
 ```mermaid
 flowchart TD
-  A["基础文章类型派生更新类型"] --> B
-  B["用 satisfies 检查状态表"] --> C
-  C["不可变合并更新文章"] --> D
-  D["输出旧值、新值与状态"]
+  A["Article 定义完整文章结构"] --> B["Pick 派生 ArticlePreview<br/>只保留 id、title"]
+  A --> C["Pick 再配合 Partial 派生 ArticlePatch<br/>允许只传部分可更新字段"]
+  D["statuses 使用 as const<br/>保留 3 个状态字面量"] --> E["Status 从 statuses 取得联合类型"]
+  E --> F["satisfies 检查 statusLabels<br/>每个 Status 都有 string 标签"]
+  A --> G["创建 original 文章"]
+  C --> H["调用 updateArticle(original, patch)"]
+  G --> H
+  H --> I["先 ...article，再 ...patch<br/>补丁中的同名字段覆盖旧值"]
+  I --> J["return 新对象 updated<br/>original 仍保留旧值"]
+  B --> K["从 updated 读取 id、title<br/>创建 preview"]
+  J --> K
+  E --> L["currentStatus 保存 published"]
+  F --> M["statusLabels[currentStatus]<br/>取得 已发布"]
+  L --> M
+  K --> N["console.log 输出原标题和新标题"]
+  M --> O["console.log 输出当前状态"]
+  N --> O
+  O --> P["statuses.join(、)<br/>输出全部可用状态"]
 ```
 
 ## 官方手册扩展阅读（可选）

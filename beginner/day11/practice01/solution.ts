@@ -1,16 +1,17 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
+// 这是解题结构，不是完整答案。只有旁边明确写着 TODO 的空字符串、0、false、[] 等才是占位值，完成时要替换或删除。
 type StudyTask =
   | { status: "waiting"; title: string }
   | { status: "studying"; title: string; minutes: number }
   | { status: "completed"; title: string; score?: number }
   | { status: "failed"; title: string; reason: string };
-// TODO：删除 declare 并实现 assertNever：参数保持 never；若运行时意外到达这里，抛出包含该值的错误。
-// never 表示前面的分支本应处理完所有 StudyTask；以后新增状态却漏写 case 时，调用处会产生类型错误。
-declare function assertNever(value: never): never;
+function assertNever(value: never): never {
+  // 这是穷尽检查的固定实现，不是本题核心答案。
+  throw new Error("未处理的任务状态：" + JSON.stringify(value));
+}
 function describeTask(task: StudyTask): string {
   switch (task.status) {
     case "waiting":
-      // TODO：使用当前 task.title 组织“标题：待开始”的字符串。
+      // TODO：使用当前 task.title 组织“待开始：标题”的字符串。
       // 下面的 "" 只为暂时满足 string 返回类型，完成时要替换。
       return "";
     case "studying":

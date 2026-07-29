@@ -13,7 +13,7 @@ Day 07 的 `find` 可能找不到名字，通讯录中的电话也可能没有�
 - 区分 `??` 与 `||` 对 0、空字符串、`false` 的不同处理。
 - 不使用非空断言 `!` 掩盖风险。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 **`JSON.stringify(...)`：把值变成可显示的 JSON 文字**
 
@@ -124,10 +124,28 @@ const shownCity = city ?? "未填写";
 
 ```mermaid
 flowchart TD
-  A["读取联系人与可选字段"] --> B
-  B["可选链避免缺失访问错误"] --> C
-  C["空值合并补电话"] --> D
-  D["保留 0 与空字符串并输出"]
+  A["创建 contacts：Lin 有电话，Mei 没有电话"] --> B["find 从第一位联系人开始"]
+  B --> C{"还有没检查的 contact 吗？"}
+  C -- "有" --> D["读取当前 contact"]
+  D --> E{"contact.name === 'Mei'？"}
+  E -- "否" --> C
+  E -- "是，本例在 Mei 命中" --> F["停止查找<br/>selectedContact = Mei 对象"]
+  C -- "全部检查完仍未找到" --> G["selectedContact = undefined"]
+  F --> H["读取 selectedContact?.phone"]
+  G --> H
+  H --> I{"安全读取的结果是 null 或 undefined 吗？"}
+  I -- "是，本例因 Mei 没有 phone<br/>没找到联系人时也会走这里" --> J["?? 使用备用文字<br/>phone = '未提供'"]
+  I -- "否" --> K["phone 使用联系人原来的号码"]
+  J --> L["声明 score = 0<br/>nickname = 空字符串"]
+  K --> L
+  L --> M["selectedContact?.name ?? '未找到'<br/>本例得到 'Mei'"]
+  M --> N["console.log 输出联系人: Mei"]
+  N --> O["console.log 输出电话: 未提供"]
+  O --> P["score ?? 100<br/>0 不是 null 或 undefined，所以保留 0"]
+  P --> Q["console.log 输出分数显示: 0"]
+  Q --> R["nickname ?? '匿名'<br/>空字符串不是 null 或 undefined，所以仍保留空字符串"]
+  R --> S["JSON.stringify('') 得到两个英文双引号"]
+  S --> T["console.log 输出昵称显示: &quot;&quot;"]
 ```
 
 ## 官方手册扩展阅读（可选）

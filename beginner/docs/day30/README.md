@@ -14,7 +14,7 @@
 - 把旧 enum 归一化成现代字面量状态；
 - 知道错误声明会让编译器相信不真实的行为。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `import * as`：把模块导出收进一个对象
 
@@ -113,11 +113,26 @@ Modern status: published
 
 ```mermaid
 flowchart TD
-  A["从旧 JS 导入真实函数与版本"] --> B
-  B["d.ts 提供类型"] --> C
-  C["声明合并扩展模型"] --> D
-  D["现代状态单独建模"] --> E
-  E["输出运行结果"]
+  A["TypeScript 读取 legacy-score.d.ts<br/>知道 total 与 version 的类型"] --> B["两段 LessonInfo 声明合并<br/>lesson 必须同时有 title 与 minutes"]
+  B --> C["从 Status 对象推导 Status 类型<br/>值只能是 draft 或 published"]
+  C --> D["类型检查完成<br/>.d.ts、interface 与 type 不会在运行时执行"]
+  D --> E["运行前先加载 legacy-score.js<br/>得到真正的 total 函数与 version = '1.0'"]
+  E --> F["当前模块创建 Status 对象"]
+  F --> G["创建 lesson = { title: 'Declarations', minutes: 40 }"]
+  G --> H["status = Status.Published<br/>也就是 'published'"]
+  H --> I["计算第一条 console.log<br/>调用 total([10, 20, 30])"]
+  I --> J["reduce 从 sum = 0 开始"]
+  J --> K{"还有下一个 value 吗？"}
+  K -- "有" --> L["sum = sum + value"]
+  L --> K
+  K -- "没有" --> M["total return 60"]
+  M --> N["console.log 输出 Legacy total: 60"]
+  N --> O["读取已导入的 version"]
+  O --> P["console.log 输出 Legacy version: 1.0"]
+  P --> Q["读取 lesson.title 与 lesson.minutes"]
+  Q --> R["console.log 输出 Merged: Declarations/40"]
+  R --> S["读取 status"]
+  S --> T["console.log 输出 Modern status: published"]
 ```
 
 ## 官方手册扩展阅读（可选）

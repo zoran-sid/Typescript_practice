@@ -92,11 +92,17 @@ const updated = {
 
 ```mermaid
 flowchart TD
-  A["读取原设置对象"] --> B
-  B["解构取得主题与技能"] --> C
-  C["spread 创建新设置"] --> D
-  D["rest 拆分数组"] --> E
-  E["输出原值和新值"]
+  A["创建 original<br/>skills: [HTML]，theme: light"] --> B["创建 updated<br/>...original 先复制顶层属性"]
+  B --> C["skills: [...original.skills, TypeScript]<br/>创建新的 skills 数组"]
+  C --> D["preferences 先展开旧对象<br/>再把 theme 改为 dark"]
+  D --> E["updated 创建完成<br/>original 没有被修改"]
+  E --> F["从 updated.skills 解构"]
+  F --> G["firstSkill 接收第一项 HTML"]
+  F --> H["...otherSkills 收集其余项<br/>得到 [TypeScript]"]
+  G --> I["读取 original 与 updated 的主题、技能"]
+  H --> I
+  I --> J["join(、) 把各自的技能数组拼成文字"]
+  J --> K["console.log 依次输出<br/>原值、新值、第一项和其余项"]
 ```
 
 ## 官方手册扩展阅读（可选）

@@ -1,6 +1,6 @@
 # Day 31（选修）｜迭代协议、生成器与 `bigint`
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `[Symbol.iterator]()` 与 `next()`：约定“下一个值怎样拿”
 
@@ -116,11 +116,31 @@ console.log(text);
 
 ```mermaid
 flowchart TD
-  A["调用 range generator"] --> B
-  B["每次 next 运行到 yield"] --> C
-  C["倒计时 generator 产生序列"] --> D
-  D["bigint 完成大整数运算"] --> E
-  E["输出三类结果"]
+  A["先计算顶层常量<br/>9007199254740993n + 1n"] --> B["nextSafeInteger = 9007199254740994n"]
+  B --> C["计算第一条 console.log 的模板内容<br/>展开 range(2, 4)"]
+  C --> D["创建 range 生成器<br/>current = 2"]
+  D --> E{"current <= end？"}
+  E -- "是" --> F["yield 当前这一项 current"]
+  F --> G["展开运算符接住这一项"]
+  G --> H["恢复生成器<br/>current += 1"]
+  H --> E
+  E -- "否" --> I["生成器结束<br/>展开结果是 [2, 3, 4]"]
+  I --> J["join(', ') 得到 '2, 3, 4'"]
+  J --> K["console.log 输出范围: 2, 3, 4"]
+  K --> L["计算第二条 console.log 的模板内容<br/>调用 createCountdown(3)"]
+  L --> M["createCountdown return 可迭代对象"]
+  M --> N["展开时调用对象的 Symbol.iterator<br/>current = 3"]
+  N --> O{"current >= 1？"}
+  O -- "是" --> P["yield 当前这一项 current"]
+  P --> Q["展开运算符接住这一项"]
+  Q --> R["恢复迭代器<br/>current -= 1"]
+  R --> O
+  O -- "否" --> S["迭代结束<br/>展开结果是 [3, 2, 1]"]
+  S --> T["join(', ') 得到 '3, 2, 1'"]
+  T --> U["console.log 输出倒计时: 3, 2, 1"]
+  U --> V["读取先前算好的 nextSafeInteger"]
+  V --> W["模板字符串把 bigint 显示为 9007199254740994"]
+  W --> X["console.log 输出安全整数之后: 9007199254740994"]
 ```
 
 ## 官方手册扩展阅读（可选）

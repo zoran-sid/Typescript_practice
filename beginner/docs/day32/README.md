@@ -14,7 +14,7 @@
 - 写一个不使用 any 的对象 Mixin；
 - 在横切功能、Mixin 与普通组合之间做选择。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `Object.assign`：把来源对象的字段复制到目标对象
 
@@ -94,11 +94,20 @@ true
 
 ```mermaid
 flowchart TD
-  A["装饰器接收 add 方法与 context"] --> B
-  B["包装函数记录调用"] --> C
-  C["target.call 保留 this 和参数"] --> D
-  D["原返回值继续返回"] --> E
-  E["输出定义、调用与结果"]
+  A["定义 Calculator.add"] --> B["@loggedMethod 接收原 add 与 context"]
+  B --> C["methodName = add<br/>return 一个新的包装函数"]
+  C --> D["@announceClass 接收 Calculator 与 context"]
+  D --> E["console.log：定义类 Calculator"]
+  E --> F["new Calculator()<br/>传给 withCategory"]
+  F --> G["Object.assign 增加 category: utility<br/>calculator 接住同一个对象"]
+  G --> H["console.log：类别 utility"]
+  H --> I["调用 calculator.add(2, 3)<br/>先进入 loggedMethod 返回的包装函数"]
+  I --> J["包装函数的 this = calculator<br/>args = [2, 3]"]
+  J --> K["console.log：调用方法 add"]
+  K --> L["target.call(this, ...args)<br/>调用原来的 add(2, 3)"]
+  L --> M["原 add return 5"]
+  M --> N["包装函数继续 return 5"]
+  N --> O["最外层 console.log：结果 5"]
 ```
 
 ## 官方手册扩展阅读（可选）

@@ -28,13 +28,49 @@
 各次调用推断出的具体结果 ──> 输出
 ```
 
-请在 `practice.ts` 中从头编写一个小型“泛型工具箱”，必须包含：
+## 要完成的功能
 
-- `lastOrFallback<Item>(items, fallback): Item`：返回最后一项；空数组返回同类型回退值。
-- `Box<Value>`：包含 `label: string` 和 `value: Value`。
-- `makeBox<Value>(label, value): Box<Value>`：保留标签和值。
-- `repeat<Item>(value, count): Item[]`：创建含 `count` 个相同值的新数组。
-- `makePair<Left, Right>(left, right): [Left, Right]`：保持输入顺序。
+请在 `practice.ts` 中从头编写一个小型“泛型工具箱”。
+
+先在文件顶层**单独声明**泛型类型 `Box<Value>`：
+
+```ts
+type Box<Value> = {
+  label: string;
+  value: Value;
+};
+```
+
+这里的 `Value` 是类型参数，不是对象字段。它表示“调用 `makeBox` 时传入的值是什么类型，盒子里的 `value` 就保持什么类型”。把 `{ label: string; value: Value }` 直接写在 `makeBox` 的返回类型中虽然合法，但不符合本题练习和复用 `Box<Value>` 的要求。
+
+再分别实现下面四个**泛型函数**。尖括号里的 `Item`、`Value`、`Left`、`Right` 都是类型参数：
+
+- 函数 `lastOrFallback<Item>(items: readonly Item[], fallback: Item): Item`：数组有内容时返回最后一项；空数组返回参数 `fallback`。返回值仍是本次调用的 `Item`。
+- 函数 `makeBox<Value>(label: string, value: Value): Box<Value>`：返回对象的 `label` 字段来自参数 `label`，`value` 字段来自参数 `value`。
+- 函数 `repeat<Item>(value: Item, count: number): Item[]`：创建一个新数组，里面有 `count` 个 `value`；返回数组中的每一项仍是 `Item`。
+- 函数 `makePair<Left, Right>(left: Left, right: Right): [Left, Right]`：返回一个两项元组，第一项是 `left`，第二项是 `right`，两项可以是不同类型。
+
+函数体由你完成，结构可以先写成下面这样：
+
+```ts
+function lastOrFallback<Item>(
+  items: readonly Item[],
+  fallback: Item,
+): Item {
+  // TODO：处理非空数组和空数组。
+}
+
+function makeBox<Value>(
+  label: string,
+  value: Value,
+): Box<Value> {
+  // TODO：返回含 label、value 两个字段的对象。
+}
+
+// TODO：用相同方式补出 repeat 和 makePair 的参数与返回类型。
+```
+
+上面的代码只说明函数的输入与输出关系；`TODO` 仍需要你自己实现。
 
 使用以下固定调用：
 

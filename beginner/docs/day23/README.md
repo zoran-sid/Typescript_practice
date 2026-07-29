@@ -60,10 +60,13 @@ target/module: 输出语法 / 模块规则
 
 ```mermaid
 flowchart TD
-  A["读取 TSConfig 概念"] --> B
-  B["解释 strict 与 noEmit"] --> C
-  C["解释 target 与 module"] --> D
-  D["按诊断顺序输出提示"]
+  A["创建 configNotes<br/>按顺序保存 4 条配置说明"] --> B["for...of 开始遍历 configNotes"]
+  B --> C{"还有下一条 note？"}
+  C -->|"有"| D["取出当前 note"]
+  D --> E["console.log(note)<br/>输出当前配置说明"]
+  E --> F["回到 for...of，准备取下一条"]
+  F --> C
+  C -->|"没有"| G["遍历结束<br/>4 条说明均已输出"]
 ```
 
 ## 官方手册扩展阅读（可选）

@@ -70,10 +70,29 @@ Total minutes: 105
 
 ```mermaid
 flowchart TD
-  A["模块提供任务更新函数"] --> B
-  B["返回新任务数组"] --> C
-  C["报告函数统计状态与分钟"] --> D
-  D["比较原数组与新数组并输出"]
+  A["example.ts 创建 original<br/>三项状态依次是 todo、doing、done"] --> B["调用 completeTask(original, 'a')"]
+  B --> C["completeTask 调用 updateById<br/>并传入“复制后改成 done”的 update 函数"]
+  C --> D["map 准备 updated 新数组"]
+  D --> E{"还有没处理的 item 吗？"}
+  E -- "有" --> F["读取当前 item"]
+  F --> G{"item.id === 'a'？"}
+  G -- "是，本例第一项命中" --> H["调用 update(item)<br/>展开旧字段并把 status 改为 done"]
+  G -- "否" --> I["直接交回原来的 item"]
+  H --> J["把本轮交回值放进 updated"]
+  I --> J
+  J --> E
+  E -- "没有" --> K["updated 完成<br/>状态依次是 done、doing、done"]
+  K --> L["调用 buildReport(updated)"]
+  L --> M["counts = { todo: 0, doing: 0, done: 0 }<br/>totalMinutes = 0"]
+  M --> N{"for...of 还有下一项 task 吗？"}
+  N -- "有" --> O["读取 task.status<br/>对应计数加 1"]
+  O --> P["把 task.minutes 加进 totalMinutes"]
+  P --> N
+  N -- "没有" --> Q["return { counts, totalMinutes }<br/>report 接住整个对象"]
+  Q --> R["console.log：original 第一项仍是 todo"]
+  R --> S["console.log：updated 第一项是 done"]
+  S --> T["console.log：Done = 2，Todo = 0"]
+  T --> U["console.log：Total minutes = 105"]
 ```
 
 ## 官方手册扩展阅读（可选）

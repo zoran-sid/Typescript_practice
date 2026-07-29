@@ -27,19 +27,73 @@ original
 original + updated + planned + report ────────┴──> 业务输出
 ```
 
+## 要完成的功能
+
 在 `practice.ts` 中从零完成“任务业务服务与报告”。
 
-必须名称：`TaskStatus`、`StudyTask`、`Report`、`updateById`、`completeTask`、`plannedByDuration`、`buildReport`、`original`、`updated`。
+先在文件顶层**分别声明**下面三个类型：
 
-固定任务：a / Types / 30 / todo；b / Modules / 45 / doing；c / Validation / 20 / todo；d / Variables / 50 / todo。
+```ts
+type TaskStatus = "todo" | "doing" | "done";
 
-需求：
+type StudyTask = {
+  readonly id: string;
+  title: string;
+  minutes: number;
+  status: TaskStatus;
+};
 
-1. `updateById<T extends { readonly id: string }>` 用 `map` 只更新命中项。
-2. `completeTask` 复用它，把 id 为 a 的状态改为 done。
-3. `plannedByDuration` 只保留 todo，按分钟升序排列，不能改动传入数组。
-4. `buildReport` 返回 `Record<TaskStatus, number>` 的 counts 和总分钟数。
-5. 输出原始/更新状态、引用比较、计划顺序和更新后报告。
+type Report = {
+  counts: Record<TaskStatus, number>;
+  totalMinutes: number;
+};
+```
+
+- `TaskStatus` 是状态类型。
+- `StudyTask` 是单个任务的类型，`status` 字段必须使用 `TaskStatus`。
+- `Report` 是报告返回对象的类型：`counts` 必须同时有 `todo`、`doing`、`done` 三个计数字段，`totalMinutes` 保存所有任务的分钟总数。
+
+把这些对象结构直接内联到函数参数或返回类型里，TypeScript 可能仍会接受，但不符合本题“声明并复用 `TaskStatus`、`StudyTask`、`Report`”的结构练习。
+
+接着实现四个函数：
+
+1. 泛型函数 `updateById<T extends { readonly id: string }>(items: readonly T[], id: string, update: (item: T) => T): T[]`：
+   - `items` 是要检查的数组；
+   - `id` 是要查找的目标编号；
+   - `update` 是“命中后怎样产生新对象”的回调函数；
+   - 返回值是 `map` 创建的新数组，只有命中项交给 `update`，未命中项原样保留。
+2. 函数 `completeTask(tasks: readonly StudyTask[], id: string): StudyTask[]`：复用 `updateById`，把目标任务的 `status` 改为 `"done"`。
+3. 函数 `plannedByDuration(tasks: readonly StudyTask[]): StudyTask[]`：只保留 todo，再按 `minutes` 升序排列，不能改动传入数组。
+4. 函数 `buildReport(tasks: readonly StudyTask[]): Report`：返回一个 `Report` 对象；`counts` 记录三种状态的数量，`totalMinutes` 记录总分钟数。
+
+核心函数可以先写成下面的结构，`TODO` 仍由你完成：
+
+```ts
+function updateById<
+  T extends { readonly id: string },
+>(
+  items: readonly T[],
+  id: string,
+  update: (item: T) => T,
+): T[] {
+  // TODO：用 map 判断 id，并在命中时调用 update。
+}
+
+function buildReport(
+  tasks: readonly StudyTask[],
+): Report {
+  // TODO：统计 counts 和 totalMinutes。
+}
+```
+
+最后声明并使用这些变量：
+
+- `original: StudyTask[]`：固定任务 a / Types / 30 / todo；b / Modules / 45 / doing；c / Validation / 20 / todo；d / Variables / 50 / todo。
+- `updated`：保存 `completeTask(original, "a")` 的返回数组。
+- `planned`：保存 `plannedByDuration(updated)` 的返回数组。
+- `report`：保存 `buildReport(updated)` 的返回对象。
+
+输出时比较 `original` 与 `updated`，读取 `planned` 的标题顺序，并从 `report.counts` 和 `report.totalMinutes` 读取报告数据。
 
 精确输出：
 

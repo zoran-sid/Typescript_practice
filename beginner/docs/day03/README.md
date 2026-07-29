@@ -4,7 +4,7 @@
 
 一周有多次学习记录时，不必声明 `mondayMinutes`、`tuesdayMinutes` 等许多变量。数组可以把 `[30, 45, 60]` 这组数据放在一起，循环再一项一项处理它们。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 **数组的 `.length`：读取当前有几项**
 
@@ -139,10 +139,18 @@ Highest: 23
 
 ```mermaid
 flowchart TD
-  A["创建温度数组"] --> B
-  B["for...of 逐项读取"] --> C
-  C["累加总和并更新最高值"] --> D
-  D["输出数量、总和、最高值"]
+  A["temperatures = [18, 21, 23]"] --> B
+  B["totalTemperature = 0；highestTemperature = 0"] --> C{"temperatures 还有未读取项？"}
+  C -- "有" --> D["for...of 把下一项交给 temperature"]
+  D --> E["totalTemperature = totalTemperature + temperature"]
+  E --> F{"temperature > highestTemperature？"}
+  F -- "是" --> G["highestTemperature = temperature"]
+  F -- "否" --> H["highestTemperature 保持不变"]
+  G --> C
+  H --> C
+  C -- "没有，循环结束" --> I["console.log 输出 temperatures.length"]
+  I --> J["console.log 输出 totalTemperature"]
+  J --> K["console.log 输出 highestTemperature"]
 ```
 
 ## 官方手册扩展阅读（可选）

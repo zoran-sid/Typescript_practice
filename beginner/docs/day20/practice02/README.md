@@ -39,18 +39,51 @@ rawBatches
 
 ## 要完成的功能
 
-- `Notification` 是两种成员的联合：
-  - `{ kind: "email"; address: string }`
-  - `{ kind: "push"; token: string }`
-- `BatchSummary`：`valid: Notification[]`、`rejectedCount: number`。
-- 泛型 `ParseResult<T>`：成功含 `value`，失败含 `error`。
-- `isRecord`：确认值是非 `null`、非数组的普通记录对象。
-- `isNotification`：根据 `kind` 检查该成员真正需要的字段。
-- `parseBatch(raw): ParseResult<BatchSummary>`：
+先在文件顶层**分别声明**三个有名字的类型：
+
+```ts
+type Notification =
+  | { kind: "email"; address: string }
+  | { kind: "push"; token: string };
+
+type BatchSummary = {
+  valid: Notification[];
+  rejectedCount: number;
+};
+
+type ParseResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+```
+
+- `Notification` 是类型：它只允许 email 和 push 两种通知。
+- `BatchSummary` 是类型：返回对象中的 `valid` 字段保存合法通知，`rejectedCount` 字段保存被丢弃的数量。
+- `ParseResult<T>` 是泛型类型：成功对象必须有 `ok: true` 和 `value`；失败对象必须有 `ok: false` 和 `error`。
+
+把这些对象结构直接内联到 `parseBatch` 的返回类型里，在 TypeScript 中可以合法书写，但不符合本题“声明并复用 `Notification`、`BatchSummary`、`ParseResult<T>`”的结构练习。
+
+接着实现三个函数：
+
+- 类型守卫函数 `isRecord(value: unknown): value is Record<string, unknown>`：确认值是非 `null`、非数组的普通记录对象。
+- 类型守卫函数 `isNotification(value: unknown): value is Notification`：根据 `kind` 检查该成员真正需要的字段。email 必须有字符串 `address`，push 必须有字符串 `token`。
+- 函数 `parseBatch(raw: string): ParseResult<BatchSummary>`：
   - JSON 语法错误返回 `JSON 格式错误`。
   - 解析结果不是数组返回 `批次必须是数组`。
   - 数组逐项验证，保留合法项并统计坏项。
-- 固定第一批包含：合法 email、不支持的 sms、合法 push、address 为数字的坏 email；第二批为语法损坏文本。
+
+函数骨架中的返回关系应是：
+
+```ts
+function parseBatch(
+  raw: string,
+): ParseResult<BatchSummary> {
+  // TODO：解析 raw、验证数组、逐项分类。
+  // 成功时 value 字段必须是 BatchSummary。
+  // 失败时 error 字段必须是字符串。
+}
+```
+
+最后声明变量 `rawBatches`，让第一批包含合法 email、不支持的 sms、合法 push、`address` 为数字的坏 email；第二批使用语法损坏文本。循环中的变量 `result` 保存每次 `parseBatch(raw)` 的返回对象，再根据 `result.ok` 读取 `value` 或 `error`。
 
 ## 约束
 

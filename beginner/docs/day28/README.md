@@ -1,6 +1,6 @@
 # Day 28（选修）｜元组、重载、`this` 与可变参数
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `call`：明确指定这一次调用中的 `this`
 
@@ -82,11 +82,30 @@ types, modules
 
 ```mermaid
 flowchart TD
-  A["元组保存名称与分钟"] --> B
-  B["通用调用器转发参数"] --> C
-  C["重载规范化输入"] --> D
-  D["call 提供显式 this"] --> E
-  E["输出四种结果"]
+  A["调用 summarize(['Functions', 45])"] --> B["元组参数按位置拆成<br/>title = 'Functions'，minutes = 45"]
+  B --> C["return 'Functions: 45m'"]
+  C --> D["console.log 输出 Functions: 45m"]
+  D --> E["调用 invoke(加法函数, 20, 22)"]
+  E --> F["Args 接住参数组合 [number, number]<br/>Result 对应 number"]
+  F --> G["invoke 执行 fn(...args)<br/>等同于加法函数(20, 22)"]
+  G --> H["加法函数 return 42<br/>invoke 再把 42 交回调用处"]
+  H --> I["console.log 输出 42"]
+  I --> J["调用 normalize([' Types ', ' MODULES '])<br/>数组重载说明返回 string[]"]
+  J --> K{"运行时 typeof value === 'string'？"}
+  K -- "是，传入单个字符串时" --> L["trim + toLowerCase<br/>return string"]
+  K -- "否，本例走这里" --> M["map 准备一个 string[]"]
+  M --> N{"还有没处理的 item 吗？"}
+  N -- "有" --> O["当前 item 执行 trim().toLowerCase()"]
+  O --> P["把处理后的文字放进新数组"]
+  P --> N
+  N -- "没有" --> Q["return ['types', 'modules']"]
+  L --> R["把 string 交回对应的字符串调用处<br/>本例不走这条分支"]
+  Q --> S["join(', ') 得到 'types, modules'"]
+  S --> T["console.log 输出 types, modules"]
+  T --> U["调用 label.call({ prefix: 'TS' }, 'typed this')"]
+  U --> V["call 把对象设为本次 label 的 this"]
+  V --> W["label 读取 this.prefix<br/>return '[TS] typed this'"]
+  W --> X["console.log 输出 [TS] typed this"]
 ```
 
 ## 官方手册扩展阅读（可选）

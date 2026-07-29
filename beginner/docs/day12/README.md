@@ -4,7 +4,7 @@
 
 今天把函数当成一种可以传递的“处理规则”。例如，成绩报告函数不必自己决定分数怎么显示；外部可以把一个格式化函数传进去，让报告函数在需要时调用它。你会看到数据如何进入普通参数、如何进入回调，以及每一层 `return` 把结果交给谁。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `array.forEach(callback)`：逐项执行动作
 
@@ -99,10 +99,18 @@ JavaScript 负责保存函数值并在需要时调用它，TypeScript 的函数�
 
 ```mermaid
 flowchart TD
-  A["创建学习记录数据"] --> B
-  B["格式函数接收当前项目"] --> C
-  C["默认与 rest 参数组织文字"] --> D
-  D["void 回调输出各行"]
+  A["调用 printReport([30, 45], formatMinutes)"] --> B["title 没有传值<br/>使用默认值：学习记录"]
+  B --> C["console.log(title)<br/>输出：学习记录"]
+  C --> D["values.forEach 取出一项<br/>交给回调的 value 和 index"]
+  D --> E["回调调用 formatter(value)<br/>实际执行 formatMinutes(value)"]
+  E --> F["formatMinutes return<br/>value + 分钟"]
+  F --> G["回调拼出第 index + 1 项<br/>console.log 输出这一行"]
+  G --> H{"values 还有下一项吗？"}
+  H -- "有" --> D
+  H -- "没有" --> I["调用 joinTopics<br/>分隔符和 3 个主题作为实参"]
+  I --> J["...topics 把函数、回调、void<br/>收进 topics 数组"]
+  J --> K["topics.join(separator)<br/>return 拼接后的主题文字"]
+  K --> L["console.log 输出主题"]
 ```
 
 ## 官方手册扩展阅读（可选）

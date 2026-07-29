@@ -40,10 +40,28 @@ export default {
       ],
       "success": "四种投递事件都被收窄处理，展示结果与重试决策也保持一致。",
       "hints": [
+        "先单独声明 Channel；再给输入事件和返回对象各写一份命名类型。教程把它们叫作 DeliveryEvent 和 DeliveryDecision。",
+        "event: DeliveryEvent 是函数输入类型，圆括号后的 : DeliveryDecision 是返回对象的类型。",
         "decideDelivery 的每个 case 都返回 text 和 shouldRetry。",
         "只有 retrying 分支的 shouldRetry 为 true，rejected 是永久失败。",
-        "外层循环根据 decision.shouldRetry 计数，不要再次复制 status 分支。",
+        "用 decision 接住函数返回的整个对象：decision.text 用于输出，decision.shouldRetry 用于计数。",
+        "外层循环不要再次复制 status 分支。",
         "default 把 event 交给 assertNever，保留穷尽检查。"
+      ],
+      "sourceRequirements": [
+        {
+          "kind": "stringUnionTypeAlias",
+          "name": "Channel",
+          "values": ["email", "sms", "push"],
+          "message": "请在文件顶层单独声明 Channel，并让它只包含 email、sms、push 三个字符串成员。"
+        },
+        {
+          "kind": "propertyTypeReferenceCount",
+          "propertyName": "channel",
+          "typeName": "Channel",
+          "minimum": 4,
+          "message": "请让四种事件的 channel 字段都使用 Channel，不要重复内联三个渠道。"
+        }
       ]
     }
   ]

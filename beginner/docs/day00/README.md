@@ -12,7 +12,7 @@
 - 能区分“类型检查”和“程序运行”。
 - 能独立写出并运行一个最小程序。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 **`console.log(...)`：把值显示在终端**
 
@@ -109,9 +109,12 @@ Hello from the Day 00 example!
 
 ```mermaid
 flowchart TD
-  A["创建 message 字符串"] --> B
-  B["把变量传给 console.log"] --> C
-  C["终端显示问候语"]
+  A["读取字符串字面量：Hello from the Day 00 example!"] --> B
+  B["const message = 字符串"] --> C
+  C["message 保存这段完整文字"] --> D
+  D["执行 console.log(message)"] --> E
+  E["console.log 读取 message 的值"] --> F
+  F["终端输出：Hello from the Day 00 example!"]
 ```
 
 ## 官方手册扩展阅读（可选）

@@ -1,6 +1,6 @@
 # Day 27（选修）｜浏览器、请求与命令行边界
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `querySelector` 与 `addEventListener`：找到网页元素，再监听它
 
@@ -87,10 +87,33 @@ CLI day: 27
 
 ```mermaid
 flowchart TD
-  A["normalizeQuery 处理固定输入"] --> B
-  B["请求适配器读取 unknown 响应"] --> C
-  C["CLI 参数解析 day"] --> D
-  D["三个边界结果分别输出"]
+  A["执行 void bindSearch<br/>只读取函数本身，不调用它，也不会绑定 input 事件"] --> B["调用 normalizeQuery('  typed  ')"]
+  B --> C["trim 删除两端空格<br/>return 'typed'"]
+  C --> D["console.log 输出 Normalized query: typed"]
+  D --> E["调用并 await loadTitle(fakeClient)"]
+  E --> F["loadTitle 调用 fakeClient.get('/lesson')"]
+  F --> G["fakeClient return { title: 'Runtime boundaries' }<br/>loadTitle 把它先当作 unknown"]
+  G --> H{"isRecord(value)？<br/>不是 null 且 typeof 是 object"}
+  H -- "否" --> I["throw Error('Invalid lesson response')<br/>loadTitle 变为 rejected"]
+  H -- "是，本例走这里" --> J{"typeof value.title === 'string'？"}
+  J -- "否" --> I
+  J -- "是，本例走这里" --> K["return value.title<br/>也就是 'Runtime boundaries'"]
+  K --> L["console.log 输出 Fetched title: Runtime boundaries"]
+  L --> M["调用 parseDay(['--day', '27'])"]
+  M --> N["indexOf('--day') 得到 index = 0"]
+  N --> O{"index < 0？"}
+  O -- "是，参数中没有 --day" --> P["return undefined"]
+  O -- "否，本例走这里" --> Q["raw = args[index + 1]<br/>得到 '27'"]
+  Q --> R{"raw 不存在或 trim 后为空？"}
+  R -- "是" --> P
+  R -- "否，本例走这里" --> S["Number(raw)<br/>day = 27"]
+  S --> T{"day 是整数且 day >= 0？"}
+  T -- "否" --> P
+  T -- "是，本例走这里" --> U["return 27"]
+  P --> V["?? 使用备用文字 'missing'"]
+  U --> W["?? 保留 27"]
+  V --> X["console.log 输出 CLI day: missing"]
+  W --> Y["console.log 输出 CLI day: 27"]
 ```
 
 ## 官方手册扩展阅读（可选）

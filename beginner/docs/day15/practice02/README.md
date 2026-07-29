@@ -39,11 +39,48 @@ value + label ──> labelValue<T> ──> LabeledValue<T>
 
 ## 要完成的功能
 
-- `firstOrUndefined<Item>(items: readonly Item[]): Item | undefined`：非空时返回首项，空数组返回 `undefined`。
-- `LabeledValue<Value>`：保存 `label: string` 和仍保持原类型的 `value`。
-- `labelValue<Value>(label, value): LabeledValue<Value>`：把两个参数装进结果对象。
-- 固定输入：姓名 `Ada、Lin`，分数 `80、90`，以及显式声明为 `readonly number[]` 的空成绩数组。
-- 空成绩的“暂无”必须在调用处通过 `??` 处理，不能塞进通用读取函数。
+先在文件顶层**单独声明**泛型类型 `LabeledValue<Value>`：
+
+```ts
+type LabeledValue<Value> = {
+  label: string;
+  value: Value;
+};
+```
+
+`Value` 是类型参数，表示 `value` 字段要保留本次传入值的类型。把这个对象结构直接写进 `labelValue` 的返回类型虽然合法，但不符合本题“声明并复用 `LabeledValue<Value>`”的结构练习。
+
+接着实现两个**泛型函数**：
+
+- 函数 `firstOrUndefined<Item>(items: readonly Item[]): Item | undefined`：数组有内容时返回第一项，空数组返回 `undefined`。`Item | undefined` 是函数返回值的类型，不是让你额外创建一个对象。
+- 函数 `labelValue<Value>(label: string, value: Value): LabeledValue<Value>`：返回一个对象；对象的 `label` 字段来自参数 `label`，`value` 字段来自参数 `value`。
+
+可以先写出下面的结构，再完成 `TODO`：
+
+```ts
+function firstOrUndefined<Item>(
+  items: readonly Item[],
+): Item | undefined {
+  // TODO：读取并返回第一项；空数组应自然得到 undefined。
+}
+
+function labelValue<Value>(
+  label: string,
+  value: Value,
+): LabeledValue<Value> {
+  // TODO：返回由这两个参数组成的对象。
+}
+```
+
+最后创建这些变量：
+
+- `firstName`：把姓名数组 `["Ada", "Lin"]` 交给 `firstOrUndefined` 后的返回值。
+- `firstScore`：把分数数组 `[80, 90]` 交给该函数后的返回值。
+- `emptyScores: readonly number[]`：单独声明的空成绩数组。
+- `firstEmptyScore`：读取 `emptyScores` 后得到的 `number | undefined`。
+- `course`：调用 `labelValue("课程", "TypeScript")` 得到的标签对象。
+
+空成绩的“暂无”必须在调用处通过 `firstEmptyScore ?? "暂无"` 处理，不能塞进通用读取函数。
 
 ## 约束
 

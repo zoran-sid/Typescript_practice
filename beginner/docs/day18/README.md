@@ -90,10 +90,23 @@ Dashboard | Types: 45 minutes
 
 ```mermaid
 flowchart TD
-  A["new 创建学习 Session"] --> B
-  B["方法读取 minutes 与 topic"] --> C
-  C["Dashboard 接收一个 SummaryProvider"] --> D
-  D["render 包装这个对象的 summary"]
+  A["new StudyCounter(Types)<br/>new StudyCounter(Modules)"] --> B["constructor 保存 topic<br/>两个实例的 minutes 都从 0 开始"]
+  B --> C["依次调用 types.add(30)、types.add(15)、modules.add(20)"]
+  C --> D["每次进入 StudyCounter.add(minutes)"]
+  D --> E{"minutes > 0 吗？"}
+  E -- "是" --> F["this.minutes += minutes"]
+  E -- "否" --> G["不修改 this.minutes"]
+  F --> H{"还有下一次 add 调用吗？"}
+  G --> H
+  H -- "有" --> D
+  H -- "没有" --> I["types.summary()<br/>return Types: 45 minutes"]
+  I --> J["console.log 输出 types 摘要"]
+  J --> K["modules.summary()<br/>return Modules: 20 minutes"]
+  K --> L["console.log 输出 modules 摘要"]
+  L --> M["new Dashboard(types)<br/>constructor 把 types 保存为 counter"]
+  M --> N["render 调用 this.counter.summary()"]
+  N --> O["summary return 给 render<br/>render 再 return Dashboard 文字"]
+  O --> P["console.log 输出 Dashboard 结果"]
 ```
 
 ## 官方手册扩展阅读（可选）

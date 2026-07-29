@@ -36,15 +36,40 @@ originalCart + updatedCart ──> 对照输出
 
 ## 要完成的功能
 
-- `CartItem`：`readonly sku`、`name`、`quantity`。
-- `Cart`：`readonly id`、只读 `items` 数组、可选 `coupon`。
-- `updateQuantity(cart, sku, nextQuantity): Cart`：
+先在文件顶层**单独声明**下面两个类型。这里的“单独声明”是指先写出有名字的 `CartItem` 和 `Cart`，后面的变量、参数和返回值再使用这两个名字：
+
+```ts
+type CartItem = {
+  readonly sku: string;
+  name: string;
+  quantity: number;
+};
+
+type Cart = {
+  readonly id: string;
+  items: readonly CartItem[];
+  coupon?: string;
+};
+```
+
+把对象结构直接写进函数参数，例如 `cart: { id: string; items: ... }`，在 TypeScript 中可以通过，但不符合本题“声明并复用命名类型”的结构练习。
+
+接着完成这些函数：
+
+- 函数 `updateQuantity(cart: Cart, sku: string, nextQuantity: number): Cart`：
   - SKU 不存在或数量为负数时返回原 `cart`。
   - 数量为 `0` 时返回移除目标商品的新购物车。
   - 数量为正数时只替换目标商品，其他商品保留。
-- `applyCoupon(cart, coupon): Cart`：返回带新优惠券的新购物车，不修改传入对象。
-- 固定原购物车：`KB` 机械键盘数量 `2`，`MS` 鼠标数量 `1`。
-- 先把 `KB` 改为 `3`，再把 `MS` 改为 `0`，最后应用 `TS20`。
+- 函数 `applyCoupon(cart: Cart, coupon: string): Cart`：返回带新优惠券的新购物车，不修改传入对象。
+
+最后创建并使用这些变量：
+
+- 变量 `originalCart: Cart`：包含 `KB` 机械键盘（数量 `2`）和 `MS` 鼠标（数量 `1`）。
+- 变量 `withKeyboardUpdated`：保存把 `KB` 改为 `3` 后的返回值。
+- 变量 `withoutMouse`：保存继续把 `MS` 改为 `0` 后的返回值。
+- 变量 `updatedCart`：保存最后应用优惠券 `TS20` 后的返回值。
+
+每个函数都返回一个 `Cart`。其中 `Cart` 返回对象的 `items` 是商品数组，`coupon` 是可选的优惠券字符串；不要把整个返回对象的结构重新内联写在函数返回类型中。
 
 ## 约束
 

@@ -14,7 +14,7 @@
 - 在 `catch` 中把错误当作 `unknown` 收窄；
 - 测试正常、空数组、坏数据和异步失败。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `Promise.reject`：造出一条失败的异步结果
 
@@ -96,11 +96,24 @@ Minutes: 75
 
 ```mermaid
 flowchart TD
-  A["先渲染 loading"] --> B
-  B["仓库异步返回 unknown"] --> C
-  C["验证为任务数组"] --> D
-  D["生成 success 状态"] --> E
-  E["渲染数量、完成数与分钟"]
+  A["用 2 个任务创建 repository<br/>MemoryTaskRepository 保存 data"] --> B["render(status: loading)"]
+  B --> C["switch 命中 loading<br/>return State: loading"]
+  C --> D["for...of + console.log<br/>先输出 loading"]
+  D --> E["await loadDashboard(repository)"]
+  E --> F["try：await repository.load()<br/>等待后取得 unknown 类型的 value"]
+  F --> G{"value 是数组<br/>且每项通过 isStudyTask？"}
+  G -->|"否"| H["return failure<br/>message: Invalid task data"]
+  G -->|"是"| I["reduce 累加 minutes<br/>totalMinutes = 75"]
+  I --> J["return success<br/>tasks: value, totalMinutes"]
+  F -->|"load 抛错"| K["catch error<br/>return failure + getErrorMessage(error)"]
+  H --> L["finalState 接住 LoadState"]
+  J --> L
+  K --> L
+  L --> M{"render(finalState)<br/>status 是什么？"}
+  M -->|"success"| N["return 状态、任务数、完成数、分钟"]
+  M -->|"failure"| O["return State: failure 与 Message"]
+  N --> P["for...of + console.log<br/>逐行输出最终面板"]
+  O --> P
 ```
 
 ## 官方手册扩展阅读（可选）

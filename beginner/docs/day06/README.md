@@ -12,7 +12,7 @@
 - 使用循环处理对象中的数组。
 - 理解对象赋值复制的是引用。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 **数组的 `.push(...)`：把新项追加到末尾**
 
@@ -183,10 +183,16 @@ const copiedScores = copyScores(originalTask.scores);
 
 ```mermaid
 flowchart TD
-  A["创建 book 对象"] --> B
-  B["book 作为实参进入 describeBook"] --> C
-  C["根据 available 生成状态"] --> D
-  D["组合多行字符串并输出"]
+  A["创建 book：title、pages、available"] --> B
+  B["先执行 describeBook(book)"] --> C
+  C["book 作为实参进入函数，参数 item 指向它"] --> D{"item.available 是 true？"}
+  D -- "是" --> E["status = '可借阅'"]
+  D -- "否" --> F["status = '已借出'"]
+  E --> G["用 item 的属性和 status 组合多行字符串"]
+  F --> G
+  G --> H["return 把多行字符串交回调用处"]
+  H --> I["返回值成为 console.log 的参数"]
+  I --> J["console.log 输出图书说明"]
 ```
 
 ## 官方手册扩展阅读（可选）

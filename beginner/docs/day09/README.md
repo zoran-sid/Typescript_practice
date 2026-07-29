@@ -10,6 +10,7 @@
 - 使用 `interface` 描述可复用的对象形状。
 - 使用可选属性 `?` 与只读属性 `readonly`。
 - 使用 `ReadonlyArray<T>` 表达不应修改的数组。
+- 让函数返回一个符合命名对象类型的结果。
 - 理解 TypeScript 类型只用于检查。
 - 理解 `readonly` 只在 TypeScript 检查时生效，而且默认只保护标记的那一层。
 
@@ -44,6 +45,61 @@ interface User {
 
 普通对象既可以用 `type`，也可以用 `interface`。本课程用 `interface` 描述主要对象，用 `type` 表示别名或联合，方便你看到名字时判断它大概扮演什么角色。
 
+## 命名对象类型也能说明函数要交回什么
+
+Day 05 中的函数返回数字或字符串。对象也可以作为一个返回值；只是这个对象里面能同时装几项有关联的结果。
+
+```ts
+type TaskId = string;
+
+interface Task {
+  readonly id: TaskId;
+  title: string;
+  done: boolean;
+  note?: string;
+}
+
+interface TaskSummary {
+  mainText: string;
+  noteText: string;
+}
+
+function createTaskSummary(task: Task): TaskSummary {
+  const status = task.done ? "已完成" : "未完成";
+  const note = task.note ?? "无";
+  return {
+    mainText: `${task.id} | ${task.title} | ${status}`,
+    noteText: `备注: ${note}`,
+  };
+}
+
+const task: Task = {
+  id: "T-01",
+  title: "学习 type 和 interface",
+  done: false,
+};
+
+const summary = createTaskSummary(task);
+console.log(summary.mainText);
+console.log(summary.noteText);
+```
+
+实际输出：
+
+```text
+T-01 | 学习 type 和 interface | 未完成
+备注: 无
+```
+
+把函数声明拆开读：
+
+- `task: Task` 在圆括号里面，说明函数接收一个 `Task` 对象。
+- 圆括号后面的 `: TaskSummary` 说明函数必须交回一个符合 `TaskSummary` 的对象。它不是第二个函数，也不会创建一个名为 `TaskSummary` 的值。
+- `return { ... }` 每次只交回一个值，这个值是对象，里面有 `mainText` 和 `noteText` 两个字段。
+- 外面的 `summary` 接住整个对象，再分别读取 `summary.mainText` 和 `summary.noteText`。
+
+如果函数只返回一段字符串，就无法再用有明确名称的字段区分“主要文字”和“备注文字”。把两项有关联的结果放进一个对象，调用处能清楚看到每一项的用途。
+
 ## `readonly` 与只读数组
 
 ```ts
@@ -72,13 +128,13 @@ interface Box {
 
 同一种项目或任务形状如果在每个函数旁边重复写，新增字段时容易只改到一处，调用方和实现方就会逐渐不一致。`type` 和 `interface` 给数据契约一个名字，让多个变量与函数共用同一份说明；`readonly` 再表达“这段代码只应读取，不能重新赋值”。
 
-TypeScript 负责在编译时检查对象是否符合契约，并阻止明显的只读写入；编辑器也能据此提示属性。你仍要决定哪些字段必填、哪些可选、哪些应该只读，以及一个概念更适合对象接口还是其他类型组合。类型名只是约束，不会替你生成或保存真实数据。
+TypeScript 负责在编译时检查对象是否符合契约，并阻止明显的只读写入；编辑器也能据此提示属性。同一个命名类型还能用于变量、函数参数和函数返回值，让调用函数的人知道会收到什么。你仍要决定哪些字段必填、哪些可选、哪些应该只读，以及一个概念更适合对象接口还是其他类型组合。类型名只是约束，不会替你生成或保存真实数据。
 
 这些保护在运行后的 JavaScript 中不会自动变成权限系统，而且 `readonly` 默认只约束标记到的那一层。嵌套对象是否也只读，需要在类型中继续明确。
 
 ## 阅读完整示例
 
-打开并右击运行 `example.ts`。在编辑器中临时尝试给 `task.id` 重新赋值，以及对 `tags` 调用 `push`，观察类型错误后撤销。注意这些保护来自类型检查。
+打开并右击运行 `example.ts`。先找到 `createTaskSummary(task): TaskSummary`，指出输入类型、返回类型、真正被 `return` 交回的对象，以及外部哪个变量接住了它。然后临时尝试给 `task.id` 重新赋值，以及对 `tags` 调用 `push`，观察类型错误后撤销。
 
 ## Example 实际输出
 
@@ -96,11 +152,22 @@ T-01 | 学习 type 和 interface | 未完成
 
 ```mermaid
 flowchart TD
-  A["声明 Task 类型"] --> B
-  B["创建任务对象"] --> C
-  C["函数读取状态与可选字段"] --> D
-  D["拼接标签和摘要"] --> E
-  E["输出三行"]
+  A["声明 Task 和 TaskSummary 对象类型"] --> B
+  B["创建 task 和只读数组 tags"] --> C
+  C["调用 createTaskSummary(task)"] --> D
+  D["参数 task 接到任务对象"] --> E
+  E{"task.done 是 true 吗？"}
+  E -- "是" --> F["status = 已完成"]
+  E -- "否" --> G["status = 未完成"]
+  F --> H
+  G --> H
+  H["task.note ?? 无 得到 note"] --> I
+  I["return 一个对象：mainText + noteText"] --> J
+  J["summary 接住整个返回对象"] --> K
+  K["summary.mainText ──> 第 1 行输出"] --> L
+  L["summary.noteText ──> 第 2 行输出"] --> M
+  M["tags.join 生成标签文字"] --> N
+  N["console.log ──> 第 3 行输出"]
 ```
 
 ## 官方手册扩展阅读（可选）

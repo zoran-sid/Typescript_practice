@@ -4,7 +4,7 @@
 
 输入框里看见的 `3`，程序收到的可能是文字 `"3"`。文字 `"3"` 加数字 `2` 会得到 `"32"`，不是 `5`。今天先认清数据的实际类型，再按“转换 → 计算 → 判断”的顺序处理。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 **`Number(...)`：把一个值转换成数字**
 
@@ -142,11 +142,15 @@ Status: Large order
 
 ```mermaid
 flowchart TD
-  A["读取价格文本与数量"] --> B
-  B["Number 转成数字"] --> C
-  C["相乘得到总价"] --> D
-  D["比较阈值设置状态"] --> E
-  E["输出价格与状态"]
+  A["unitPriceText = '12'；itemCount = 2"] --> B
+  B["Number(unitPriceText) 得到数字 12"] --> C
+  C["unitPrice * itemCount 得到 totalPrice = 24"] --> D
+  D["先设置 status = 'Small order'"] --> E{"totalPrice >= 20？"}
+  E -- "是" --> F["把 status 改成 'Large order'"]
+  E -- "否" --> G["status 保持 'Small order'"]
+  F --> H["console.log 输出 totalPrice"]
+  G --> H
+  H --> I["console.log 输出最终 status"]
 ```
 
 ## 官方手册扩展阅读（可选）

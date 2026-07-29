@@ -14,7 +14,7 @@
 - 比较“整批通过才导入”和“保留有效项并统计拒绝项”两种汇总策略；
 - 用完整 `switch` 安全读取不同状态的字段。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `reduce`：把数组中的多项累计成一个结果
 
@@ -93,10 +93,21 @@ Total planned minutes: 105
 
 ```mermaid
 flowchart TD
-  A["外部任务数据进入导入器"] --> B
-  B["unknown 逐项验证为 Task"] --> C
-  C["拒绝无效项"] --> D
-  D["描述首项状态并统计分钟"]
+  A["JSON.stringify 创建 text<br/>其中包含 2 个任务"] --> B["result = importTasks(text)"]
+  B --> C["try：JSON.parse(text)<br/>parsed 的类型先保持 unknown"]
+  C --> D{"JSON.parse 是否成功？"}
+  D -->|"否"| E["return ok: false<br/>message: JSON format is invalid"]
+  D -->|"是"| F{"parsed 是数组<br/>且每项都通过 isStudyTask？"}
+  F -->|"否"| G["return ok: false<br/>message: Task data is invalid"]
+  F -->|"是"| H["return ok: true<br/>tasks: parsed"]
+  E --> I{"result.ok？"}
+  G --> I
+  H --> I
+  I -->|"false"| J["console.log：Import failed + message"]
+  I -->|"true"| K["first = result.tasks[0]"]
+  K --> L["reduce 累加 task.minutes<br/>totalMinutes = 105"]
+  L --> M["describeState(first.state)<br/>switch 命中 doing，return doing since 09:00"]
+  M --> N["console.log：任务数、首项状态、总分钟"]
 ```
 
 ## 官方手册扩展阅读（可选）

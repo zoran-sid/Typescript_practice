@@ -19,27 +19,47 @@
 先沿变量名看数据怎样分叉和汇合；`──>` 表示值被交给下一步。
 
 ```text
-tasks
-   └── for...of ──> 当前 task
-                         └── describeTask
-                                └── switch(task.status)
-                                       ├── waiting
-                                       ├── studying
-                                       ├── completed
-                                       └── failed
-每个 case 的文字 ──> 逐行输出
+tasks: StudyTask[]
+│
+└── for...of ──> 当前 task
+                  │
+                  └── describeTask(task)
+                      │
+                      └── switch(task.status)
+                          ├── waiting
+                          │   └── 读取 title ──> return 待开始文字
+                          ├── studying
+                          │   └── 读取 title、minutes ──> return 学习中文字
+                          ├── completed
+                          │   └── 读取 title、score
+                          │       └── score 有值吗？
+                          │           ├── 有 ──> 使用数字分数
+                          │           └── 没有 ──> 使用“待评分”
+                          │               └── return 已完成文字
+                          └── failed
+                              └── 读取 title、reason ──> return 失败文字
+
+函数返回的字符串 ──> console.log 输出本条任务
+                       └── 回到 for...of 处理下一项
 ```
 
-请在 `practice.ts` 中从第一行开始编写“学习任务状态说明器”。
+## 要完成的功能
 
-固定类型 `StudyTask` 必须包含以下四种联合成员：
+请在 `practice.ts` 中从第一行开始编写“学习任务状态说明器”。程序要把每个任务对象交给 `describeTask`，让函数根据状态返回一段文字；外层循环只负责输出这段文字。
+
+先声明固定类型 `StudyTask`，它必须包含以下四种联合成员：
 
 - `{ status: "waiting"; title: string }`
 - `{ status: "studying"; title: string; minutes: number }`
 - `{ status: "completed"; title: string; score?: number }`
 - `{ status: "failed"; title: string; reason: string }`
 
-虽然上面只有四种 `status`，`completed` 必须分别测试“有分数”和“无分数”，因此固定输入一共有五项。请实现 `assertNever(value: never): never` 和 `describeTask(task: StudyTask): string`，使用 `switch` 完成收窄，并创建名为 `tasks` 的数组：
+然后实现两个函数：
+
+- `assertNever(value: never): never`：发现漏写的新状态时抛出错误。
+- `describeTask(task: StudyTask): string`：用 `switch` 检查 `task.status`，每个分支返回对应文字。
+
+最后创建名为 `tasks` 的数组并用 `for...of` 逐项调用 `describeTask`。虽然只有四种 `status`，`completed` 必须分别测试“有分数”和“无分数”，所以固定输入一共有五项：
 
 ~~~text
 waiting / 联合类型
@@ -48,6 +68,8 @@ completed / 对象 / 92
 completed / 复习 / 不提供 score
 failed / 提交 / 网络中断
 ~~~
+
+> **先看清输出标点：** `describeTask(task: StudyTask)` 里的 `()` 和 `:` 是 TypeScript 语法，必须使用英文半角符号。下面输出中的 `：`、`（ ）` 是展示给读者的中文标点。运行器不会因这些显示标点的全半角差异判你失败，但其他文字、数字和顺序仍要一致。
 
 程序必须精确输出：
 
@@ -63,7 +85,7 @@ failed / 提交 / 网络中断
 
 - 不得把成员专属字段全部改成可选属性。
 - 不得使用 `any`、类型断言或非空断言。
-- `completed` 分支必须用空值合并处理缺失分数。
+- `completed` 分支必须正确处理缺失分数；可以使用 `score ?? "待评分"`，也可以写清楚的条件判断。
 - `default` 必须把 `task` 交给 `assertNever`。
 
 完成标准：右键运行 `practice.ts` 后显示 PASS；新增一个 `paused` 成员时，能看到穷尽检查提示缺失分支。
@@ -75,7 +97,7 @@ case "name": 结尾是冒号；用 return 或 break 结束分支，分支里的�
 ## 写完后自检
 
 - 如果给 `StudyTask` 新增 `paused` 状态但不加 `case`，你预计哪一行先出现类型错误？为什么错误会出现在那里？
-- 把已完成任务的 `score` 改成 `0`，输出应该把它当成分数还是“待评分”？这能否解释为什么这里用 `??` 而不是 `||`？
+- 把已完成任务的 `score` 改成 `0`，输出应该把它当成分数还是“待评分”？如果把这段改写成 `score ?? "待评分"`，为什么不应使用 `||`？
 - 如果把四种成员合并成一个“所有字段都可选”的对象，哪些非法组合会被放进数组？判别联合解决了什么问题？
 
 ## 文件

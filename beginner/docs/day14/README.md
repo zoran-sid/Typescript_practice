@@ -83,10 +83,21 @@ Ada：完成 12 课（beginner）
 
 ```mermaid
 flowchart TD
-  A["从多个模块 import 值与类型"] --> B
-  B["创建 Student 值"] --> C
-  C["调用格式化与汇总函数"] --> D
-  D["输出组合结果"]
+  A["程序读取 4 条 import"] --> B["course-data.js 提供<br/>courseTitle、lessonCount"]
+  A --> C["score-tools.js 提供<br/>默认导出 formatScore 和 passingScore"]
+  A --> D["student-types.js 提供 Student 类型<br/>只用于编译时检查"]
+  A --> E["student-tools.js 提供<br/>summarizeStudent"]
+  B --> F["创建 student 对象"]
+  C --> F
+  D --> F
+  E --> F
+  F --> G["Student 检查 name、completed、track"]
+  G --> H["console.log 使用<br/>courseTitle 和 lessonCount"]
+  H --> I["调用 formatScore(80)<br/>函数 return 格式化文字"]
+  I --> J["console.log 输出格式化成绩"]
+  J --> K["console.log 输出 passingScore"]
+  K --> L["调用 summarizeStudent(student)<br/>函数 return 学员摘要"]
+  L --> M["console.log 输出学员摘要"]
 ```
 
 ## 官方手册扩展阅读（可选）

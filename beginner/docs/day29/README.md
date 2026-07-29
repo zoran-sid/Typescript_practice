@@ -14,7 +14,7 @@
 - 用品牌类型防止结构相同的标识符被误传；
 - 区分类型层转换与运行时验证。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `startsWith`：检查字符串是否以指定文字开头
 
@@ -108,10 +108,25 @@ Title: Advanced types
 
 ```mermaid
 flowchart TD
-  A["从来源类型派生布尔标记"] --> B
-  B["模板字面量生成处理器名"] --> C
-  C["条件类型取得成员"] --> D
-  D["创建合法值并输出"]
+  A["TypeScript 先检查类型<br/>Settings 有 theme 与 pageSize"] --> B["Flags&lt;Settings&gt; 遍历这两个键<br/>把每个字段的类型改成 boolean"]
+  B --> C["检查 flags 必须同时有<br/>theme: boolean 与 pageSize: boolean"]
+  C --> D["topics 使用 as const<br/>三个成员保留为具体文字类型"]
+  D --> E["ElementOf&lt;typeof topics&gt;<br/>用 infer 得到 Topic 联合类型"]
+  E --> F["检查 topic = 'modules'<br/>确实属于 Topic"]
+  F --> G["HandlerName&lt;'ready'&gt;<br/>先得到 Ready，再拼成 onReady"]
+  G --> H["检查 handler = 'onReady'"]
+  H --> I["AwaitedValue&lt;Promise&lt;string&gt;&gt;<br/>用 infer 取出 string"]
+  I --> J["检查 title = 'Advanced types'"]
+  J --> K["类型检查结束<br/>类型别名不会变成运行时代码"]
+  K --> L["运行时按源码顺序创建 flags"]
+  L --> M["创建 topics 常量数组"]
+  M --> N["topic = 'modules'"]
+  N --> O["handler = 'onReady'"]
+  O --> P["title = 'Advanced types'"]
+  P --> Q["console.log 输出 Flags: true/false"]
+  Q --> R["console.log 输出 Topic: modules"]
+  R --> S["console.log 输出 Handler: onReady"]
+  S --> T["console.log 输出 Title: Advanced types"]
 ```
 
 ## 官方手册扩展阅读（可选）

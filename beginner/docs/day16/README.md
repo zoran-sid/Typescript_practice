@@ -108,10 +108,21 @@ ID=7
 
 ```mermaid
 flowchart TD
-  A["带 id 的对象进入受约束函数"] --> B
-  B["keyof 限制读取键"] --> C
-  C["item[key] 返回 T[K]"] --> D
-  D["输出课程与设置字段"]
+  A["创建 course 和 settings 对象"] --> B["keyof typeof settings 得到<br/>theme、fontSize、compact"]
+  B --> C["selectedSetting 保存 theme"]
+  C --> D["调用 describeId(course)"]
+  D --> E["约束要求 course 必须有 number 类型的 id"]
+  E --> F["return ID= + item.id<br/>得到 ID=7"]
+  F --> G["console.log 输出 ID"]
+  G --> H["调用 getProperty(course, title)"]
+  H --> I["Key 只能是 keyof course<br/>return item[key] 得到 TypeScript"]
+  I --> J["console.log 输出标题"]
+  J --> K["调用 getProperty(course, lessons)"]
+  K --> L["return item[key] 得到 21"]
+  L --> M["console.log 输出课数"]
+  M --> N["调用 getProperty(settings, selectedSetting)"]
+  N --> O["selectedSetting 是 theme<br/>return item[key] 得到 dark"]
+  O --> P["console.log 输出设置"]
 ```
 
 ## 官方手册扩展阅读（可选）

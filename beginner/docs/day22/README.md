@@ -14,7 +14,7 @@
 - 测试同步抛错，并在异步测试中先 `await`；
 - 从第一条失败信息和最小输入开始调试。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `Object.is`：比较两个值是不是同一个值
 
@@ -89,11 +89,40 @@ AAA 只是这三步的英文名称。写测试时先问自己：“我准备了�
 
 ```mermaid
 flowchart TD
-  A["准备购物车测试输入"] --> B
-  B["调用总价业务函数"] --> C
-  C["断言正常、空值和失败输入"] --> D
-  D["等待异步问候"] --> E
-  E["逐项报告通过"]
+  A["Arrange：price = 20，quantity = 3"] --> B["Act：调用 cartTotal(20, 3)"]
+  B --> C{"quantity < 0？"}
+  C -- "否，本例走这里" --> D["return 20 * 3<br/>total = 60"]
+  C -- "是" --> E["throw RangeError<br/>程序在这条路径停止"]
+  D --> F["Assert：assertEqual(total, 60, '正常总价')"]
+  F --> G{"Object.is(60, 60)？"}
+  G -- "相同，本例走这里" --> H["console.log 输出通过: 正常总价"]
+  G -- "不同" --> I["throw Error<br/>测试失败并停止"]
+  H --> J["先计算 cartTotal(20, 0)"]
+  J --> K{"0 < 0？"}
+  K -- "否，本例走这里" --> L["return 20 * 0，也就是 0"]
+  K -- "是" --> M["throw RangeError<br/>这次调用不在 try 中，测试会停止"]
+  L --> N["assertEqual(0, 0, '空购物车')"]
+  N --> O{"Object.is(0, 0)？"}
+  O -- "相同，本例走这里" --> P["console.log 输出通过: 空购物车"]
+  O -- "不同" --> I
+  P --> Q["调用 assertThrows<br/>把箭头函数作为 action 传入"]
+  Q --> R["进入 try，执行 action()"]
+  R --> S["action 调用 cartTotal(20, -1)"]
+  S --> T{"-1 < 0？"}
+  T -- "是，本例走这里" --> U["cartTotal 抛出 RangeError"]
+  T -- "否" --> V["cartTotal 正常返回<br/>assertThrows 随后主动抛出普通 Error"]
+  U --> W["catch 接住 error"]
+  V --> W
+  W --> X{"error instanceof RangeError？"}
+  X -- "是，本例走这里" --> Y["console.log 输出通过: 负数数量会报错<br/>return 结束 assertThrows"]
+  X -- "否" --> Z["重新 throw error<br/>测试失败并停止"]
+  Y --> AA["调用并 await greeting('小夏')"]
+  AA --> AB["等待 Promise.resolve()"]
+  AB --> AC["return '你好，小夏'"]
+  AC --> AD["assertEqual('你好，小夏', '你好，小夏', '异步问候')"]
+  AD --> AE{"Object.is 两段文字？"}
+  AE -- "相同，本例走这里" --> AF["console.log 输出通过: 异步问候"]
+  AE -- "不同" --> I
 ```
 
 ## 官方手册扩展阅读（可选）

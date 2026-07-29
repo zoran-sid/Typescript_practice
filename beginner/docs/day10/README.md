@@ -4,7 +4,7 @@
 
 同一个工单编号可能来自两处：系统生成的是数字 `42`，人工录入的是字符串 `"A42"`。函数要同时接收这两种数据，但不能还没判断就调用字符串专用方法。代码先检查当前到底是哪一种，再使用对应方法；这个“先排除其他可能”的过程叫类型收窄。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 今天要解决的是同一个问题：“运行时收到的值到底是什么？”不同数据要用不同证据判断。
 
@@ -195,10 +195,21 @@ TS-10
 
 ```mermaid
 flowchart TD
-  A["联合 ID 进入格式函数"] --> B
-  B["typeof 区分字符串和数字"] --> C
-  C["字面量 alignment 通过检查"] --> D
-  D["输出三个格式结果"]
+  A["声明 Id、Alignment 和两个函数"] --> B
+  B["调用 formatId('ts-10')，参数 id = 'ts-10'"] --> C{"typeof id === 'string'？"}
+  C -- "是" --> D["return id.toUpperCase()"]
+  C -- "否" --> E["return `#${id}`"]
+  D --> F["console.log 输出第一次调用的返回值"]
+  E --> F
+  F --> G["调用 formatId(42)，参数 id = 42"] --> H{"typeof id === 'string'？"}
+  H -- "是" --> I["return id.toUpperCase()"]
+  H -- "否" --> J["return `#${id}`"]
+  I --> K["console.log 输出第二次调用的返回值"]
+  J --> K
+  K --> L["调用 describeAlignment('center')"]
+  L --> M["参数 alignment = 'center'，符合 Alignment"]
+  M --> N["return 对齐方式文字"]
+  N --> O["console.log 输出 describeAlignment 的返回值"]
 ```
 
 ## 官方手册扩展阅读（可选）

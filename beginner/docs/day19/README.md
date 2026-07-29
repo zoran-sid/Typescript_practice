@@ -4,7 +4,7 @@
 
 今天从一段端口文字得到可用端口。输入可能不是数字，也可能超出范围；端口即使合法，保存时仍可能遇到普通业务失败。我们会把这两类失败分开，让调用者知道是程序无法继续，还是这次业务操作没有成功。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `text.trim()`：去掉字符串两端空白
 
@@ -171,11 +171,34 @@ type Result<T> =
 
 ```mermaid
 flowchart TD
-  A["文本端口进入解析函数"] --> B
-  B["合法值 return 端口"] --> C
-  C["非法值 throw Error"] --> D
-  D["调用处捕获 unknown"] --> E
-  E["输出成功与失败"]
+  A["数组 [3000, abc] 进入 for...of"] --> B["取出当前 text"]
+  B --> C["try 中调用 parsePort(text)"]
+  C --> D["Number(text) 得到 port"]
+  D --> E{"port 是 1～65535 的整数吗？"}
+  E -- "是" --> F["return port 给 parsePort 调用处"]
+  F --> G["console.log 输出端口"]
+  E -- "否" --> H["throw new RangeError"]
+  H --> I["catch 接住 unknown 类型的 error"]
+  I --> J["调用 errorMessage(error)"]
+  J --> K{"error instanceof Error 吗？"}
+  K -- "是" --> L["return error.message"]
+  K -- "否" --> M["return 未知错误"]
+  L --> N["console.log 输出错误"]
+  M --> N
+  G --> O{"for...of 还有下一个 text 吗？"}
+  N --> O
+  O -- "有" --> B
+  O -- "没有" --> P["调用 savePort(3000)"]
+  P --> Q{"port === 13 吗？"}
+  Q -- "是" --> R["return { ok: false, error }"]
+  Q -- "否" --> S["return { ok: true, value: 3000 }"]
+  R --> T["saved 保存 Result 对象"]
+  S --> T
+  T --> U{"saved.ok 是 true 吗？"}
+  U -- "是" --> V["使用文字：成功"]
+  U -- "否" --> W["使用 saved.error"]
+  V --> X["console.log 输出保存结果"]
+  W --> X
 ```
 
 ## 官方手册扩展阅读（可选）

@@ -79,10 +79,22 @@
 
 ```mermaid
 flowchart TD
-  A["读取年龄"] --> B
-  B["分支决定票价"] --> C
-  C["组合年龄条件决定能否独自入场"] --> D
-  D["输出三项结果"]
+  A["ageText = '20'；hasStudentCard = true"] --> B
+  B["Number(ageText) 得到 age = 20"] --> C{"age < 12？"}
+  C -- "是" --> D["ticketPrice = 15"]
+  C -- "否" --> E{"age >= 65？"}
+  E -- "是" --> F["ticketPrice = 20"]
+  E -- "否" --> G{"hasStudentCard && age <= 25？"}
+  G -- "是" --> H["ticketPrice = 30"]
+  G -- "否" --> I["ticketPrice = 40"]
+  D --> J["票价分支结束"]
+  F --> J
+  H --> J
+  I --> J
+  J --> K["计算 canEnterAlone = age >= 18 && ticketPrice > 0"]
+  K --> L["console.log 输出 age"]
+  L --> M["console.log 输出 ticketPrice"]
+  M --> N["console.log 输出 canEnterAlone"]
 ```
 
 ## 官方手册扩展阅读（可选）

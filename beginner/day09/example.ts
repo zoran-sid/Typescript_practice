@@ -7,10 +7,18 @@ interface Task {
   note?: string;
 }
 
-function describeTask(task: Task): string {
+interface TaskSummary {
+  mainText: string;
+  noteText: string;
+}
+
+function createTaskSummary(task: Task): TaskSummary {
   const status = task.done ? "已完成" : "未完成";
   const note = task.note ?? "无";
-  return `${task.id} | ${task.title} | ${status}\n备注: ${note}`;
+  return {
+    mainText: `${task.id} | ${task.title} | ${status}`,
+    noteText: `备注: ${note}`,
+  };
 }
 
 const task: Task = {
@@ -20,8 +28,10 @@ const task: Task = {
 };
 
 const tags: ReadonlyArray<string> = ["TypeScript", "基础"];
+const summary = createTaskSummary(task);
 
-console.log(describeTask(task));
+console.log(summary.mainText);
+console.log(summary.noteText);
 console.log(`标签: ${tags.join(", ")}`);
 
 export {};

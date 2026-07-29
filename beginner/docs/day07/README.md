@@ -4,7 +4,7 @@
 
 Day 03 里，你用循环自己逐项处理数组。今天先不背新名词。假设原数组是 `[1, 2, 3]`，现在要得到 `[2, 4, 6]`：程序需要把 1、2、3 依次拿出来，每次乘以 2，再把三个结果放进新数组。JavaScript 已经提供了负责重复取值的数组工具，你只需把“拿到一个值后怎么算”交给它。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 今天四个方法都由数组提供，所以点号左边永远是“这一步要读取的数组”。它们不会因为调用本身而改写原数组容器。
 
@@ -172,11 +172,33 @@ const firstLargeOrder = orders.find((order) => {
 
 ```mermaid
 flowchart TD
-  A["价格数组进入 map"] --> B
-  B["计算九折新数组"] --> C
-  C["filter 找出低价项"] --> D
-  D["find 找到首个高价项"] --> E
-  E["输出三个结果"]
+  A["创建 prices = [15, 80, 120, 45]"] --> B["map 准备一个新数组"]
+  B --> C{"map 还有没处理的 price 吗？"}
+  C -- "有" --> D["读取当前 price"]
+  D --> E["计算并交回 price * 0.9"]
+  E --> F["把本轮结果放进新数组"]
+  F --> C
+  C -- "没有" --> G["discountedPrices = [13.5, 72, 108, 40.5]"]
+  G --> H["filter 准备一个新数组"]
+  H --> I{"filter 还有没检查的 price 吗？"}
+  I -- "有" --> J["读取 discountedPrices 中的当前 price"]
+  J --> K{"price < 50？"}
+  K -- "是" --> L["保留当前 price"]
+  K -- "否" --> M["跳过当前 price"]
+  L --> I
+  M --> I
+  I -- "没有" --> N["affordablePrices = [13.5, 40.5]"]
+  N --> O["find 从 prices 第一项开始查找"]
+  O --> P{"还有没检查的 price 吗？"}
+  P -- "有" --> Q["读取当前 price"]
+  Q --> R{"price >= 100？"}
+  R -- "否" --> P
+  R -- "是，本例在 120 命中" --> S["停止查找<br/>firstLargePrice = 120"]
+  P -- "没有找到" --> T["firstLargePrice = undefined"]
+  S --> U["console.log 输出打折后的数组"]
+  T --> U
+  U --> V["console.log 输出低于 50 的数组"]
+  V --> W["console.log 输出第一个至少 100 的值"]
 ```
 
 ## 官方手册扩展阅读（可选）

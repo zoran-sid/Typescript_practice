@@ -5,10 +5,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const beginnerRoot = fileURLToPath(new URL("..", import.meta.url));
+const workspaceRoot = path.dirname(beginnerRoot);
 const docsRoot = path.join(beginnerRoot, "docs");
 const errors = [];
 const allowAnswers = process.argv.includes("--allow-answers");
-const daysIntroducingJavaScriptTools = new Set([
+const daysWithPreviewSection = new Set([
   "day00",
   "day02",
   "day03",
@@ -34,6 +35,33 @@ const daysIntroducingJavaScriptTools = new Set([
 const expectedDays = Array.from({ length: 33 }, (_, index) =>
   `day${String(index).padStart(2, "0")}`,
 );
+
+const beginnerReadmePath = path.join(beginnerRoot, "README.md");
+if (existsSync(beginnerReadmePath)) {
+  const beginnerReadme = readFileSync(beginnerReadmePath, "utf8");
+  if (
+    !beginnerReadme.includes("## 代码符号和输出文字的标点不一样") ||
+    !beginnerReadme.includes('"email" | "sms" | "push"') ||
+    !beginnerReadme.includes("弯引号 `“sms”`")
+  ) {
+    errors.push(
+      "beginner/README.md 必须分清代码语法与输出文字中的中英文括号、冒号和引号。",
+    );
+  }
+}
+
+const rootReadmePath = path.join(workspaceRoot, "README.md");
+if (existsSync(rootReadmePath)) {
+  const rootReadme = readFileSync(rootReadmePath, "utf8");
+  if (
+    rootReadme.includes("不只围绕学生系统") ||
+    rootReadme.includes("你个人答案")
+  ) {
+    errors.push(
+      "项目 README 应使用适合所有 GitHub 学习者的通用说明，不保留对单一案例或个人目录的描述。",
+    );
+  }
+}
 
 for (const file of ["README.md", "OFFICIAL-READING.md", "VALUE-CHECKS.md"]) {
   if (!existsSync(path.join(docsRoot, file))) {
@@ -96,8 +124,18 @@ for (const day of expectedDays) {
 
   const dayReadmePath = path.join(docDayDir, "README.md");
   const dayReadme = readFileSync(dayReadmePath, "utf8");
-  if (countText(dayReadme, "```mermaid") !== 1 || !dayReadme.includes("flowchart TD")) {
-    errors.push(`docs/${day}/README.md 必须有且只有一个 Example Mermaid 流程图。`);
+  const exampleFlow = readSection(dayReadme, "## Example 代码流程图");
+  const flowNodeCount =
+    exampleFlow.match(/\b[A-Z][A-Z0-9]*\s*(?:\[|\{)/g)?.length ?? 0;
+  if (
+    countText(dayReadme, "```mermaid") !== 1 ||
+    !exampleFlow.includes("flowchart TD") ||
+    flowNodeCount < 5 ||
+    !/(console\.log|输出)/.test(exampleFlow)
+  ) {
+    errors.push(
+      `docs/${day}/README.md 必须有且只有一个至少包含 5 个实际代码步骤的 Example Mermaid 流程图。`,
+    );
   }
   const exampleOutput = readSection(dayReadme, "## Example 实际输出");
   if (
@@ -141,18 +179,23 @@ for (const day of expectedDays) {
   if (countText(dayReadme, "## 官方资料") > 0) {
     errors.push(`docs/${day}/README.md 不应再保留与统一索引重复的“官方资料”列表。`);
   }
-  if (daysIntroducingJavaScriptTools.has(day)) {
-    const toolsHeading = "## 今天第一次见到的 JavaScript 工具";
-    const toolsSection = readSection(dayReadme, toolsHeading).trim();
+  if (dayReadme.includes("今天第一次见到的 JavaScript 工具")) {
+    errors.push(
+      `docs/${day}/README.md 不应再使用容易被误解为 JavaScript 实例的旧标题。`,
+    );
+  }
+  if (daysWithPreviewSection.has(day)) {
+    const previewHeading = "## 写 Example 前先认识这些写法";
+    const previewSection = readSection(dayReadme, previewHeading).trim();
     const exampleOutputIndex = dayReadme.indexOf("## Example 实际输出");
     if (
-      countText(dayReadme, toolsHeading) !== 1 ||
-      toolsSection.length < 180 ||
-      !toolsSection.includes("```text") ||
-      dayReadme.indexOf(toolsHeading) > exampleOutputIndex
+      countText(dayReadme, previewHeading) !== 1 ||
+      previewSection.length < 180 ||
+      !previewSection.includes("```text") ||
+      dayReadme.indexOf(previewHeading) > exampleOutputIndex
     ) {
       errors.push(
-        `docs/${day}/README.md 必须在 Example 前解释当天首次出现的 JavaScript 工具，并给出实际输出。`,
+        `docs/${day}/README.md 必须在 Example 前解释代码里即将使用的新写法，并给出实际输出。`,
       );
     }
   }
@@ -296,7 +339,8 @@ for (const day of expectedDays) {
         errors.push(`${day}/${id}/solution.ts 必须保留 TODO，不能提供完整答案。`);
       }
       if (
-        !scaffold.includes("TODO 旁的空字符串、0、false、[] 等只是占位值") ||
+        !scaffold.includes("TODO") ||
+        !scaffold.includes("占位值") ||
         !scaffold.includes("完成时要替换或删除")
       ) {
         errors.push(
@@ -373,6 +417,31 @@ for (const day of expectedDays) {
       }
       if (!isStringArray(exercise?.expected)) {
         errors.push(`${day}/${id} expected 必须是字符串数组。`);
+      } else {
+        const practiceReadmePath = path.join(
+          docsRoot,
+          day,
+          id,
+          "README.md",
+        );
+        if (existsSync(practiceReadmePath)) {
+          const practiceReadme = readFileSync(practiceReadmePath, "utf8");
+          for (const expectedLine of exercise.expected) {
+            if (!practiceReadme.includes(expectedLine)) {
+              errors.push(
+                `docs/${day}/${id}/README.md 缺少检查器中的期望输出：${expectedLine}`,
+              );
+            }
+          }
+          if (
+            exercise.expected.some((line) => /[（）()]/.test(line)) &&
+            !practiceReadme.includes("先看清输出标点")
+          ) {
+            errors.push(
+              `docs/${day}/${id}/README.md 的输出含括号，必须解释中文全角与英文半角符号的区别。`,
+            );
+          }
+        }
       }
       if (typeof exercise?.success !== "string" || !exercise.success.trim()) {
         errors.push(`${day}/${id} 缺少 success。`);
@@ -387,7 +456,7 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    `PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、首次 JS 工具说明、官方扩展索引、面试问答、场景背景、关联数据流、迁移自检、${allowAnswers ? "可保留作答的练习入口" : "空白作答入口"}、明确的 TODO 占位说明和匹配检查。`,
+    `PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、Example 前置写法说明、详细代码流程图、官方扩展索引、面试问答、场景背景、关联数据流、输出标点说明、迁移自检、${allowAnswers ? "可保留作答的练习入口" : "空白作答入口"}、明确的 TODO 占位说明和匹配检查。`,
   );
 }
 

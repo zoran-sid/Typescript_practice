@@ -4,7 +4,7 @@
 
 接口、文件或浏览器存储给程序的是一段外部数据。即使里面写着 `name`、`contact` 等熟悉字段，TypeScript 也没有检查过它们是否存在、类型是否正确。先把解析结果放进 `unknown`，意思是“现在还不知道它能不能安全使用”；验证通过后，再交给业务代码。
 
-## 今天第一次见到的 JavaScript 工具
+## 写 Example 前先认识这些写法
 
 ### `JSON.parse(text)` 与 `JSON.stringify(value)`
 
@@ -174,10 +174,25 @@ JavaScript 负责真正执行每一项条件，TypeScript 只在守卫返回 `tr
 
 ```mermaid
 flowchart TD
-  A["准备合法与非法 JSON"] --> B
-  B["JSON.parse 得到 unknown"] --> C
-  C["类型守卫验证课程字段"] --> D
-  D["合法输出课程，非法输出提示"]
+  A["两个 JSON 字符串进入 for...of"] --> B["取出当前 raw"]
+  B --> C["JSON.parse(raw)<br/>结果保存为 unknown 类型的 value"]
+  C --> D["调用 isCourse(value)"]
+  D --> E{"是非 null 对象<br/>并且不是数组吗？"}
+  E -- "否" --> J["return false"]
+  E -- "是" --> F{"存在 title<br/>并且 title 是 string 吗？"}
+  F -- "否" --> J
+  F -- "是" --> G{"存在 score<br/>并且 score 是 number 吗？"}
+  G -- "否" --> J
+  G -- "是" --> H["return true"]
+  H --> I{"if (isCourse(value))"}
+  J --> I
+  I -- "true" --> K["value 已缩小为 Course<br/>读取 title 和 score"]
+  K --> L["console.log 输出课程与分数"]
+  I -- "false" --> M["console.log 输出课程数据无效"]
+  L --> N{"for...of 还有下一个 raw 吗？"}
+  M --> N
+  N -- "有" --> B
+  N -- "没有" --> O["程序结束"]
 ```
 
 ## 官方手册扩展阅读（可选）

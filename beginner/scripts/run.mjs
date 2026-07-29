@@ -81,6 +81,7 @@ async function main() {
     typeHints: exercise.typeHints ?? exercise.hints,
     runtimeHints: exercise.runtimeHints ?? exercise.hints,
     compilerOptions: exercise.compilerOptions ?? {},
+    sourceRequirements: exercise.sourceRequirements ?? [],
     printPass: true,
   }) ? 0 : 1;
 }
@@ -107,7 +108,18 @@ function checkScaffold({ source, label, compilerOptions }) {
 }
 
 function runSource(options) {
-  const { source, label, expected, success, hints = [], typeHints = hints, runtimeHints = hints, compilerOptions = {}, printPass } = options;
+  const {
+    source,
+    label,
+    expected,
+    success,
+    hints = [],
+    typeHints = hints,
+    runtimeHints = hints,
+    compilerOptions = {},
+    sourceRequirements = [],
+    printPass,
+  } = options;
   if (!existsSync(source)) {
     courseError(`缺少源文件 ${relative(source)}。`);
     return false;
@@ -120,6 +132,23 @@ function runSource(options) {
     printHints(typeHints);
     return false;
   }
+  const sourceText = readFileSync(source, "utf8");
+  const sourceFile = ts.createSourceFile(
+    source,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const missingRequirements = sourceRequirements.filter(
+    (requirement) => !meetsSourceRequirement(sourceFile, requirement),
+  );
+  if (missingRequirements.length > 0) {
+    console.error(`${label} 代码结构还缺少题目要求：`);
+    missingRequirements.forEach(({ message }) => console.error(`  - ${message}`));
+    printHints(hints);
+    return false;
+  }
   const execution = execute(source);
   if (!execution.ok) {
     console.error(`${label} ${execution.kind}。`);
@@ -128,16 +157,26 @@ function runSource(options) {
     return false;
   }
   const actual = normalizeOutput(execution.stdout);
-  if (!sameLines(actual, expected)) {
+  const outputComparison = compareOutput(actual, expected);
+  if (!outputComparison.equivalent) {
     console.log(`${label} 尚未通过。\n`);
     console.log("期望输出：");
     printLines(expected);
     console.log("\n实际输出：");
     printLines(actual.length > 0 ? actual : ["（没有输出）"]);
+    printPunctuationDifferences(actual, expected);
     printHints(hints);
     return false;
   }
   if (execution.stdout.trim()) console.log(execution.stdout.trimEnd());
+  if (!outputComparison.exact) {
+    console.log(
+      "\n标点说明：你的内容和计算结果正确；差异只来自中英文冒号、括号或这些标点旁的空格，本次仍判为通过。",
+    );
+    console.log(
+      "TypeScript 语法中的 () 和 : 必须使用英文半角符号；字符串里展示给读者的标点可以按题目示例使用中文全角符号。",
+    );
+  }
   console.log(printPass ? `\nPASS ${label}：${success}` : `\n${success}`);
   return true;
 }
@@ -168,6 +207,61 @@ function getDiagnostics(filename, overrides) {
   return ts.getPreEmitDiagnostics(program);
 }
 
+function meetsSourceRequirement(sourceFile, requirement) {
+  if (requirement.kind === "stringUnionTypeAlias") {
+    const declaration = sourceFile.statements.find(
+      (statement) =>
+        ts.isTypeAliasDeclaration(statement) &&
+        statement.name.text === requirement.name,
+    );
+    if (!declaration) return false;
+
+    const members = ts.isUnionTypeNode(declaration.type)
+      ? declaration.type.types
+      : [declaration.type];
+    const actualValues = members.flatMap((member) =>
+      ts.isLiteralTypeNode(member) && ts.isStringLiteral(member.literal)
+        ? [member.literal.text]
+        : [],
+    );
+    if (actualValues.length !== members.length) return false;
+
+    const actual = new Set(actualValues);
+    const expected = new Set(requirement.values);
+    return (
+      actual.size === expected.size &&
+      [...expected].every((value) => actual.has(value))
+    );
+  }
+
+  if (requirement.kind === "propertyTypeReferenceCount") {
+    let matches = 0;
+    const visit = (node) => {
+      if (
+        ts.isPropertySignature(node) &&
+        propertyName(node.name) === requirement.propertyName &&
+        node.type &&
+        ts.isTypeReferenceNode(node.type) &&
+        ts.isIdentifier(node.type.typeName) &&
+        node.type.typeName.text === requirement.typeName
+      ) {
+        matches += 1;
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+    return matches >= requirement.minimum;
+  }
+
+  return false;
+}
+
+function propertyName(name) {
+  return ts.isIdentifier(name) || ts.isStringLiteral(name)
+    ? name.text
+    : "";
+}
+
 function validateCheck(check) {
   const errors = [];
   if (!isRecord(check)) return ["检查文件必须默认导出对象。"];
@@ -183,6 +277,62 @@ function validateCheck(check) {
     if (typeof exercise.success !== "string" || !exercise.success.trim()) errors.push(`${expectedId}.success 必须是非空字符串。`);
     for (const key of ["hints", "typeHints", "runtimeHints"]) if (exercise[key] !== undefined && !isStringArray(exercise[key])) errors.push(`${expectedId}.${key} 必须是字符串数组。`);
     if (exercise.compilerOptions !== undefined && !isRecord(exercise.compilerOptions)) errors.push(`${expectedId}.compilerOptions 必须是对象。`);
+    if (exercise.sourceRequirements !== undefined) {
+      if (!Array.isArray(exercise.sourceRequirements)) {
+        errors.push(`${expectedId}.sourceRequirements 必须是数组。`);
+      } else {
+        exercise.sourceRequirements.forEach((requirement, requirementIndex) => {
+          const label = `${expectedId}.sourceRequirements[${requirementIndex}]`;
+          if (!isRecord(requirement)) {
+            errors.push(`${label} 必须是对象。`);
+            return;
+          }
+          if (
+            typeof requirement.message !== "string" ||
+            !requirement.message.trim()
+          ) {
+            errors.push(`${label}.message 必须是非空字符串。`);
+          }
+          if (requirement.kind === "stringUnionTypeAlias") {
+            if (
+              typeof requirement.name !== "string" ||
+              !requirement.name ||
+              !isStringArray(requirement.values) ||
+              requirement.values.length === 0
+            ) {
+              errors.push(
+                `${label} 必须包含类型名 name 和非空字符串数组 values。`,
+              );
+            }
+            return;
+          }
+          if (requirement.kind === "propertyTypeReferenceCount") {
+            if (
+              typeof requirement.propertyName !== "string" ||
+              !requirement.propertyName ||
+              typeof requirement.typeName !== "string" ||
+              !requirement.typeName ||
+              !Number.isInteger(requirement.minimum) ||
+              requirement.minimum < 1
+            ) {
+              errors.push(
+                `${label} 必须包含 propertyName、typeName 和正整数 minimum。`,
+              );
+            }
+            return;
+          }
+          if (typeof requirement.kind !== "string") {
+            errors.push(
+              `${label}.kind 必须是字符串。`,
+            );
+          } else {
+            errors.push(
+              `${label}.kind 不支持 ${requirement.kind}。`,
+            );
+          }
+        });
+      }
+    }
   });
   return errors;
 }
@@ -193,6 +343,46 @@ function normalizeExercise(input) { const match=/^(?:practice)?(\d{1,2})$/i.exec
 function formatDiagnostic(diagnostic) { const message=ts.flattenDiagnosticMessageText(diagnostic.messageText,"\n"),code=diagnostic.code?`（TS${diagnostic.code}）`:""; if(!diagnostic.file||diagnostic.start===undefined)return `TypeScript 提示${code}：${message}\n`; const p=diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start); return [`位置：${relative(diagnostic.file.fileName)}:${p.line+1}:${p.character+1}`,`TypeScript 提示${code}：${message}`,""] .join("\n"); }
 function normalizeOutput(output){const trimmed=output.trim();return trimmed?trimmed.split(/\r?\n/).map((line)=>line.trimEnd()):[];}
 function sameLines(actual,expected){return actual.length===expected.length&&actual.every((line,index)=>line===expected[index]);}
+function compareOutput(actual, expected) {
+  const exact = sameLines(actual, expected);
+  const equivalent = sameLines(
+    actual.map(normalizeDisplayPunctuation),
+    expected.map(normalizeDisplayPunctuation),
+  );
+  return { exact, equivalent };
+}
+function normalizeDisplayPunctuation(line) {
+  return line
+    .replaceAll("：", ":")
+    .replaceAll("（", "(")
+    .replaceAll("）", ")")
+    .replace(/ *: */g, ":")
+    .replace(/ *\( */g, "(")
+    .replace(/ *\) */g, ")");
+}
+function printPunctuationDifferences(actual, expected) {
+  const differences = [];
+  const lineCount = Math.min(actual.length, expected.length);
+
+  for (let index = 0; index < lineCount; index++) {
+    if (actual[index] === expected[index]) continue;
+    if (
+      normalizeDisplayPunctuation(actual[index]) !==
+      normalizeDisplayPunctuation(expected[index])
+    ) {
+      continue;
+    }
+    differences.push(index + 1);
+  }
+
+  if (differences.length === 0) return;
+  console.log(
+    `\n标点提示：第 ${differences.join("、")} 行只差中英文冒号、括号或标点旁的空格。`,
+  );
+  console.log(
+    "中文全角是 ：、（ ），英文半角是 :、( )；请按题目的输出代码块核对。",
+  );
+}
 function printLines(lines){lines.forEach((line)=>console.log(`  ${line}`));}
 function printHints(hints=[]){if(!Array.isArray(hints)||hints.length===0)return;console.log("\n提示：");hints.forEach((hint,index)=>console.log(`  ${index+1}. ${hint}`));}
 function printUsage(days){console.error("用法：npm run beginner -- day10 practice02");console.error("解题结构：npm run beginner:solution -- day10 practice02");console.error("example：npm run beginner:example -- day10");console.error("也可直接右击 example.ts、practice.ts；右击 solution.ts 只检查结构提示，不会运行完整答案。");printAvailableDays(days);}
