@@ -123,7 +123,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 1 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 1 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -137,27 +137,45 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const message = "hello, Typescript?";
+假设库存服务启动后，要把当前状态写到终端，运维脚本会收集这行日志。初学者常把变量名也放进引号里。代码可以运行，TypeScript 也不会报错，因为 `"serviceStatus"` 本身就是一段合法字符串；问题是程序打印了变量名这几个字，而不是变量中保存的状态。
 
-// ❌ 类型虽然是 string，但大小写和结尾标点都不符合要求。
-console.log(message);
+```ts
+const serviceStatus = "Inventory service ready";
+
+console.log("serviceStatus"); // ❌ 引号让变量名变成了固定文字。
 ```
+
+实际输出：
+
+```text
+serviceStatus
+```
+
+以后把状态改成 `"Inventory service unavailable"`，这行输出仍不会变化。监控看到的是一条看似正常执行、实际没有业务数据的日志。这类错误不是类型错误，而是读取了错误的值。
 
 ### 正确写法
 
 ```ts
-const message = "Hello, TypeScript!";
+const serviceStatus = "Inventory service ready";
 
-// ✅ 程序会逐字符输出变量中的准确内容。
-console.log(message);
+console.log(serviceStatus); // ✅ 不加引号，读取变量当前保存的值。
 ```
+
+实际输出：
+
+```text
+Inventory service ready
+```
+
+引号表示“把这里面的字符直接当作文字”；不加引号的 `serviceStatus` 表示“读取这个变量当前保存的值”。`console.log` 适合查看运行信息，但它不会替业务系统保存状态，也不能验证这段文字是否符合需求。
 
 ## 面试时怎么回答
 
 **问：TypeScript 和 JavaScript 到底是什么关系？TypeScript 能保证程序运行时不出错吗？**
 
-可以先说它解决的问题：JavaScript 中有些类型混用要到运行时才会报错，还有一些不会报错，却会算出意外结果；TypeScript 的编译器和编辑器能提前提示这类“类型对不上”的问题，并把参数、返回值和对象结构变成可检查的契约。接着说边界：类型标注只参与检查，生成 JavaScript 后会被删除，真正执行代码的仍是浏览器或 Node.js。
+可以这样回答：
+
+TypeScript 在 JavaScript 的运行规则之上增加静态类型检查。它能在代码执行前发现一部分类型不匹配，并用参数、返回值和对象类型说明代码之间的约定。编译后，类型标注会被擦除，真正执行的仍是 JavaScript，所以 TypeScript 不会改变 JavaScript 原有的运行结果。
 
 例如下面的类型标注会在生成 JavaScript 时消失，但程序仍输出 `3`：
 
@@ -168,14 +186,20 @@ console.log(total);
 
 新版 Node.js 可以直接执行只含“可擦除类型语法”的 `.ts` 文件，但那一步只是把类型拿掉：它不会替你做类型检查，也会忽略 `tsconfig.json` 中依赖转换的配置，部分 TypeScript 语法仍不能直接运行。本课程因此仍把 `tsc --noEmit` 的检查与运行步骤分开；“Node 能打开这个文件”不能替代“TypeScript 已检查这个项目”。
 
-因此“通过 TypeScript 检查”不等于“业务一定正确”：折扣公式写错、接口返回脏数据、文件不存在，仍要靠运行时校验、测试和错误处理发现。这比只回答“TypeScript 是 JavaScript 的超集”更完整。
+通过类型检查也不等于业务一定正确。折扣公式写错、接口返回的数据不可信、文件不存在，仍要靠运行时校验、测试和错误处理发现。
+
+官方参考：
+
+- [TypeScript：TypeScript for the New Programmer](https://www.typescriptlang.org/docs/handbook/typescript-from-scratch.html)
+- [Node.js：Modules: TypeScript](https://nodejs.org/api/typescript.html)
+- [MDN：Console API](https://developer.mozilla.org/en-US/docs/Web/API/Console_API)
 
 ## 拓展思考（不要求写代码）
 
 如果程序通过了 TypeScript 类型检查，却把感叹号误写成问号，为什么 TypeScript 不会替你发现这个错误？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
-独立完成并核对输出后，再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`。结构提示用于复盘，不是可复制答案。
+建议先独立完成并核对输出，再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，对照完整调用链复盘。

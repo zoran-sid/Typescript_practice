@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day02/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day02/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day02/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -68,6 +68,43 @@ Status: Goal reached
 
 转换写 Number(text)；if (条件) { ... } 的花括号后不加分号，内部赋值语句要加。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定文字 completedText = 3"] --> B["调用 Number(completedText)"]
+    B --> C["completed = 3"]
+    D["固定数字 plannedLessons = 2"] --> E["数字加法"]
+    C --> E
+    E --> F["totalLessons = 5"]
+    F --> G{"totalLessons >= 5？"}
+    G -- "是" --> H["status 改为 Goal reached"]
+    G -- "否" --> I["保留 Keep learning"]
+    H --> J["console.log 总课数与状态"]
+    I --> J
+    J --> K["输出两行报告"]
+```
+
+## 起始代码
+
+固定输入、默认状态和输出调用已提供。请完成转换、加法和目标判断。
+
+```ts
+const completedText = "3";
+const plannedLessons = 2;
+
+const completed = 0; // TODO：替换为 completedText 的数字转换结果。
+const totalLessons = 0; // TODO：替换为数字加法结果。
+let status = "Keep learning";
+const reachedGoal = false; // TODO：替换为“总课数是否达到 5”的比较结果。
+if (reachedGoal) {
+  // TODO：达到目标时更新 status。
+}
+
+console.log(`Total lessons: ${totalLessons}`);
+console.log(`Status: ${status}`);
+```
+
 ## 写完后自检
 
 - 如果 `completedText` 改成 `"2"`，总课数和状态分别会是什么？
@@ -77,4 +114,4 @@ Status: Goal reached
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

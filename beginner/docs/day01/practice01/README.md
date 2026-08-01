@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day01/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day01/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day01/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -68,6 +68,38 @@ completedLessons ──┘
 
 声明用 const name = value; 或 let count = value;。冒号连接名称与类型，等号才赋值；模板字符串用反引号。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数据：姓名、课程、完成数 0、初学者状态"] --> B["completedLessons 第一次加 1"]
+    B --> C["completedLessons 第二次加 1"]
+    C --> D["最终完成数：2"]
+    A --> E["读取 learnerName、courseName、isBeginner"]
+    D --> F["四条模板字符串"]
+    E --> F
+    F --> G["四次 console.log"]
+    G --> H["输出学习档案"]
+```
+
+## 起始代码
+
+固定数据和输出位置已提供。你只需要完成两次“读取旧值、加 1、写回”的更新。
+
+```ts
+const learnerName = "Lin";
+const courseName = "TypeScript";
+let completedLessons = 0;
+const isBeginner = true;
+
+// TODO：连续更新 completedLessons 两次，每次在旧值上加 1。
+
+console.log(`学习者: ${learnerName}`);
+console.log(`课程: ${courseName}`);
+console.log(`已完成: ${completedLessons}`);
+console.log(`初学者: ${isBeginner}`);
+```
+
 ## 写完后自检
 
 - 如果 `completedLessons` 从 5 开始，仍连续增加两次，第三行应显示多少？
@@ -77,4 +109,4 @@ completedLessons ──┘
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

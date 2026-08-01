@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day21/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day21/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day21/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -34,6 +34,65 @@ fetchUserId ── await ──> userId
 失败请求 ──> rejected Promise ──> catch unknown ──> 错误文字
 
 并行结果 + 依赖结果 + 错误结果 ──> main 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定调用 fetchText(课程)"] --> B["coursePromise"]
+  C["固定调用 fetchText(进度)"] --> D["progressPromise"]
+  B --> E["Promise.all"]
+  D --> E
+  E --> F["await 后解构 course、progress"]
+  F --> G["console.log 并行结果"]
+  H["调用 fetchUserId"] --> I["await<br/>return userId = 42"]
+  I --> J["调用 fetchPermission(userId)"]
+  J --> K["await<br/>return permission"]
+  K --> L["console.log 依赖结果"]
+  M["固定失败调用 fetchText(通知, true)"] --> N{"shouldFail？"}
+  N -- "true" --> O["throw Error"]
+  O --> P["catch unknown<br/>errorMessage(error)"]
+  P --> Q["console.log 错误"]
+  R["调用 main()"] --> S["顶层 await"]
+```
+
+## 起始代码
+
+四个函数签名、并行调用、依赖调用、失败调用和全部输出位置已经给出。你需要完成异步判断、各个 `return` 和错误收窄。
+
+```ts
+async function fetchText(name: string, shouldFail = false): Promise<string> {
+  await Promise.resolve();
+  throw new Error("TODO：判断 shouldFail；失败时抛错，成功时 return name");
+}
+async function fetchUserId(): Promise<number> {
+  await Promise.resolve();
+  throw new Error("TODO：return 固定用户 id 42");
+}
+async function fetchPermission(userId: number): Promise<string> {
+  await Promise.resolve();
+  throw new Error("TODO：使用 userId 并 return 权限文字");
+}
+function errorMessage(error: unknown): string {
+  throw new Error("TODO：收窄 error 并 return 文字");
+}
+
+async function main(): Promise<void> {
+  const coursePromise = fetchText("课程");
+  const progressPromise = fetchText("进度");
+  const [course, progress] = await Promise.all([coursePromise, progressPromise]);
+  console.log(`并行结果: ${course}、${progress}`);
+  const userId = await fetchUserId();
+  const permission = await fetchPermission(userId);
+  console.log(`依赖结果: ${permission}`);
+  try {
+    await fetchText("通知", true);
+  } catch (error: unknown) {
+    console.log(`错误: ${errorMessage(error)}`);
+  }
+}
+await main();
 ```
 
 ## 要完成的功能
@@ -72,4 +131,4 @@ fetchUserId ── await ──> userId
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

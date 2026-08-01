@@ -19,7 +19,7 @@ const exerciseMatch = /^(day\d{2})\/(practice\d{2})\/(practice|solution)\.ts$/i.
 let args;
 if (exampleMatch) args = [runner, "example", exampleMatch[1].toLowerCase()];
 else if (exerciseMatch) args = [runner, exerciseMatch[3].toLowerCase(), exerciseMatch[1].toLowerCase(), exerciseMatch[2].toLowerCase()];
-else fail("请右击 dayXX/example.ts 或 practiceXX/practice.ts；也可右击 solution.ts 检查带 TODO 的解题结构，辅助模块不单独运行。");
+else fail("请右击 dayXX/example.ts、practiceXX/practice.ts 或完整参考答案 solution.ts；辅助模块不单独运行。");
 const result = spawnSync(process.execPath, args, { cwd: workspaceRoot, stdio: "inherit", windowsHide: true });
 if (result.error) fail(result.error.message);
 process.exitCode = result.status ?? 1;

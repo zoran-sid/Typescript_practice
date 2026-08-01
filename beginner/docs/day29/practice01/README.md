@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day29/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day29/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day29/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -26,19 +26,88 @@ Events ──> 键重映射 ──> Handlers<Events> ──> handlers
 四条类型派生结果 ──> 输出
 ```
 
-从零完成“类型派生工具箱”。
 
-必须名称：`FeatureConfig`、`Flags`、`ElementOf`、`Events`、`Handlers`、`userIdBrand`、`UserId`、`createUserId`、`profilePath`。
+## 代码流程图
 
-需求：
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
 
-1. `Flags<T>` 保留 T 的全部键，把值统一变成 boolean。
-2. `ElementOf<T>` 从只读元组 `["types", "modules"] as const` 提取字面量联合，并选择 modules。
-3. `Handlers<Events>` 把 ready、failed 重映射成 `onReady`、`onFailed`，各自参数保持对应负载类型。
-4. `UserId` 是带 unique symbol 品牌的字符串；`createUserId` 只接受以 `usr_` 开头且后面非空的值，否则抛错；验证成功后只在这里使用一次窄断言。
-5. `profilePath` 只接受 UserId。
+```mermaid
+flowchart TD
+  A["FeatureConfig 类型"] --> B["Flags 映射每个 Key"]
+  B --> C["得到 boolean flags 固定数据"]
+  C --> D["console.log Flags"]
+  E["固定 topics as const"] --> F["ElementOf 条件类型 infer Item"]
+  F --> G["selected='modules'"]
+  G --> H["console.log Selected"]
+  I["Events 类型"] --> J["Handlers 键重映射"]
+  J --> K["固定 onReady/onFailed 回调"]
+  K --> M["调用 handlers.onReady/onFailed"]
+  L["固定事件负载"] --> M
+  M --> M2["回调读取 at/message 并 console.log"]
+  N["固定字符串 usr_42"] --> O["createUserId(value)"]
+  O --> P{"前缀正确且有后续内容？"}
+  P -- "否" --> Q["throw Error"]
+  P -- "是" --> R["边界处断言并 return UserId"]
+  R --> S["profilePath(id)"]
+  S --> T["return /users/usr_42"]
+  T --> U["console.log 路径"]
+```
 
-精确输出：
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type FeatureConfig = { darkMode: string; retries: number };
+type Flags<T> = {
+  // TODO：理解映射关系；保留全部键，并让值为 boolean。
+  [Key in keyof T]: boolean;
+};
+type ElementOf<T> = T extends readonly (infer Item)[] ? Item : never;
+type Events = { ready: { at: number }; failed: { message: string } };
+type Handlers<T> = {
+  // TODO：理解键重映射与回调负载的对应关系。
+  [Key in keyof T as `on${Capitalize<Key & string>}`]: (payload: T[Key]) => void;
+};
+declare const userIdBrand: unique symbol;
+type UserId = string & { readonly [userIdBrand]: true };
+function createUserId(value: string): UserId {
+  // TODO：判断格式；失败 throw；通过后 return 品牌 ID。
+  return value as UserId;
+}
+function profilePath(id: UserId): string { return `/users/${id}`; }
+
+const flags: Flags<FeatureConfig> = { darkMode: true, retries: false };
+const topics = ["types", "modules"] as const;
+type Topic = ElementOf<typeof topics>;
+const selected: Topic = "modules";
+const handlers: Handlers<Events> = {
+  onReady(payload) {
+    // TODO：使用 payload.at。
+    console.log(`Ready at ${payload.at}`);
+  },
+  onFailed(payload) {
+    // TODO：使用 payload.message。
+    console.log(`Failed: ${payload.message}`);
+  },
+};
+console.log(`Flags: dark=${flags.darkMode}, retries=${flags.retries}`);
+console.log(`Selected: ${selected}`);
+handlers.onReady({ at: 29 });
+handlers.onFailed({ message: "invalid" });
+const userId = createUserId("usr_42");
+console.log(profilePath(userId));
+```
+
+
+## 任务要求
+
+1. 用映射类型生成布尔 flags，用条件类型与 `infer` 提取数组元素。
+2. 用键重映射生成 `onReady`、`onFailed`，两个回调读取各自负载。
+3. `createUserId` 先验证 `usr_` 前缀和后续内容，再在唯一边界创建品牌值。
+4. 固定 flags、topic、事件负载和用户 id 必须通过派生类型检查。
+
+## 精确期望输出
 
 ```text
 Flags: dark=true, retries=false
@@ -47,10 +116,6 @@ Ready at 29
 Failed: invalid
 /users/usr_42
 ```
-
-限制：不使用 `any`；不能把普通字符串直接断言成 UserId；品牌构造器必须先做运行时格式检查。
-
-完成标准：右击运行 `practice.ts` 后输出完全一致且类型检查通过；能在纸上展开 Flags 和 Handlers 的最终对象形状。
 
 ## 本题易漏语法
 
@@ -65,4 +130,4 @@ Failed: invalid
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

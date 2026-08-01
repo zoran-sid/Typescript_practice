@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day12/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day12/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day12/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,70 @@ scores
           └── 每个 score ──> formatScore 回调 ──> 格式文字
                                                    └── reporter 回调 ──> 逐行输出
 studentName + 默认标点 ──> greetStudent ──> 问候输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  AA["固定姓名 Ada"] --> B["调用 greetStudent('Ada')"]
+  A["固定 scores = 55, 80, 100"] --> E["调用 reportScores(scores, formatScore, console.log)"]
+  B --> C["函数处理可选称呼和默认标点<br/>return greeting"]
+  C --> D["console.log(greeting)"]
+  E --> F["for...of 取出当前 score"]
+  F --> G["回调 formatScore(score)"]
+  G --> H{"score >= 60？"}
+  H -- "是" --> I["return 通过文字"]
+  H -- "否" --> J["return 未通过文字"]
+  I --> K["reporter(message) 输出"]
+  J --> K
+  K --> L{"当前 score 通过？"}
+  L -- "是" --> M["passedCount += 1"]
+  L -- "否" --> N["计数不变"]
+  M --> F
+  N --> F
+  E -->|"循环结束 return"| O["passedCount"]
+  A --> P["调用 sumScores(...scores)"]
+  P --> Q["循环累加并 return totalScore"]
+  O --> R["输出通过数量"]
+  Q --> S["输出总分"]
+```
+
+## 起始代码
+
+下面提前给出类型、固定分数、函数签名、调用位置和输出位置。你需要完成条件判断、循环、回调内容和所有 `return`。
+
+```ts
+type ScoreFormatter = (score: number) => string;
+type Reporter = (message: string) => void;
+
+const formatScore: ScoreFormatter = (score) => {
+  throw new Error("TODO：判断是否达到 60 分，并 return 对应文字");
+};
+
+function greetStudent(name: string, title?: string, punctuation = "!"): string {
+  throw new Error("TODO：处理缺席称呼并 return 问候语");
+}
+
+function sumScores(...scores: number[]): number {
+  throw new Error("TODO：用循环累加并 return 总分");
+}
+
+function reportScores(
+  scores: readonly number[],
+  formatter: ScoreFormatter,
+  reporter: Reporter,
+): number {
+  throw new Error("TODO：循环执行 formatter 和 reporter，统计通过数量并 return");
+}
+
+const scores = [55, 80, 100] as const;
+const greeting = greetStudent("Ada");
+console.log(greeting);
+const passedCount = reportScores(scores, formatScore, console.log);
+const totalScore = sumScores(...scores);
+console.log(`总分：${totalScore}`);
+console.log(`通过数量：${passedCount}`);
 ```
 
 请在 `practice.ts` 中从头编写“学生成绩报告器”。
@@ -75,4 +139,4 @@ studentName + 默认标点 ──> greetStudent ──> 问候输出
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

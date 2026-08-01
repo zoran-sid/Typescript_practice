@@ -1,12 +1,17 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 const completedText = "3";
 const plannedLessons = 2;
-const completed = 0; // TODO：0 只是 number 类型占位；用 Number(...) 转换 completedText，并把转换结果保存到 completed。
-const totalLessons = 0; // TODO：0 只是 number 类型占位；把 completed 与 plannedLessons 相加，并把和保存到 totalLessons。
+
+// 调用关系：表单文字 -> Number -> 可参与加法的数字。
+const completed = Number(completedText);
+const totalLessons = completed + plannedLessons;
 let status = "Keep learning";
-const reachedGoal = false; // TODO：false 只是 boolean 类型占位；判断 totalLessons 是否大于或等于题目给出的目标 5，并把比较结果保存到 reachedGoal。
+const reachedGoal = totalLessons >= 5;
+
+// 判断达到目标后，才更新默认状态。
 if (reachedGoal) {
   status = "Goal reached";
 }
+
+// 调用关系：totalLessons 和最终 status -> 模板字符串 -> 终端输出。
 console.log(`Total lessons: ${totalLessons}`);
 console.log(`Status: ${status}`);

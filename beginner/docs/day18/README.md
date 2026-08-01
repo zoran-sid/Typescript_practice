@@ -115,7 +115,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -134,39 +134,68 @@ flowchart TD
 
 ### 错误代码示例
 
+日志模块本来直接调用 `formatter.format(...)`，后来任务调度器要求传入一个独立回调。开发者把普通方法取出来交给调度器，调用方式从“实例点方法”变成了“直接调用函数”：
+
 ```ts
-class MessageFormatter {
+class AuditFormatter {
   constructor(private readonly prefix: string) {}
 
-  format(message: string): string {
-    return `${this.prefix} ${message}`;
+  format(entry: string): string {
+    return `${this.prefix} ${entry}`;
   }
 }
 
-const format = new MessageFormatter("[学习]").format;
-format("完成"); // ❌ 普通方法脱离实例后，this 不再指向原对象。
+const formatter = new AuditFormatter("[订单]");
+const scheduledTask = formatter.format; // ❌ 普通方法脱离实例。
+
+console.log(scheduledTask("已支付"));
 ```
+
+运行时会报错：
+
+```text
+TypeError: Cannot read properties of undefined (reading 'prefix')
+```
+
+`formatter.format("已支付")` 中，点号左边的 `formatter` 会成为 `this`。保存成 `scheduledTask` 后再直接调用，前面没有实例，普通方法里的 `this` 就是 `undefined`。这类问题常出现在事件处理器、定时任务、数组回调和第三方库的回调参数中。
 
 ### 正确写法
 
+如果这个方法本来就需要经常作为回调传递，可以写成箭头函数字段：
+
 ```ts
-class MessageFormatter {
+class AuditFormatter {
   constructor(private readonly prefix: string) {}
 
-  format = (message: string): string => {
-    return `${this.prefix} ${message}`; // ✅ 箭头函数字段捕获当前实例的 this。
+  format = (entry: string): string => { // ✅ 箭头字段保留创建它的 this。
+    return `${this.prefix} ${entry}`;
   };
 }
 
-const format = new MessageFormatter("[学习]").format;
-format("完成");
+const formatter = new AuditFormatter("[订单]");
+const scheduledTask = formatter.format;
+console.log(scheduledTask("已支付"));
 ```
+
+实际输出：
+
+```text
+[订单] 已支付
+```
+
+也可以保留普通方法，在传递时明确绑定一次：
+
+```ts
+const scheduledTask = formatter.format.bind(formatter);
+```
+
+箭头函数字段会为每个实例创建一份函数；普通原型方法配合 `bind` 则由调用处决定何时绑定。选哪一种要看方法是否经常脱离实例传递。
 
 ## 面试时怎么回答
 
 **问：`class implements` 后面只能写 `interface` 吗？**
 
-**答：**不是。只要 `type` 表示可静态检查的对象形状，类也可以实现它；`implements` 检查的是实例是否具有要求的成员，不会把方法实现自动塞进类里：
+**答：**不是。`implements` 后面需要的是能描述实例形状的类型，`interface` 和对象类型别名都可以。它只检查类实例是否满足契约，不会给类添加成员，也不会影响方法参数的类型推断：
 
 ```ts
 type Printable = { print(): string };
@@ -177,13 +206,18 @@ class Report implements Printable {
 }
 ```
 
-联合类型这类无法让一个类同时确定实现哪种形状的类型，不能直接拿来 `implements`。开发者仍要亲自写成员和业务规则。
+类仍要亲自实现 `print`。无法静态表示为单一实例形状的联合类型，也不能直接用来让类“选择实现其中一个分支”。
 
 **问：接口、抽象类和访问修饰符怎样区分？**
 
-**答：**接口适合只描述能力；抽象类除了规定抽象成员，还能带共享状态和已实现方法，并参与运行时继承。`public`、`protected`、TypeScript 的 `private` 主要帮助编译期限制访问，不等于安全边界；JavaScript 的 `#field` 才有运行时私有语义。
+**答：**接口只描述实例需要具备的结构，编译后不保留。抽象类既能声明必须由子类实现的成员，也能保存共享状态和已经实现的方法；它会生成 JavaScript，并参与运行时继承。`public`、`protected` 和 TypeScript 的 `private` 主要是类型检查阶段的可见性规则；需要 JavaScript 运行时私有字段时使用 `#field`。
 
-**容易答错或追问：**不要说抽象类只是“不能实例化的接口”，也不要以为 `implements`、`private` 会自动生成实现和数据校验。
+这些语法都不会替业务方法验证输入。例如 `consume(-5)` 是否允许，仍要在方法中写出规则。
+
+官方参考：
+
+- [TypeScript Handbook：Classes、`implements`、可见性与抽象类](https://www.typescriptlang.org/docs/handbook/2/classes.html)
+- [MDN：Private elements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements)
 
 ## 拓展思考（不要求写代码）
 

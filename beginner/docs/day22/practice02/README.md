@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day22/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day22/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day22/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题不再逐条手写测试流程。你要把三组正常案例放进测试表中循环执行，再为负金额保留一条单独的失败测试。
 
@@ -25,6 +25,79 @@ shippingCases[]
                                           └── assertEqual(actual, expected, label)
 负金额 ──> shippingFee ──> RangeError ──> assertRangeError
 每条真正通过 ──> passed + 1 ──> 最终测试数
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 shippingCases<br/>60普通、60会员、100普通"] --> B["for...of 逐项取 testCase"]
+  B --> C["调用 shippingFee(orderTotal, member)"]
+  C --> D{"orderTotal < 0？"}
+  D -- "是" --> E["throw RangeError"]
+  D -- "否" --> F{"orderTotal >= 100？"}
+  F -- "是" --> G["return 0"]
+  F -- "否" --> H{"member？"}
+  H -- "是" --> I["return 5"]
+  H -- "否" --> J["return 10"]
+  G --> K["actual"]
+  I --> K
+  J --> K
+  K --> L["assertEqual(actual, expected, label)"]
+  L --> M["通过后 passed + 1"]
+  M --> B
+  N["固定负金额 -1"] --> O["箭头回调交给 assertRangeError"]
+  O --> C
+  E --> P["确认 RangeError 后 passed + 1"]
+  P --> Q["输出：共 4 个测试"]
+  M --> Q
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type ShippingCase = {
+  label: string;
+  orderTotal: number;
+  member: boolean;
+  expected: number;
+};
+function shippingFee(orderTotal: number, member: boolean): number {
+  // TODO：负数抛错；判断满额和会员；return 运费。
+  void orderTotal;
+  void member;
+  return 0;
+}
+function assertEqual<T>(actual: T, expected: T, label: string): void {
+  // TODO：比较实际值；失败抛错，成功才执行下面的显示语句。
+  void actual;
+  void expected;
+  console.log(`通过: ${label}`);
+}
+function assertRangeError(action: () => void, label: string): void {
+  // TODO：执行 action；确认 RangeError；没抛错或错误类型不对时失败。
+  void action;
+  console.log(`通过: ${label}`);
+}
+
+const shippingCases: ShippingCase[] = [
+  { label: "普通订单运费", orderTotal: 60, member: false, expected: 10 },
+  { label: "会员订单运费", orderTotal: 60, member: true, expected: 5 },
+  { label: "满额免运费", orderTotal: 100, member: false, expected: 0 },
+];
+let passed = 0;
+for (const testCase of shippingCases) {
+  // TODO：把案例交给 shippingFee 和 assertEqual；通过后让 passed += 1。
+  void testCase;
+}
+assertRangeError(() => shippingFee(-1, false), "负金额会报错");
+// TODO：异常断言通过后让 passed += 1。
+console.log(`共 ${passed} 个测试`);
 ```
 
 ## 和 Practice 01 的区别
@@ -61,4 +134,4 @@ Practice 01 为成绩服务分别手写正常、边界、错误、异步四条�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

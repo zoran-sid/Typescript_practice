@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day17/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day17/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day17/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,80 @@ Article
    ├── Pick ──> ArticlePreview ──> preview
    └── Omit ──> PublicArticle ──> publicArticle
 派生对象 + 状态文字 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 statuses as const"] --> B["派生 Status 联合"]
+  B --> C["statusLabels<br/>satisfies Record"]
+  D["固定 original: Article"] --> E["固定 patch: ArticlePatch"]
+  D --> F["调用 updateArticle(original, patch)"]
+  E --> F
+  F --> G["spread 合并<br/>return updated"]
+  G --> H["创建 preview: ArticlePreview"]
+  G --> I["调用 toPublicArticle(updated)"]
+  I --> J["解构移除 summary"]
+  J --> K["return publicArticle"]
+  D --> L["console.log 原标题、原状态"]
+  H --> M["console.log 新标题、新状态"]
+  C --> M
+  K --> N["Object.keys<br/>console.log 公开字段"]
+  A --> O["console.log 可用状态"]
+```
+
+## 起始代码
+
+固定状态、派生类型、文章、补丁、函数签名、调用和输出已给出。你需要完成对象合并与移除字段时的解构和 `return`。
+
+```ts
+const statuses = ["draft", "published", "archived"] as const;
+type Status = (typeof statuses)[number];
+type Article = {
+  readonly id: number;
+  title: string;
+  summary: string;
+  published: boolean;
+  status: Status;
+};
+type ArticlePatch = Partial<Pick<Article, "title" | "summary" | "published" | "status">>;
+type ArticlePreview = Pick<Article, "id" | "title" | "status">;
+type PublicArticle = Omit<Article, "summary">;
+const statusLabels = {
+  draft: "草稿",
+  published: "已发布",
+  archived: "已归档",
+} satisfies Record<Status, string>;
+
+function updateArticle(article: Article, patch: ArticlePatch): Article {
+  throw new Error("TODO：用 spread 合并并 return 新 Article");
+}
+function toPublicArticle(article: Article): PublicArticle {
+  throw new Error("TODO：解构排除 summary，并 return 其余字段");
+}
+
+const original: Article = {
+  id: 1,
+  title: "旧标题",
+  summary: "内部学习记录",
+  published: false,
+  status: "draft",
+};
+const patch: ArticlePatch = {
+  title: "TypeScript 工具类型",
+  published: true,
+  status: "published",
+};
+const updated = updateArticle(original, patch);
+const preview: ArticlePreview = { id: updated.id, title: updated.title, status: updated.status };
+const publicArticle = toPublicArticle(updated);
+console.log(`原标题：${original.title}`);
+console.log(`新标题：${preview.title}`);
+console.log(`原状态：${original.status}`);
+console.log(`新状态：${preview.status}=${statusLabels[preview.status]}`);
+console.log(`公开字段：${Object.keys(publicArticle).join(",")}`);
+console.log(`可用状态：${statuses.join("、")}`);
 ```
 
 请从头编写“文章更新与公开摘要”。
@@ -88,4 +162,4 @@ Utility Type 用尖括号传类型，如 Partial<Task>；as const 与 satisfies 
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

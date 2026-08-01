@@ -1,21 +1,29 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 type ScoreFormatter = (score: number) => string;
 type Reporter = (message: string) => void;
+
 const formatScore: ScoreFormatter = (score) => {
-  // TODO：检查当前 score 是否大于等于 60；分别生成“成绩：分数（通过）”或“成绩：分数（未通过）”。
-  // 花括号函数体必须明确 return；下面的 "" 只是临时占位，完成时要替换。
-  return "";
+  // 回调收到当前分数，判断后必须 return 本轮要展示的文字。
+  const result = score >= 60 ? "通过" : "未通过";
+  return `成绩：${score}（${result}）`;
 };
-function greetStudent(name: string, title?: string, punctuation = "!"): string {
-  // TODO：title 缺席时改用“同学”，再按“你好、name、称呼、punctuation”的顺序组成问候语。
-  // 下面的 "" 只是临时占位；punctuation 已由参数默认值处理，不要在函数里写死。
-  return "";
+
+function greetStudent(
+  name: string,
+  title?: string,
+  punctuation = "!",
+): string {
+  const displayTitle = title ?? "同学";
+  return `你好，${name}${displayTitle}${punctuation}`;
 }
+
 function sumScores(...scores: number[]): number {
-  // TODO：遍历 rest 参数收集到的 scores 数组，把每个分数累加后返回总分。
-  // 下面的 0 是初始/空数组占位；有元素时必须返回真实累计结果。
-  return 0;
+  let total = 0;
+  for (const score of scores) {
+    total += score;
+  }
+  return total;
 }
+
 function reportScores(
   scores: readonly number[],
   formatter: ScoreFormatter,
@@ -23,9 +31,25 @@ function reportScores(
 ): number {
   let passedCount = 0;
   for (const score of scores) {
-    // TODO：把当前 score 交给 formatter，将它返回的文字交给 reporter；score >= 60 时让 passedCount 增加 1。
+    // 调用关系：score -> formatter(score) -> message -> reporter(message)。
+    const message = formatter(score);
+    reporter(message);
+    if (score >= 60) {
+      passedCount += 1;
+    }
   }
   return passedCount;
 }
+
 const scores = [55, 80, 100] as const;
-// TODO：输出 greetStudent 的问候；以 console.log 作为 Reporter 调用 reportScores；再输出 sumScores 的总分和 reportScores 返回的及格数。
+
+// 调用关系：固定姓名 -> greetStudent(...) -> greeting -> console.log。
+const greeting = greetStudent("Ada");
+console.log(greeting);
+
+// 调用关系：scores + formatScore + console.log -> reportScores -> passedCount。
+const passedCount = reportScores(scores, formatScore, console.log);
+// 调用关系：scores 展开为三个参数 -> sumScores -> totalScore。
+const totalScore = sumScores(...scores);
+console.log(`总分：${totalScore}`);
+console.log(`通过数量：${passedCount}`);

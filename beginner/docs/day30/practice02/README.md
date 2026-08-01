@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day30/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day30/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day30/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题专门验证声明文件和模块增强的运行时边界。辅助文件提供一个旧计分模块和一个没有 `label()` 方法的旧用户类；你要先观察真实原型，再同时补类型与实现。
 
@@ -27,6 +27,55 @@ legacy-user.js ──> LegacyUser.prototype
                       └── 模块增强（只补类型）
                               + 原型赋值（补运行时实现）
                                       └── user.label() ──> 最终文字
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["legacy-score 模块"] --> B["import * as legacyScore"]
+  B --> C["调用 total([10,20,30])"]
+  B --> D["读取 version"]
+  C --> E["console.log Module total"]
+  D --> F["console.log Module version"]
+  G["LegacyUser.prototype"] --> H["补丁前 typeof label"]
+  H --> I["beforePatch='undefined'"]
+  I --> J["console.log Before patch"]
+  K["declare module 增强"] --> L["编译器知道 label(): string"]
+  M["普通 function 赋给 prototype.label"] --> N["运行时安装真实方法"]
+  L --> O["new LegacyUser('Ada')"]
+  N --> O
+  O --> P["调用 user.label()"]
+  P --> Q["函数读取 this.name"]
+  Q --> R["return 'Ada (legacy)'"]
+  R --> S["console.log User label"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+import * as legacyScore from "../legacy-score.js";
+import { LegacyUser } from "../legacy-user.js";
+declare module "../legacy-user.js" {
+  interface LegacyUser {
+    label(): string;
+  }
+}
+const beforePatch = typeof LegacyUser.prototype.label;
+LegacyUser.prototype.label = function (): string {
+  // TODO：读取 this.name 并 return 标签。
+  return "";
+};
+const user = new LegacyUser("Ada");
+console.log(`Module total: ${legacyScore.total([10, 20, 30])}`);
+console.log(`Module version: ${legacyScore.version}`);
+console.log(`Before patch: ${beforePatch}`);
+console.log(`User label: ${user.label()}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -64,4 +113,4 @@ User label: Ada (legacy)
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

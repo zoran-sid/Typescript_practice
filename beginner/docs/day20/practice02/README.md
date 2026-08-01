@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day20/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day20/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day20/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -35,6 +35,72 @@ rawBatches
                                 └── false ──> rejectedCount + 1
 成功批次 ──> 渠道列表 + 丢弃数量
 失败批次 ──> 批次错误
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 rawBatches<br/>混合批次 + 损坏 JSON"] --> B["for...of 取出 raw"]
+  B --> C["调用 parseBatch(raw)"]
+  C --> D["try: JSON.parse(raw)"]
+  D -->|"语法失败"| E["return JSON 格式错误"]
+  D -->|"成功"| F["value: unknown"]
+  F --> G{"Array.isArray(value)？"}
+  G -- "否" --> H["return 批次必须是数组"]
+  G -- "是" --> I["for...of 取出 item"]
+  I --> J["调用 isNotification(item)"]
+  J --> K{"email/address 或 push/token 合法？"}
+  K -- "是" --> L["valid.push(item)"]
+  K -- "否" --> M["rejectedCount += 1"]
+  L --> I
+  M --> I
+  I -->|"循环结束"| N["return ok:true BatchSummary"]
+  E --> O["result"]
+  H --> O
+  N --> O
+  O --> P{"result.ok？"}
+  P -- "true" --> Q["map 回调读取 kind<br/>console.log 可发送和丢弃数"]
+  P -- "false" --> R["console.log 批次错误"]
+```
+
+## 起始代码
+
+三份类型、守卫签名、固定批次、调用和全部输出位置都已给出。你需要完成对象判断、通知分支、分类循环和各个 `return`。
+
+```ts
+type Notification =
+  | { kind: "email"; address: string }
+  | { kind: "push"; token: string };
+type BatchSummary = { valid: Notification[]; rejectedCount: number };
+type ParseResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  throw new Error("TODO：判断普通记录对象并 return boolean");
+}
+function isNotification(value: unknown): value is Notification {
+  throw new Error("TODO：根据 kind 判断成员字段并 return boolean");
+}
+function parseBatch(raw: string): ParseResult<BatchSummary> {
+  throw new Error("TODO：解析、检查数组、循环分类并 return Result");
+}
+
+const rawBatches = [
+  '[{"kind":"email","address":"ada@example.com"},{"kind":"sms","phone":"10086"},{"kind":"push","token":"device-1"},{"kind":"email","address":42}]',
+  '[{"kind":',
+];
+for (const raw of rawBatches) {
+  const result = parseBatch(raw);
+  if (result.ok) {
+    const kinds = result.value.valid.map((item) => item.kind);
+    console.log(`可发送：${kinds.join(",")}`);
+    console.log(`丢弃数量：${result.value.rejectedCount}`);
+  } else {
+    console.log(`批次错误：${result.error}`);
+  }
+}
 ```
 
 ## 要完成的功能
@@ -112,4 +178,4 @@ function parseBatch(
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

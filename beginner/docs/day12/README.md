@@ -119,7 +119,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -138,46 +138,75 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const double = (value: number): number => {
-  value * 2; // ❌ 使用花括号后不会自动返回，函数实际得到 undefined。
-};
+电商页面要把价格文本转成“分”，再交给接口。最初回调只有一行，开发者写的是自动返回；后来为了排查数据加了一行日志和花括号，却忘了补 `return`：
 
-function greet(title?: string): string {
-  return title.toUpperCase(); // ❌ 可选参数可能是 undefined。
-}
+```ts
+const priceTexts = ["19.90", "5.00"];
+
+const priceCents = priceTexts.map((text) => {
+  const cents = Math.round(Number(text) * 100);
+  console.log(`准备提交：${cents}`);
+  cents; // ❌ 这只是计算表达式，没有把结果交回 map。
+});
+
+console.log(priceCents);
+console.log(JSON.stringify(priceCents));
 ```
+
+实际输出：
+
+```text
+准备提交：1990
+准备提交：500
+[ undefined, undefined ]
+[null,null]
+```
+
+`map` 会为每个回调返回值保留一个位置。没有 `return` 时，返回值是 `undefined`；数组再被 JSON 序列化时，这些位置会变成 `null`。如果写成 `const priceCents: number[] = ...`，TypeScript 会直接提示 `void[]` 不能赋给 `number[]`。
 
 ### 正确写法
 
 ```ts
-const double = (value: number): number => {
-  return value * 2; // ✅ 花括号函数体要明确 return。
-};
+const priceCents = priceTexts.map((text): number => {
+  const cents = Math.round(Number(text) * 100);
+  console.log(`准备提交：${cents}`);
+  return cents; // ✅ return 把本轮结果交给 map。
+});
 
-function greet(title?: string): string {
-  return (title ?? "同学").toUpperCase(); // ✅ 先提供默认值，再调用字符串方法。
-}
+console.log(priceCents);
 ```
+
+实际输出：
+
+```text
+准备提交：1990
+准备提交：500
+[ 1990, 500 ]
+```
+
+这里有两层返回关系：回调的 `return cents` 把一个数字交给 `map`；`map` 再把所有数字组成新数组交给 `priceCents`。
 
 ## 面试时怎么回答
 
 **问：回调类型主要解决什么问题？**
 
-**答：**它把固定流程和可替换规则拆开。例如遍历成绩、决定何时调用函数属于报告流程，而“一个分数显示成什么文字”交给 `Formatter`。TypeScript 负责检查传入函数的参数和返回值能否接上，调用者仍要决定回调结果代表什么、是否有副作用、错误由谁处理。层数太多时，回调也会让数据流难追踪，所以不是所有两行代码都要抽成回调。
+**答：**回调类型描述“外层函数会怎样调用传进来的函数”。例如 `(value: number) => string` 表示外层会给回调一个数字，并依赖它返回字符串。这样固定的遍历流程可以接收不同格式化规则，同时 TypeScript 会检查参数和返回值是否接得上。回调是否允许副作用、错误由谁处理，仍然要在 API 约定中说明。
 
 **问：`void` 和 `undefined` 是一回事吗？**
 
-**答：**不是。回调类型里的 `void` 重点是“调用方不使用返回值”，不要求实现函数真的只能产生 `undefined`。例如下面的函数实际会算出长度，但通过 `void` 类型调用时，类型契约不允许调用方依赖这个数字：
+**答：**不是。`undefined` 是一个真实值和类型；函数类型中的 `void` 表示调用方不使用返回值。TypeScript 允许一个会返回值的函数赋给 `() => void`，但通过这个 `void` 类型调用后，调用者不能依赖那个返回值：
 
 ```ts
 const report: (text: string) => void = (text) => text.length;
 const result = report("TS"); // result 的类型是 void
 ```
 
-`undefined` 则是一种真实的值和类型。
+这条规则方便把已有函数用作事件处理器或 `forEach` 回调。需要计算结果的 `map` 回调不能写成 `void`；花括号函数体也必须明确 `return`。
 
-**容易答错或追问：**不要说 `void` 表示函数什么都不做，或等同“运行时一定返回 undefined”。箭头函数用了花括号后仍需明确 `return`，否则需要结果的回调会真的交回 `undefined`。
+官方参考：
+
+- [TypeScript Handbook：Function Type Expressions 与 `void`](https://www.typescriptlang.org/docs/handbook/2/functions.html)
+- [MDN：Arrow function expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)
 
 ## 拓展思考（不要求写代码）
 

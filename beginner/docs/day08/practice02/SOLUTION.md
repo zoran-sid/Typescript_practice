@@ -1,16 +1,13 @@
-# Day 08 · Practice 02 解题结构提示
+# Practice 02 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day08/practice02/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。`solution.ts` 中的查找、安全电话访问及 0/空字符串处理仍是 `TODO`。
+[打开 solution.ts](../../../day08/practice02/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-联系人数组允许电话缺失，`find` 又让整个联系人可能缺失。因此姓名和电话都应从可选链开始，随后由 `??` 产生显示值。分数与昵称是独立的两组反例，用于验证 `??` 不会错误替换 0 和空字符串。
+## 直接调用逻辑
 
-## 自检
+`contacts` → `find` → `selectedContact` → 安全读取姓名与可选电话；`score = 0`、空昵称 → `??` → 保留两个有效值 → 四次 `console.log`。
 
-- 联系人类型中的 `phone` 带 `?`。
-- 不直接访问 `selectedContact.phone`。
-- 后备值只处理 `null` / `undefined`。
-- 昵称输出能明确看见空字符串仍被保留。
+这一题刻意使用“找到联系人但电话缺失”的数据，方便区分对象不存在与某个可选字段不存在。

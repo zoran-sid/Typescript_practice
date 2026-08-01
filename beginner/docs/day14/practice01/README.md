@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day14/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day14/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day14/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -24,6 +24,53 @@
 工具模块 ── import ──────> 格式化/统计函数
                                   │
 student + scores ──> 导入函数 ──> 组合结果 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["course-data.ts<br/>courseTitle + lessonCount"] --> B["普通 import 进入入口"]
+  C["student-types.ts<br/>Student 类型"] --> D["import type<br/>只参与类型检查"]
+  E["score-tools.ts<br/>formatScore + passingScore"] --> F["普通 import 进入入口"]
+  G["student-tools.ts<br/>summarizeStudent"] --> H["普通 import 进入入口"]
+  D --> I["固定 student: Student"]
+  B --> J["console.log 课程概况"]
+  I --> K["调用 summarizeStudent(student)"]
+  H --> K
+  K --> L["return 学生摘要<br/>console.log 输出"]
+  M["固定 scores = 55, 80"] --> N["for...of 取出 score"]
+  F --> O["调用 formatScore(score)"]
+  N --> O
+  O --> P["return scoreText<br/>console.log 输出"]
+  F --> Q["console.log 及格线"]
+```
+
+## 起始代码
+
+模块路径、导入、固定学生、分数、循环、函数调用和输出位置都已列出。复制到 `practice.ts` 后，可以先沿变量名核对每个模块值进入了哪一行，再遮住循环部分自己重写。
+
+```ts
+import { courseTitle, lessonCount } from "../course-data.js";
+import formatScore, { passingScore } from "../score-tools.js";
+import { summarizeStudent } from "../student-tools.js";
+import type { Student } from "../student-types.js";
+
+const student: Student = {
+  name: "Ada",
+  completed: 12,
+  track: "beginner",
+};
+const scores: readonly number[] = [55, 80];
+
+// TODO：先遮住下面的循环体，独立重写一遍后再对照。
+console.log(`课程：${courseTitle}（${lessonCount} 课）`);
+console.log(summarizeStudent(student));
+for (const score of scores) {
+  const scoreText = formatScore(score);
+  console.log(scoreText);
+}
+console.log(`及格线：${passingScore}`);
 ```
 
 请把 `practice.ts` 当作一个全新的入口文件，组合已经准备好的四个模块：
@@ -70,4 +117,4 @@ Ada：完成 12 课（beginner）
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

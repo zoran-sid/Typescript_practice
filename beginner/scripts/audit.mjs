@@ -8,6 +8,7 @@ const beginnerRoot = fileURLToPath(new URL("..", import.meta.url));
 const workspaceRoot = path.dirname(beginnerRoot);
 const docsRoot = path.join(beginnerRoot, "docs");
 const errors = [];
+const starterSources = [];
 const allowAnswers = process.argv.includes("--allow-answers");
 const daysWithPreviewSection = new Set([
   "day00",
@@ -124,6 +125,9 @@ for (const day of expectedDays) {
 
   const dayReadmePath = path.join(docDayDir, "README.md");
   const dayReadme = readFileSync(dayReadmePath, "utf8");
+  if (/不提供完整答案|只提供带 TODO 的结构提示/.test(dayReadme)) {
+    errors.push(`docs/${day}/README.md 仍在描述旧的 TODO 答案规则。`);
+  }
   const exampleFlow = readSection(dayReadme, "## Example 代码流程图");
   const flowNodeCount =
     exampleFlow.match(/\b[A-Z][A-Z0-9]*\s*(?:\[|\{)/g)?.length ?? 0;
@@ -155,13 +159,19 @@ for (const day of expectedDays) {
     );
   }
   const interviewAnswer = readSection(dayReadme, "## 面试时怎么回答").trim();
+  const hasOfficialInterviewSource =
+    interviewAnswer.includes("官方参考") &&
+    /https:\/\/(?:www\.)?(?:typescriptlang\.org|developer\.mozilla\.org|nodejs\.org|tc39\.es)\//.test(
+      interviewAnswer,
+    );
   if (
     countText(dayReadme, "## 面试时怎么回答") !== 1 ||
     interviewAnswer.length < 180 ||
-    !interviewAnswer.includes("**问：")
+    !interviewAnswer.includes("**问：") ||
+    !hasOfficialInterviewSource
   ) {
     errors.push(
-      `docs/${day}/README.md 必须有且只有一个结合当天知识、包含具体问答与边界的面试章节。`,
+      `docs/${day}/README.md 必须有且只有一个结合当天知识、包含可直接口述的回答、边界和官方参考链接的面试章节。`,
     );
   }
   const officialReading = readSection(
@@ -202,12 +212,31 @@ for (const day of expectedDays) {
 
   const badExample = readSection(dayReadme, "### 错误代码示例");
   const goodExample = readSection(dayReadme, "### 正确写法");
+  const badExampleIndex = dayReadme.indexOf("### 错误代码示例");
+  const errorBlockStart = dayReadme.lastIndexOf("\n## ", badExampleIndex);
+  const nextSectionIndex = dayReadme.indexOf("\n## ", badExampleIndex);
+  const errorTeachingBlock = dayReadme.slice(
+    errorBlockStart >= 0 ? errorBlockStart : Math.max(0, badExampleIndex - 600),
+    nextSectionIndex >= 0 ? nextSectionIndex : dayReadme.length,
+  );
+  const hasRealErrorContext =
+    badExample.length >= 200 &&
+    errorTeachingBlock.length >= 650 &&
+    /(项目|业务|开发|代码库|接口|页面|脚本|测试|模块|配置|数据|用户|团队)/.test(
+      errorTeachingBlock,
+    ) &&
+    /(报错|错误|失败|输出|结果|后果|运行|编译|检查)/.test(
+      errorTeachingBlock,
+    );
   if (
     countText(dayReadme, "### 错误代码示例") !== 1 ||
     !badExample.includes("```ts") ||
-    !badExample.includes("// ❌")
+    !badExample.includes("// ❌") ||
+    !hasRealErrorContext
   ) {
-    errors.push(`docs/${day}/README.md 必须有且只有一个带 // ❌ 注释的 TypeScript 错误代码示例。`);
+    errors.push(
+      `docs/${day}/README.md 必须有且只有一个带项目背景、具体后果和 // ❌ 注释的现实 TypeScript 错误示例。`,
+    );
   }
   if (
     countText(dayReadme, "### 正确写法") !== 1 ||
@@ -254,14 +283,66 @@ for (const day of expectedDays) {
     const practiceReadmePath = path.join(docPracticeDir, "README.md");
     if (existsSync(practiceReadmePath)) {
       const practiceReadme = readFileSync(practiceReadmePath, "utf8");
+      if (
+        /不提供完整答案|结构提示代码|TODO (?:解题结构|代码骨架)|只提示步骤/.test(
+          practiceReadme,
+        )
+      ) {
+        errors.push(
+          `docs/${day}/${id}/README.md 仍在描述旧的结构提示规则，应改为完整参考答案。`,
+        );
+      }
       const dataFlow = readSection(practiceReadme, "## 数据流");
       if (
         countText(practiceReadme, "## 数据流") !== 1 ||
         !dataFlow.includes("```text") ||
-        !dataFlow.includes("──>") ||
-        practiceReadme.includes("```mermaid")
+        !dataFlow.includes("──>")
       ) {
         errors.push(`docs/${day}/${id}/README.md 必须有且只有一个变量关系清楚的数据流文本块。`);
+      }
+      const practiceFlow = readSection(practiceReadme, "## 代码流程图");
+      const practiceFlowNodeCount =
+        practiceFlow.match(/\b[A-Z][A-Z0-9]*\s*(?:\[|\{)/g)?.length ?? 0;
+      if (
+        countText(practiceReadme, "## 代码流程图") !== 1 ||
+        countText(practiceReadme, "```mermaid") !== 1 ||
+        !practiceFlow.includes("flowchart TD") ||
+        practiceFlowNodeCount < 4 ||
+        !/(console\.log|输出)/.test(practiceFlow)
+      ) {
+        errors.push(
+          `docs/${day}/${id}/README.md 必须有且只有一个覆盖固定数据、调用、核心逻辑、返回值和输出的 Mermaid 代码流程图。`,
+        );
+      }
+      const starterCode = readSection(practiceReadme, "## 起始代码");
+      const starterSource = readFencedCode(starterCode, "ts");
+      const starterParsed = ts.createSourceFile(
+        `${day}/${id}/starter.ts`,
+        starterSource,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TS,
+      );
+      starterSources.push({
+        fileName: path.join(codePracticeDir, "starter-audit.ts"),
+        source: starterSource,
+      });
+      if (
+        countText(practiceReadme, "## 起始代码") !== 1 ||
+        !starterCode.includes("```ts") ||
+        (day !== "day00" && !starterCode.includes("TODO")) ||
+        !starterCode.includes("console.log") ||
+        !/(const|let|function|class|type|interface)\b/.test(starterCode) ||
+        /沿用上方|TODO[^\r\n]*(?:调用|输出)/.test(starterCode) ||
+        /^\s*\/\/\s*(?:const\s+\w+\s*=\s*\w+\(|console\.log\()/m.test(
+          starterSource,
+        ) ||
+        starterSource.length === 0 ||
+        starterParsed.parseDiagnostics.length > 0
+      ) {
+        errors.push(
+          `docs/${day}/${id}/README.md 的起始代码必须是语法完整的 TypeScript，预先给出固定声明与输出位置，并把待练习逻辑标成 TODO。`,
+        );
       }
       const background = readSection(practiceReadme, "## 场景背景").trim();
       if (countText(practiceReadme, "## 场景背景") !== 1 || background.length < 30) {
@@ -325,7 +406,7 @@ for (const day of expectedDays) {
         errors.push(`docs/${day}/${id}/README.md 缺少可点击的 practice.ts 作答链接。`);
       }
       if (!practiceReadme.includes(expectedSolutionLink)) {
-        errors.push(`docs/${day}/${id}/README.md 缺少可点击的 solution.ts 结构链接。`);
+        errors.push(`docs/${day}/${id}/README.md 缺少可点击的 solution.ts 完整答案链接。`);
       }
       if (!practiceReadme.includes("[SOLUTION.md](./SOLUTION.md)")) {
         errors.push(`docs/${day}/${id}/README.md 缺少可点击的方案说明链接。`);
@@ -334,17 +415,14 @@ for (const day of expectedDays) {
 
     const solutionPath = path.join(codePracticeDir, "solution.ts");
     if (existsSync(solutionPath)) {
-      const scaffold = readFileSync(solutionPath, "utf8");
-      if (!/\bTODO\b/.test(scaffold)) {
-        errors.push(`${day}/${id}/solution.ts 必须保留 TODO，不能提供完整答案。`);
-      }
+      const solution = readFileSync(solutionPath, "utf8");
       if (
-        !scaffold.includes("TODO") ||
-        !scaffold.includes("占位值") ||
-        !scaffold.includes("完成时要替换或删除")
+        /\bTODO\b/.test(solution) ||
+        /占位值|完成时要替换或删除/.test(solution) ||
+        !solution.includes("// 调用关系：")
       ) {
         errors.push(
-          `${day}/${id}/solution.ts 必须说明 TODO 旁的类型占位值不是答案，完成时要替换或删除。`,
+          `${day}/${id}/solution.ts 必须是无 TODO 的完整答案，并用“调用关系”注释解释数据传递。`,
         );
       }
     }
@@ -352,8 +430,14 @@ for (const day of expectedDays) {
     const guidePath = path.join(docPracticeDir, "SOLUTION.md");
     if (existsSync(guidePath)) {
       const guide = readFileSync(guidePath, "utf8");
-      if (!guide.includes("本文件不提供完整答案")) {
-        errors.push(`docs/${day}/${id}/SOLUTION.md 必须明确说明不提供完整答案。`);
+      if (
+        !guide.includes("本文件提供完整参考答案") ||
+        guide.includes("本文件不提供完整答案") ||
+        countText(guide, "## 直接调用逻辑") !== 1
+      ) {
+        errors.push(
+          `docs/${day}/${id}/SOLUTION.md 必须说明它提供完整参考答案，并单独解释直接调用逻辑。`,
+        );
       }
       if (!guide.includes("[返回题目](./README.md)")) {
         errors.push(`docs/${day}/${id}/SOLUTION.md 缺少返回题目的链接。`);
@@ -450,13 +534,17 @@ for (const day of expectedDays) {
   }
 }
 
+for (const diagnostic of checkStarterSources(starterSources)) {
+  errors.push(diagnostic);
+}
+
 if (errors.length) {
   console.error("课程结构审计未通过：");
   errors.forEach((error) => console.error(`  - ${error}`));
   process.exitCode = 1;
 } else {
   console.log(
-    `PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs，且均有设计原因、Example 前置写法说明、详细代码流程图、官方扩展索引、面试问答、场景背景、关联数据流、输出标点说明、迁移自检、${allowAnswers ? "可保留作答的练习入口" : "空白作答入口"}、明确的 TODO 占位说明和匹配检查。`,
+    `PASS：Day00–32 的 33 份课程文档与 69 道独立练习已集中到 docs；每题均有场景背景、变量数据流、代码流程图、带 TODO 的起始代码、完整参考答案、直接调用逻辑、输出标点说明、迁移自检和匹配检查，${allowAnswers ? "并允许保留已有 practice.ts 作答" : "且 practice.ts 保持初始入口"}。`,
   );
 }
 
@@ -488,6 +576,91 @@ function readSection(text, heading) {
   const headingLevel = heading.match(/^#+/)?.[0].length ?? 2;
   const next = rest.search(new RegExp(`\\n#{1,${headingLevel}} `));
   return next < 0 ? rest : rest.slice(0, next);
+}
+
+function readFencedCode(section, language) {
+  const pattern = new RegExp(
+    "```" + language + "\\s*\\r?\\n([\\s\\S]*?)\\r?\\n```",
+  );
+  return pattern.exec(section)?.[1] ?? "";
+}
+
+function checkStarterSources(sources) {
+  const options = {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    moduleDetection: ts.ModuleDetectionKind.Force,
+    lib: ["lib.es2022.d.ts", "lib.dom.d.ts", "lib.esnext.decorators.d.ts"],
+    strict: true,
+    noEmit: true,
+    skipLibCheck: true,
+    allowJs: true,
+    checkJs: false,
+  };
+  const normalize = (fileName) => path.resolve(fileName).toLowerCase();
+  const virtualFiles = new Map(
+    sources.map(({ fileName, source }) => [normalize(fileName), source]),
+  );
+  const host = ts.createCompilerHost(options);
+  const originalFileExists = host.fileExists.bind(host);
+  const originalReadFile = host.readFile.bind(host);
+  const originalGetSourceFile = host.getSourceFile.bind(host);
+  const getVirtualSource = (fileName) => virtualFiles.get(normalize(fileName));
+
+  host.fileExists = (fileName) =>
+    getVirtualSource(fileName) !== undefined || originalFileExists(fileName);
+  host.readFile = (fileName) =>
+    getVirtualSource(fileName) ?? originalReadFile(fileName);
+  host.getSourceFile = (
+    fileName,
+    languageVersion,
+    onError,
+    shouldCreateNewSourceFile,
+  ) => {
+    const source = getVirtualSource(fileName);
+    if (source === undefined) {
+      return originalGetSourceFile(
+        fileName,
+        languageVersion,
+        onError,
+        shouldCreateNewSourceFile,
+      );
+    }
+    return ts.createSourceFile(
+      fileName,
+      source,
+      languageVersion,
+      true,
+      ts.ScriptKind.TS,
+    );
+  };
+
+  const program = ts.createProgram(
+    sources.map(({ fileName }) => fileName),
+    options,
+    host,
+  );
+  return ts
+    .getPreEmitDiagnostics(program)
+    .filter(
+      (diagnostic) =>
+        diagnostic.category === ts.DiagnosticCategory.Error &&
+        diagnostic.file &&
+        getVirtualSource(diagnostic.file.fileName) !== undefined,
+    )
+    .map((diagnostic) => {
+      const sourceFile = diagnostic.file;
+      const position = sourceFile.getLineAndCharacterOfPosition(
+        diagnostic.start ?? 0,
+      );
+      const relativePath = path.relative(beginnerRoot, sourceFile.fileName);
+      const message = ts.flattenDiagnosticMessageText(
+        diagnostic.messageText,
+        " ",
+      );
+      return `${relativePath}:${position.line + 1}:${position.character + 1} 的起始代码无法通过严格类型检查：${message}`;
+    });
 }
 
 function isRecord(value) {

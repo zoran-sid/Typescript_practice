@@ -218,7 +218,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -233,65 +233,82 @@ flowchart TD
 
 ### 错误代码示例
 
+假设客服接口返回 JSON。团队期望其中有 `email`，但旧数据可能只有电话号码。开发者用 `as EmailContact` 消除了编辑器报错，没有检查真实对象：
+
 ```ts
-function formatId(id: string | number): string {
-  if (typeof id === "String") {
-    return id.toUpperCase();
-    // ❌ typeof 不会返回 "String"，这里也无法把 id 收窄为 string。
-  }
-
-  return `#${id}`;
-}
-
 interface EmailContact {
   email: string;
 }
 
-function printEmail(externalValue: unknown): void {
+function readEmail(externalValue: unknown): string {
   const contact = externalValue as EmailContact;
-  console.log(contact.email.toLowerCase());
-  // ❌ as 没有检查外部值；缺少 email 时运行会出错。
+  // ❌ as 只改变编译器的看法，没有验证 email。
+  return contact.email.toLowerCase();
 }
+
+const apiPayload: unknown = {
+  phone: "13800000000",
+};
+
+console.log(readEmail(apiPayload));
 ```
+
+代码能通过 TypeScript 检查，但运行时会在 `toLowerCase()` 处抛出错误，因为 `contact.email` 实际是 `undefined`。`as EmailContact` 没有增加 `email` 属性，也没有生成任何校验代码。只要接口出现旧记录、空对象或 `null`，这个断言就可能把外部数据问题变成页面崩溃。
 
 ### 正确写法
 
 ```ts
-function formatId(id: string | number): string {
-  if (typeof id === "string") {
-    return id.toUpperCase(); // ✅ typeof 返回小写 "string"。
-  }
-
-  return `#${id}`;
-}
-
-function printEmail(externalValue: unknown): void {
+function readEmail(externalValue: unknown): string {
   if (
     typeof externalValue === "object" &&
     externalValue !== null &&
     "email" in externalValue &&
     typeof externalValue.email === "string"
   ) {
-    console.log(externalValue.email.toLowerCase());
-    // ✅ 运行时逐步检查后，email 才被收窄为 string。
+    return externalValue.email.toLowerCase();
+    // ✅ 经过运行时检查后，email 才能按 string 使用。
   }
+
+  return "No email";
 }
+
+const apiPayload: unknown = {
+  phone: "13800000000",
+};
+
+console.log(readEmail(apiPayload));
 ```
+
+实际输出：
+
+```text
+No email
+```
+
+检查顺序对应四个真实风险：先确认是对象，再排除 `null`，再确认属性存在，最后确认属性值确实是字符串。每个条件既在运行时验证数据，也让 TypeScript 在成功分支中继续缩小类型；失败路线则返回明确结果。
 
 ## 面试时怎么回答
 
 **问：`any`、`unknown`、联合类型和类型断言分别适合什么场景？**
 
-`any` 相当于暂时退出类型检查，几乎什么操作都能写，因此错误也会继续向后传播；`unknown` 表示“现在还不知道”，使用前必须通过 `typeof`、`Array.isArray` 或自定义校验收窄。`Array.isArray` 只能确认容器是数组，元素类型仍要继续检查。联合类型则表示一组已知可能，例如 `string | number`，分支判断后才能使用某一种类型独有的方法。外部输入通常先用 `unknown` 接住，再验证，比直接写 `any` 更安全。
+可以这样回答：
 
-类型断言不是第四种校验方式。假设 `value: unknown` 在运行时是字符串 `"42"`，`value as number` 不会让它变成数字；只有检查或转换才能改变后续行为。收窄的价值正是把运行时已经确认的事实告诉 TypeScript。面试时可以用一句边界收尾：类型系统能检查你写出的契约，但不能凭空证明网络响应符合契约。
+`any` 会关闭这部分值的类型检查，几乎任何操作都能继续写，错误也容易向后传播。`unknown` 表示值目前不确定，使用前必须通过 `typeof`、`Array.isArray` 或其他运行时检查收窄。联合类型用于列出已经知道的几种可能，例如 `string | number`；收窄后才能使用某个成员独有的方法。外部输入通常先按 `unknown` 对待，再逐项验证。
+
+类型断言不是校验方式。`value as number` 不会把运行时的字符串变成数字，也不会检查接口对象是否真的拥有某个字段。收窄的价值是用运行时证据证明当前值属于哪种类型，再把这个事实交给 TypeScript。类型系统能检查代码中的契约，不能凭空证明网络响应符合契约。
+
+官方参考：
+
+- [TypeScript：Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+- [TypeScript：Everyday Types 中的联合类型与类型断言](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types)
+- [TypeScript：More on Functions 中的 `unknown`](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)
 
 ## 拓展思考（不要求写代码）
 
 如果外部值是 `null`、数字或字符串，直接执行 `"email" in value` 也可能报错。应先用 `value !== null && typeof value === "object"` 确认它是非空对象，再检查 `"email" in value`。这两步分别排除了什么风险？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，逐个指出四个函数使用的收窄方法。

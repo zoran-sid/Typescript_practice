@@ -1,40 +1,13 @@
-# Day 10 · Practice 02 解题结构提示
+# Practice 02 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day10/practice02/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。这里只给收窄、规范化和策略层的骨架；三个 `false` 都有各自含义。
+[打开 solution.ts](../../../day10/practice02/solution.ts)
 
-## 第一层：把输入统一成布尔值
+本文件提供完整参考答案。
 
-`normalizeToggle` 的承诺是：不管收到哪种合法格式，调用处最终只会拿到 `boolean`。
+## 直接调用逻辑
 
-```text
-boolean | "on" | "off" ──> normalizeToggle ──> boolean
-```
+环境与开关输入 → `describeDebug` → 内部调用 `normalizeToggle(input)` → return 统一的 boolean 到 `requested` → 与“不是生产环境”共同计算 `canEnable` → 选择 `status` → return 最终文字 → `console.log`。
 
-`typeof` 分支成立时，输入已经是布尔值，不需要再猜字符串内容。另一条路径中的输入只可能是 `"on"` 或 `"off"`，比较一次即可得到布尔结果。
-
-## 第二层：把请求交给环境策略
-
-规范结果 `requested` 只表示“输入请求开启”，并不表示最终一定允许。`canEnable` 还要同时检查环境。这样，输入格式的规则与生产安全规则不会揉在同一个长条件里。
-
-## TODO 应怎样推进
-
-1. 完成布尔分支的 `booleanResult`。这里的 `false` 只是占位；最终应反映本次传入值。
-2. 完成字符串分支的 `textResult`，让比较表达式直接产生布尔值。
-3. 在 `describeDebug` 中组合请求结果和环境限制。
-4. 只在确实允许时把默认状态改成 `"enabled"`。
-
-## 常见错误示例
-
-```ts
-return Boolean(input);
-```
-
-非空字符串 `"off"` 也会被 `Boolean(...)` 转成 `true`，与配置语义相反。这里需要解释具体字符串，而不是只判断它是否为空。
-
-```ts
-const canEnable = requested;
-```
-
-这漏掉了生产环境限制。规范化解决的是输入格式问题，环境策略仍需单独执行。
+规范化函数只处理输入格式，环境规则只处理是否允许开启，两层职责不会混在一起。

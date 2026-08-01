@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day11/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day11/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day11/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -41,6 +41,64 @@ tasks: StudyTask[]
 
 函数返回的字符串 ──> console.log 输出本条任务
                        └── 回到 for...of 处理下一项
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定数据 tasks<br/>5 个 StudyTask"] --> B["for...of 取出当前 task"]
+  B --> C["调用 describeTask(task)"]
+  C --> D{"switch 判断 task.status"}
+  D -- "waiting" --> E["读取 title<br/>return 待开始文字"]
+  D -- "studying" --> F["读取 title、minutes<br/>return 学习中文字"]
+  D -- "completed" --> G{"score 是 undefined 吗？"}
+  G -- "是" --> H["使用 待评分"]
+  G -- "否" --> I["使用 score + 分"]
+  H --> J["return 已完成文字"]
+  I --> J
+  D -- "failed" --> K["读取 title、reason<br/>return 失败文字"]
+  D -- "遗漏的新状态" --> L["调用 assertNever(task)<br/>抛出错误"]
+  E --> M["description 接住返回字符串"]
+  F --> M
+  J --> M
+  K --> M
+  M --> N["console.log(description)"]
+  N --> B
+```
+
+## 起始代码
+
+固定类型、数据、函数签名、循环、调用和输出位置已经给出。你需要完成 `switch` 与各分支的 `return`；循环会自动把函数返回值送到 `console.log`。
+
+```ts
+type StudyTask =
+  | { status: "waiting"; title: string }
+  | { status: "studying"; title: string; minutes: number }
+  | { status: "completed"; title: string; score?: number }
+  | { status: "failed"; title: string; reason: string };
+
+function assertNever(value: never): never {
+  throw new Error("未处理的任务状态：" + JSON.stringify(value));
+}
+
+function describeTask(task: StudyTask): string {
+  throw new Error("TODO：判断 task.status；每个分支根据当前字段 return 对应文字");
+}
+
+const tasks: StudyTask[] = [
+  { status: "waiting", title: "联合类型" },
+  { status: "studying", title: "函数", minutes: 45 },
+  { status: "completed", title: "对象", score: 92 },
+  { status: "completed", title: "复习" },
+  { status: "failed", title: "提交", reason: "网络中断" },
+];
+
+for (const task of tasks) {
+  // 固定调用与输出已经提供；TODO 在 describeTask 函数体内完成。
+  const description = describeTask(task);
+  console.log(description);
+}
 ```
 
 ## 要完成的功能
@@ -103,4 +161,4 @@ case "name": 结尾是冒号；用 return 或 break 结束分支，分支里的�
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

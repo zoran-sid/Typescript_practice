@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day11/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day11/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day11/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -66,6 +66,70 @@ events: DeliveryEvent[]
                                 └── false ──> retryCount 保持不变
 
 循环结束 ──> retryCount ──> 输出“需要重试”的总数
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定数据 events<br/>4 个 DeliveryEvent"] --> B["for...of 取出当前 event"]
+  B --> C["调用 decideDelivery(event)"]
+  C --> D{"switch 判断 event.status"}
+  D -- "queued" --> E["return 排队文字 + false"]
+  D -- "sent" --> F["读取 deliveredAt<br/>return 已发送文字 + false"]
+  D -- "retrying" --> G["读取 retryAfterSeconds<br/>return 重试文字 + true"]
+  D -- "rejected" --> H["读取 reason<br/>return 拒绝文字 + false"]
+  E --> I["decision 接住 DeliveryDecision"]
+  F --> I
+  G --> I
+  H --> I
+  I --> J["console.log(decision.text)"]
+  I --> K{"decision.shouldRetry？"}
+  K -- "true" --> L["retryCount += 1"]
+  K -- "false" --> M["计数不变"]
+  L --> B
+  M --> B
+  B -->|"循环结束"| N["console.log 需要重试数量"]
+```
+
+## 起始代码
+
+类型、固定事件、函数签名、遍历、调用和输出位置已经列好。你要补的是 `switch` 中的判断与 `return`，并把循环里的 `false` 换成是否重试的真实判断。
+
+```ts
+type Channel = "email" | "sms" | "push";
+type DeliveryEvent =
+  | { status: "queued"; id: string; channel: Channel }
+  | { status: "sent"; id: string; channel: Channel; deliveredAt: string }
+  | { status: "retrying"; id: string; channel: Channel; retryAfterSeconds: number }
+  | { status: "rejected"; id: string; channel: Channel; reason: string };
+type DeliveryDecision = { text: string; shouldRetry: boolean };
+
+function assertNever(value: never): never {
+  throw new Error("未处理的投递事件：" + JSON.stringify(value));
+}
+
+function decideDelivery(event: DeliveryEvent): DeliveryDecision {
+  throw new Error("TODO：按 status 判断，并从每个分支 return { text, shouldRetry }");
+}
+
+const events: DeliveryEvent[] = [
+  { status: "queued", id: "msg-1", channel: "email" },
+  { status: "sent", id: "msg-2", channel: "sms", deliveredAt: "10:30" },
+  { status: "retrying", id: "msg-3", channel: "push", retryAfterSeconds: 30 },
+  { status: "rejected", id: "msg-4", channel: "email", reason: "地址无效" },
+];
+let retryCount = 0;
+
+for (const event of events) {
+  const decision = decideDelivery(event);
+  console.log(decision.text);
+  if (false) {
+    // TODO：把 false 换成“本条决定是否需要重试”的判断，再增加计数。
+    retryCount += 1;
+  }
+}
+console.log(`需要重试：${retryCount}`);
 ```
 
 ## 要完成的功能
@@ -194,4 +258,4 @@ msg-3 事件 ──> status 是 retrying
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

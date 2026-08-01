@@ -1,22 +1,13 @@
-# Day 05 · Practice 01 解题结构提示
+# Practice 01 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day05/practice01/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。三个函数的签名和调用链已经给出，核心表达式与条件仍是 `TODO`。
+[打开 solution.ts](../../../day05/practice01/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-每个函数只负责一项计算：小计函数接收数量和单价，优惠函数接收上一步返回的小计与会员状态，应付函数接收小计和优惠。数据通过参数进入函数，通过局部变量参与计算，再通过 `return` 回到调用处。
+## 直接调用逻辑
 
-## 变量作用域与数据流
+`quantity`、`unitPrice` → `calculateSubtotal` → return 到 `subtotal` → `subtotal`、`isMember` → `calculateDiscount` → return 到 `discount` → 前两个结果 → `calculateAmountToPay` → return 到 `amountToPay` → 输出三行。
 
-外部的 `quantity` 是实参；调用发生时，它的当前值被交给函数参数 `quantity`。参数只在该次函数调用内部有效。函数不应偷偷读取外部同名变量，否则换一组实参时就不再可靠。
-
-`console.log` 只把内容显示到终端；`return` 才把值交回调用表达式。外部变量先接住返回值，下一次调用再把它作为实参传下去。
-
-## 自检
-
-- 三个函数都在所有路径返回 `number`。
-- 计算函数内部没有输出或外部状态修改。
-- 优惠边界与会员条件同时满足才进入对应路径。
-- 三行日志只在所有返回值都接住后执行。
+每个函数只处理一步，上一函数的返回值由变量接住，再作为下一函数的实参。

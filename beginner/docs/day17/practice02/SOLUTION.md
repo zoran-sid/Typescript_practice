@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day17/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 中的 `// 调用关系：` 注释指向三次真实授权调用，权限并没有被写死在输出里。
 
-## 方案一
+## 直接调用逻辑
 
-1. 从两个只读元组分别派生 `Role` 与 `Action`。
-2. 用 `Record<Role, readonly Action[]>` 描述权限矩阵，再用 `satisfies` 检查对象是否完整且动作有效。
-3. `can` 只读取当前角色对应的动作列表，遍历后交回 boolean。
-4. 从完整成员类型 Pick 出卡片字段，和三次权限判断一起输出。
+1. `role` 决定从 `permissions` 读取哪一组允许动作。
+2. `can` 循环比较每个 `allowedAction` 与目标 `action`，匹配时返回 `true`，遍历结束返回 `false`。
+3. 三组固定参数分别得到三个布尔结果，再进入对应输出。
+4. `member` 的 `name` 和 `role` 组成 `MemberCard`，最后一行只读取这张卡片。
 
-## 关键检查点
-
-- `satisfies` 检查权限表，但不会把每个数组无条件放宽成任意字符串。
-
-- `can` 由数据表驱动；新增角色时先补表，不复制新的角色分支。
-
-- `MemberCard` 不包含邮箱，却仍与 `Member` 的字段类型保持同步。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

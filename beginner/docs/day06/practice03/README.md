@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day06/practice03/practice.ts)
-- 结构提示代码：[solution.ts](../../../day06/practice03/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day06/practice03/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -47,6 +47,69 @@ Copied total: 60
 Customer: Lin
 ```
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定对象 originalCart"] --> B["调用 copyPrices(originalCart.prices)"]
+    B --> C["函数建立局部 result"]
+    C --> D["for...of 逐项 result.push(price)"]
+    D --> E["return result"]
+    E --> F["copiedCart.prices"]
+    A --> G["复制 customer.name 到新对象"]
+    G --> H["copiedCart"]
+    F --> H
+    H --> I["只向副本 push 30"]
+    I --> J["调用 totalPrices(copiedCart.prices)"]
+    J --> K["循环累加 price"]
+    K --> L["return total"]
+    L --> M["四次 console.log"]
+    A --> M
+    H --> M
+    M --> N["输出原数量、副本数量、总价和客户"]
+```
+
+## 起始代码
+
+类型、两个函数签名、固定购物车、函数调用和输出都已给出。复制循环、累加循环、return 和只修改副本的 push 由你完成。
+
+```ts
+type Cart = { customer: { name: string }; prices: number[] };
+
+function copyPrices(source: number[]): number[] {
+  const result: number[] = [];
+  for (const price of source) {
+    // TODO：把本轮 price 追加到 result。
+  }
+  return []; // TODO：把占位数组换成 result。
+}
+
+function totalPrices(prices: number[]): number {
+  let total = 0;
+  for (const price of prices) {
+    // TODO：把本轮 price 累加到 total。
+  }
+  return 0; // TODO：把占位结果换成 total。
+}
+
+const originalCart: Cart = {
+  customer: { name: "Lin" },
+  prices: [10, 20],
+};
+
+const copiedCart: Cart = {
+  customer: { name: originalCart.customer.name },
+  prices: copyPrices(originalCart.prices),
+};
+
+// TODO：只向 copiedCart.prices 追加 30。
+
+console.log(`Original items: ${originalCart.prices.length}`);
+console.log(`Copied items: ${copiedCart.prices.length}`);
+console.log(`Copied total: ${totalPrices(copiedCart.prices)}`);
+console.log(`Customer: ${copiedCart.customer.name}`);
+```
+
 ## 写完后自检
 
 - 如果追加价格从 30 改成 5，原件数量、副本数量和副本总价分别会是什么？
@@ -55,4 +118,4 @@ Customer: Lin
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

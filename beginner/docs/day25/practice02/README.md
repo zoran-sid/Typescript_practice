@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day25/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day25/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day25/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题把已经拆成模块的更新器和报告器接到入口，并增加一次不存在 id 的调用，检查“新数组”与“任务真的改变”不是一回事。
 
@@ -26,6 +26,61 @@ original
 updated[0].status + report ────────────────────┴──> 对照输出
 original + missing id ──> completeTask ──> missingResult
 original 与 missingResult 的逐项引用比较 ──> 是否误改任务
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 original：3 个任务"] --> B["调用 completeTask(original,'a')"]
+  B --> C["模块内 map 回调寻找 id"]
+  C --> D{"命中 a？"}
+  D -- "是" --> E["return 新任务，status='done'"]
+  D -- "否" --> F["return 原任务"]
+  E --> G["updated 新数组"]
+  F --> G
+  G --> H["调用 buildReport(updated)"]
+  H --> I["模块内循环累计 counts/totalMinutes"]
+  I --> J["return report"]
+  A --> K["调用 completeTask(original,'missing')"]
+  K --> L["map 回调全部未命中"]
+  L --> M["missing 新数组、各项仍是原引用"]
+  M --> N["some 回调逐项比较引用"]
+  N --> O["return changedItem=false"]
+  A --> P["输出 original 状态"]
+  G --> Q["输出 updated 状态"]
+  J --> R["输出 Done/Todo/Minutes"]
+  O --> S["输出 Missing id changed item"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+import type { StudyTask } from "../models.js";
+import { buildReport } from "../report.js";
+import { completeTask } from "../task-service.js";
+
+const original: StudyTask[] = [
+  { id: "a", title: "Types", minutes: 30, status: "todo" },
+  { id: "b", title: "Modules", minutes: 45, status: "doing" },
+  { id: "c", title: "Validation", minutes: 30, status: "done" },
+];
+const updated = completeTask(original, "a");
+const report = buildReport(updated);
+console.log(`Original first status: ${original[0]?.status}`);
+console.log(`Updated first status: ${updated[0]?.status}`);
+console.log(`Done: ${report.counts.done}`);
+console.log(`Todo: ${report.counts.todo}`);
+console.log(`Total minutes: ${report.totalMinutes}`);
+const missing = completeTask(original, "missing");
+// TODO：用 some 回调比较 missing 与 original 的同位置对象。
+const changedItem = false;
+console.log(`Missing id changed item: ${changedItem}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -63,4 +118,4 @@ Missing id changed item: false
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

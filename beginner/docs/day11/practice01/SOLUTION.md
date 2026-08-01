@@ -1,17 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day11/practice01/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。建议先独立完成 `practice.ts`，再运行 `solution.ts`，沿代码里的 `// 调用关系：` 注释核对自己的数据传递顺序。
 
-## 方案一
+## 直接调用逻辑
 
-1. 让 `tasks` 中的每项数据进入 `describeTask`，先由 `status` 决定分支。
-2. 在各 `case` 中只读取收窄后存在的字段；`completed` 还要单独处理可选分数。
-3. 让循环只负责调用描述函数并展示返回值，状态逻辑留在函数内部。
+1. `tasks` 保存五条固定任务，`for...of` 每次取出一条 `task`。
+2. `describeTask(task)` 用 `status` 选择分支，并把该分支生成的字符串 `return` 给调用处。
+3. 局部变量 `description` 接住返回值，`console.log(description)` 输出当前任务。
+4. `completed` 分支单独处理 `score` 缺席；`default` 把遗漏状态交给 `assertNever`。
 
-## 关键检查点
-
-- 不要把成员专属字段全部改成可选属性。
-
-- `default` 应把遗漏的新状态暴露为穷尽检查问题。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

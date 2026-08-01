@@ -116,7 +116,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -135,49 +135,102 @@ flowchart TD
 
 ### 错误代码示例
 
+团队把一个启用了旧 `experimentalDecorators` 的项目迁到当前标准装饰器语义时，最容易直接复制旧三参数实现：
+
 ```ts
-function logged(
+function legacyTimer(
   target: object,
   key: string,
   descriptor: PropertyDescriptor,
 ): void {
-  // ❌ 这是旧版三参数装饰器签名，不能直接用于标准装饰器配置。
   console.log(key, descriptor.value);
 }
 
-function badWrapper(target: (...args: any[]) => any) {
-  // ❌ any[] 丢掉签名；箭头函数也不会取得实例调用时的 this。
-  return (...args: any[]) => target(...args);
+class CacheStore {
+  @legacyTimer
+  read(key: string): string {
+    return `cached:${key}`;
+  }
 }
+// ❌ 在当前标准装饰器模式下，方法装饰器接收 value 和 context，
+// 旧的 target/key/descriptor 签名会在编译阶段不匹配。
 ```
 
-### 正确写法
+旧代码不是“少改一个参数”就能迁移：两套装饰器的上下文对象、返回约定、初始化时机和编译选项不同。若项目明确启用了 `experimentalDecorators`，三参数签名仍属于那套旧语义；若使用 TypeScript 5.0 引入的标准装饰器模型，就应使用 `(value, context)`。
+
+即使签名改成两个参数，包装器也可能破坏原方法：
 
 ```ts
-function logged<This, Args extends unknown[], Return>(
-  target: (this: This, ...args: Args) => Return,
-  context: ClassMethodDecoratorContext<
-    This,
-    (this: This, ...args: Args) => Return
-  >,
-): (this: This, ...args: Args) => Return {
-  const name = String(context.name);
-
-  return function (this: This, ...args: Args): Return {
-    console.log(`调用: ${name}`);
-    // ✅ 普通 function 接住实例 this，并把参数和返回值原样转交。
-    return target.call(this, ...args);
+function brokenTrace(
+  target: (...args: any[]) => any,
+  context: ClassMethodDecoratorContext,
+): any {
+  return (...args: any[]) => {
+    console.log(`调用: ${String(context.name)}`);
+    target(...args);
+    // ❌ 返回类型 any 把问题藏起来：箭头函数没有实例调用时的动态 this，
+    // 这里也没有 return 原方法结果。
   };
 }
 ```
+
+假如用它装饰货币换算方法，原方法读取实例汇率时会因 `this` 丢失而报错；即使原方法不使用 `this`，调用者拿到的也会是 `undefined`。`any` 让编译器无法继续检查“包装前后签名必须一致”这条关系。
+
+### 正确写法
+
+下面故意写成只适用于货币换算方法的具体装饰器，不给练习题提供通用泛型答案。`target.apply(thisValue, args)` 会用指定的 `thisValue` 和参数数组调用原函数，并把原函数的返回值交回来；这里的参数数组只有一个 `cents`。
+
+```ts
+type ConversionMethod = (
+  this: CurrencyConverter,
+  cents: number,
+) => number;
+
+function traceConversion(
+  target: ConversionMethod,
+  context: ClassMethodDecoratorContext<
+    CurrencyConverter,
+    ConversionMethod
+  >,
+): ConversionMethod {
+  const name = String(context.name);
+
+  return function (
+    this: CurrencyConverter,
+    cents: number,
+  ): number {
+    console.log(`换算: ${name}`);
+    // ✅ 普通 function 接住实例 this；apply 转交参数数组并返回原结果。
+    return target.apply(this, [cents]);
+  };
+}
+
+class CurrencyConverter {
+  constructor(private readonly rate: number) {}
+
+  @traceConversion
+  toMainUnit(cents: number): number {
+    return cents * this.rate;
+  }
+}
+
+const converter = new CurrencyConverter(0.01);
+console.log(converter.toMainUnit(250));
+```
+
+这里的包装器保留实例、一个数字参数和数字返回值。它能讲清标准装饰器的运行边界，但不能直接套到其他签名上；需要复用时，才进一步把 `CurrencyConverter`、`number` 和参数列表抽成泛型。
 
 ## 面试时怎么回答
 
 **问：** 标准装饰器和 `experimentalDecorators` 旧装饰器有什么区别？Mixin 与组合又怎么选？
 
-**答：** TypeScript 5.0 起支持的标准方法装饰器不需要开启 `experimentalDecorators`，它接收原方法和 `context`，形状是 `(value, context)`；包装器要用普通 `function` 接住实例 `this`，再执行 `target.call(this, ...args)` 并返回原结果。开启 `experimentalDecorators` 使用的是旧语义，常见签名为 `(target, key, descriptor)`。两套写法的配置、类型、运行语义和输出代码都不同，不能直接互换。Mixin 适合给对象增加 `category` 这类能力，组合则让 `MessageService` 通过构造器接收可替换的 `Formatter`。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要把装饰器说成纯类型语法，它会参与类定义或方法调用时的运行行为；也不要忘记包装器若漏传 `this`、参数或返回值，会改变原方法。`Object.assign` 型 Mixin 可能直接修改传入对象，并要用交叉类型反映新增字段；组合的依赖更显式，通常更容易替换和测试。若面试官给出三参数代码，先确认项目是否启用了旧 `experimentalDecorators`，不能套用标准装饰器的 `context` 解释。
+TypeScript 5.0 支持当前标准装饰器模型，方法装饰器接收原方法和 context，也就是 `(value, context)`；它不依赖 `experimentalDecorators`。旧实验性装饰器常见签名是 `(target, propertyKey, descriptor)`，需要开启 `experimentalDecorators`。两套语义的参数、类型、初始化方式和生成代码不同；新版还不能直接使用旧版的参数装饰器与 `emitDecoratorMetadata` 工作流，所以迁移前要先确认框架依赖哪一套。
+
+包装方法时，我会保留 `this`、全部参数和返回值：用普通 `function` 接住实例，通过 `target.call(this, ...args)` 调原方法，并返回结果。Mixin 适合从可复用组件组合出额外能力，但它会增加类型和运行时结构；普通组合把依赖放在字段或构造器中，更显式，也更容易替换和测试。日志这类横切包装可以考虑装饰器，支付审计器这类需要测试和替换的业务依赖通常优先组合。
+
+官方参考：[TypeScript 5.0 标准装饰器说明](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html#decorators)、[旧版 Experimental Decorators 说明](https://www.typescriptlang.org/docs/handbook/decorators)、[TypeScript Mixins](https://www.typescriptlang.org/docs/handbook/mixins.html)
 
 ## 拓展思考（不要求写代码）
 

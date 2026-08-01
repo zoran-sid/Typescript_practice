@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day07/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day07/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day07/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -55,6 +55,55 @@ Practice 01 处理订单对象：先按状态筛选，再提取编号、累计�
 
 另建 `statusCodes = [200, 404, 204, 500]`：用 `map` 生成每项是否成功的布尔数组，用 `filter` 保留错误状态码，再用 `find` 找第一项“没有响应正文”的 204。不要改动本题原输出；先在纸上预测三个结果数组/值，再单独运行核对。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数组 prices"] --> B["调用 prices.map"]
+    B --> C["回调接收当前 price"]
+    C --> D["return price * 0.9"]
+    D --> E["discountedPrices"]
+    E --> F["调用 discountedPrices.filter"]
+    F --> G["回调 return price < 50"]
+    G -- "true" --> H["保留当前折后价"]
+    G -- "false" --> I["丢弃当前折后价"]
+    H --> J["affordablePrices"]
+    I --> J
+    A --> K["调用 prices.find"]
+    K --> L["回调 return price >= 100"]
+    L -- "false" --> K
+    L -- "true" --> M["停止并交回当前价格"]
+    M --> N["firstLargePrice"]
+    E --> O["join 后输出"]
+    J --> O
+    N --> O
+    O --> P["三行价格报告"]
+```
+
+## 起始代码
+
+固定价格、三个数组方法调用和输出已提供。请完成 map、filter、find 回调里的 return。
+
+```ts
+const prices = [15, 80, 120, 45];
+
+const discountedPrices = prices.map((price) => {
+  return 0; // TODO：替换为当前价格的九折结果。
+});
+
+const affordablePrices = discountedPrices.filter((price) => {
+  return false; // TODO：替换为当前折后价是否严格低于 50。
+});
+
+const firstLargePrice = prices.find((price) => {
+  return false; // TODO：替换为当前原价是否至少为 100。
+});
+
+console.log(`打折后: ${discountedPrices.join(", ")}`);
+console.log(`低于 50: ${affordablePrices.join(", ")}`);
+console.log(`第一个至少 100: ${firstLargePrice}`);
+```
+
 ## 写完后自检
 
 - 如果某件商品折后价格恰好是 50，为什么它不会进入“低于 50”的结果？
@@ -63,4 +112,4 @@ Practice 01 处理订单对象：先按状态筛选，再提取编号、累计�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

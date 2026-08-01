@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day19/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day19/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day19/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -36,6 +36,62 @@ priceTexts
                                                           └── { ok:false, error }
 每项 Result ──> 输出价格/错误
 ok:true 的数量 ──> validCount ──> 汇总输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 priceTexts<br/>19.9、free、0"] --> B["for...of 取出 text"]
+  B --> C["调用 toPriceResult(text)"]
+  C --> D["try 中调用 parsePrice(text)"]
+  D --> E{"非空、有限且 >= 0？"}
+  E -- "是" --> F["return price"]
+  F --> G["return ok:true Result"]
+  E -- "否" --> H["throw RangeError"]
+  H --> I["catch unknown<br/>errorMessage(error)"]
+  I --> J["return ok:false Result"]
+  G --> K["result"]
+  J --> K
+  K --> L{"result.ok？"}
+  L -- "true" --> M["console.log 价格<br/>validCount += 1"]
+  L -- "false" --> N["console.log 错误"]
+  M --> B
+  N --> B
+  B -->|"循环结束"| O["console.log 有效数量"]
+```
+
+## 起始代码
+
+类型、函数签名、固定文本、调用、分支输出和最终计数输出都已提供。你需要完成价格判断、异常转换和每个 `return`。
+
+```ts
+type Result<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+
+function parsePrice(text: string): number {
+  throw new Error("TODO：判断空文本、有限数字和非负条件，再 return price");
+}
+function errorMessage(error: unknown): string {
+  throw new Error("TODO：收窄 error 并 return 文字");
+}
+function toPriceResult(text: string): Result<number> {
+  throw new Error("TODO：使用 parsePrice，经 try/catch return 对应 Result");
+}
+
+const priceTexts = ["19.9", "free", "0"];
+let validCount = 0;
+for (const text of priceTexts) {
+  const result = toPriceResult(text);
+  if (result.ok) {
+    console.log(`价格：${result.value}`);
+    validCount += 1;
+  } else {
+    console.log(`错误：${result.error}`);
+  }
+}
+console.log(`有效数量：${validCount}`);
 ```
 
 ## 要完成的功能
@@ -78,4 +134,4 @@ ok:true 的数量 ──> validCount ──> 汇总输出
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

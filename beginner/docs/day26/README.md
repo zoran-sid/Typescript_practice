@@ -122,7 +122,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 3 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -142,53 +142,99 @@ flowchart TD
 
 ### 错误代码示例
 
+网关需要从远程配置中心读取“每分钟最多允许多少次请求”。开发环境响应很快，有人忘记等待 Promise，就先返回了一份看似成功的默认配置：
+
 ```ts
-async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
+type LimitState =
+  | { status: "ready"; perMinute: number }
+  | { status: "failure"; message: string };
+
+interface SettingsGateway {
+  read(): Promise<unknown>;
+}
+
+async function readLimitWrong(
+  gateway: SettingsGateway,
+): Promise<LimitState> {
   try {
-    const tasks = repository.load() as unknown as StudyTask[];
-    // ❌ 既忘了 await，又用双重断言绕过外部数据验证。
-    if (!tasks.length) throw new Error("没有任务");
-    // ❌ 合法的空数组被错误当成失败。
-    return { status: "success", tasks, totalMinutes: 0 };
-  } catch (error) {
-    // ❌ catch 中的值可能是字符串、数字或其他对象，不一定有 message。
-    return { status: "failure", message: error.message };
+    gateway.read();
+    // ❌ 这里只启动了请求。函数马上返回 ready，
+    // 配置中心稍后拒绝时已经离开这个 try。
+    return { status: "ready", perMinute: 0 };
+  } catch {
+    return { status: "failure", message: "读取配置失败" };
   }
 }
 ```
 
+如果配置中心一秒后才因网络中断而拒绝，调用者早已拿到 `ready`。网关可能把 `0` 理解成“不限流”，随后还会出现未处理的 Promise 拒绝。`try/catch` 没有失效，它只是不能接住离开当前执行过程后才发生、又没有被 `await` 的拒绝。
+
+这个场景还有一个容易忽略的边界：数字 `0` 是合法配置，但条件判断会把它当成假值：
+
+```ts
+function describeRetryCount(value: number | null): string {
+  if (!value) {
+    // ❌ value 为 0 时也会进入这里，合法的“不重试”被当成无效配置。
+    return "配置无效";
+  }
+  return `最多重试 ${value} 次`;
+}
+```
+
+`null` 表示解析失败，`0` 表示明确禁止重试。它们在业务上不同，不能只靠 `if (!value)` 合并处理。
+
 ### 正确写法
 
 ```ts
-async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
+function parsePerMinute(value: unknown): number | null {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    !("perMinute" in value) ||
+    typeof value.perMinute !== "number" ||
+    !Number.isFinite(value.perMinute) ||
+    value.perMinute < 0
+  ) {
+    return null;
+  }
+  return value.perMinute;
+}
+
+async function readLimit(
+  gateway: SettingsGateway,
+): Promise<LimitState> {
   try {
-    // ✅ await 后仍是 unknown；异步完成不代表外部数据已经可信。
-    const value: unknown = await repository.load();
-    const tasks = parseTasks(value);
-    if (tasks === null) {
-      return { status: "failure", message: "Task data is invalid" };
+    // ✅ 先等待远程操作结束，再验证仍然不可信的 unknown。
+    const raw: unknown = await gateway.read();
+    const perMinute = parsePerMinute(raw);
+    if (perMinute === null) {
+      return { status: "failure", message: "限流配置格式错误" };
     }
 
-    // ✅ [] 能通过验证，并自然得到 totalMinutes = 0。
-    const totalMinutes = tasks.reduce((sum, task) => sum + task.minutes, 0);
-    return { status: "success", tasks, totalMinutes };
+    // ✅ 这里用 === null 判断，因此合法的 0 不会被误判。
+    return { status: "ready", perMinute };
   } catch (error: unknown) {
     return {
       status: "failure",
-      // ✅ 先收窄，再读取 Error 独有的 message。
-      message: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "未知读取错误",
     };
   }
 }
 ```
 
+执行顺序是：等待远程读取、验证 `unknown`、最后构造 `ready`。网络拒绝进入 `catch`，字段错误返回“格式错误”，合法的 `0` 继续保留。日志和页面因此能分清网络故障、协议错误和真实配置。
+
 ## 面试时怎么回答
 
 **问：** 为什么异步页面常用判别联合，而不是三个布尔变量？
 
-**答：** `isLoading`、`hasData`、`hasError` 可以组合出“仍在加载但同时成功和失败”这类无效状态。判别联合把合法情况写成三种：`{ status: "loading" }`、`{ status: "success"; tasks: StudyTask[]; totalMinutes: number }`、`{ status: "failure"; message: string }`。`switch (state.status)` 后，TypeScript 会在 success 分支允许读 `tasks`，在 failure 分支允许读 `message`，渲染逻辑也能逐个覆盖。
+**可以直接这样回答：**
 
-**容易答错或追问：** `await repository.load()` 只解决等待顺序，不会验证返回的 `unknown`；成功拿到值后仍要经过守卫。`catch` 里的值也应按 `unknown` 处理，先判断 `error instanceof Error` 才读 `message`。面试官若追问新增 `empty` 状态，我会把它加入联合，并在 `switch` 的 `default` 分支把剩余值交给接收 `never` 的穷尽检查，让编译器指出还没处理的状态。状态越多，测试路径也越多，数据与界面要继续共用同一状态来源。
+多个独立布尔值会产生无效组合，例如 `isLoading`、`hasData`、`hasError` 同时为 true。判别联合只列出允许存在的对象：loading 不带数据，success 一定带任务和统计，failure 一定带错误消息。判断 `state.status` 后，TypeScript 会把联合收窄到对应成员，渲染代码只能读取这个状态真正拥有的字段。
+
+`await` 只负责等待 Promise 完成，不会验证仓库返回的 `unknown`，所以成功取值后仍要运行守卫。严格配置下 `catch` 变量是 `unknown`，读取 `message` 前先判断 `error instanceof Error`。新增 `empty` 状态时，我会把它加入联合，并用 `never` 做穷尽检查，让遗漏的 `switch` 分支在编译阶段暴露；同时补上对应测试。
+
+官方参考：[TypeScript 判别联合与穷尽检查](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)、[useUnknownInCatchVariables](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-4.html#defaulting-to-the-unknown-type-in-catch-variables)、[MDN Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 
 ## 拓展思考（不要求写代码）
 

@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day26/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day26/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day26/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -27,22 +27,125 @@ Promise 抛错 ─────────────────────�
 LoadState ──> render ──> 输出行 + 回归测试
 ```
 
-在 `practice.ts` 中从零完成“异步任务面板”。
 
-必须名称：`StudyTask`、`LoadState`、`TaskRepository`、`isRecord`、`isStudyTask`、`parseTasks`、`loadDashboard`、`render`、`MemoryTaskRepository`、`runRegressionTests`。
+## 代码流程图
 
-需求：
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
 
-1. 任务字段为只读 id、title、非负有限 minutes、`todo | doing | done` 状态。
-2. 仓库 `load()` 返回 `Promise<unknown>`；内存仓库可返回给定值，也可异步抛出给定错误。
-3. `parseTasks` 验证数组及每个元素；空数组合法，坏数据返回 `null`。
-4. `loadDashboard` 成功时计算总分钟，坏数据返回消息 `Task data is invalid`，捕获 Error 时保留其 message。
-5. `render` 把 loading 和 success 转成输出行。
-6. `runRegressionTests` 独立验证：正常两项、空数组、坏 minutes、仓库抛出 `offline`，返回通过数量。
+```mermaid
+flowchart TD
+  A["固定 tasks / 空数组 / 坏数据 / offline"] --> B["MemoryTaskRepository"]
+  B --> C["await repository.load()"]
+  C --> D{"Promise 拒绝？"}
+  D -- "是" --> E["catch unknown 并收窄"]
+  E --> F["return failure(message)"]
+  D -- "否" --> G["parseTasks(value)"]
+  G --> H{"数组且 every(isStudyTask)？"}
+  H -- "否" --> I["return failure('Task data is invalid')"]
+  H -- "是" --> J["reduce 回调累计 totalMinutes"]
+  J --> K["return success(tasks,totalMinutes)"]
+  L["固定 loading state"] --> M["render(state)"]
+  F --> M
+  I --> M
+  K --> M
+  M --> N{"switch status"}
+  N --> O["return 对应 string[]"]
+  O --> P["for...of 输出每一行"]
+  A --> Q["runRegressionTests"]
+  Q --> R["依次 await 四个 loadDashboard 调用"]
+  R --> S["判断关键结果，通过才 passed + 1"]
+  S --> T["return passed 并输出 4/4"]
+```
 
-固定正常任务为 Async / 30 / done 与 Tests / 45 / todo。
+## 起始代码
 
-精确输出：
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type StudyTask = {
+  readonly id: string;
+  title: string;
+  minutes: number;
+  status: "todo" | "doing" | "done";
+};
+type LoadState =
+  | { status: "loading" }
+  | { status: "success"; tasks: StudyTask[]; totalMinutes: number }
+  | { status: "failure"; message: string };
+interface TaskRepository { load(): Promise<unknown>; }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // TODO：return 对象判断。
+  void value;
+  return false;
+}
+function isStudyTask(value: unknown): value is StudyTask {
+  // TODO：逐字段判断并 return。
+  void value;
+  return false;
+}
+function parseTasks(value: unknown): StudyTask[] | null {
+  // TODO：数组检查、every 回调并 return。
+  void value;
+  return null;
+}
+async function loadDashboard(repository: TaskRepository): Promise<LoadState> {
+  // TODO：await、验证、reduce、catch，并 return 状态。
+  void repository;
+  return { status: "failure", message: "" };
+}
+function render(state: LoadState): string[] {
+  // TODO：switch status，并 return 要显示的字符串数组。
+  void state;
+  return [];
+}
+class MemoryTaskRepository implements TaskRepository {
+  constructor(private readonly value: unknown, private readonly error?: Error) {}
+  async load(): Promise<unknown> {
+    // TODO：有 error 时拒绝，否则 return value。
+    return this.value;
+  }
+}
+async function runRegressionTests(): Promise<number> {
+  let passed = 0;
+  const normal = await loadDashboard(new MemoryTaskRepository([
+    { id: "a", title: "One", minutes: 30, status: "done" },
+    { id: "b", title: "Two", minutes: 45, status: "todo" },
+  ]));
+  const empty = await loadDashboard(new MemoryTaskRepository([]));
+  const invalid = await loadDashboard(new MemoryTaskRepository([
+    { id: "a", title: "Broken", minutes: "30", status: "todo" },
+  ]));
+  const offline = await loadDashboard(
+    new MemoryTaskRepository(undefined, new Error("offline")),
+  );
+  // TODO：分别判断 normal、empty、invalid、offline；每项通过后让 passed += 1。
+  void normal;
+  void empty;
+  void invalid;
+  void offline;
+  // TODO：return 真正通过的测试数。
+  return passed;
+}
+const tasks = [
+  { id: "a", title: "Async", minutes: 30, status: "done" },
+  { id: "b", title: "Tests", minutes: 45, status: "todo" },
+];
+for (const line of render({ status: "loading" })) console.log(line);
+const finalState = await loadDashboard(new MemoryTaskRepository(tasks));
+for (const line of render(finalState)) console.log(line);
+console.log(`Tests passed: ${await runRegressionTests()}/4`);
+```
+
+
+## 任务要求
+
+1. 从 `unknown` 仓库结果验证出 `StudyTask[]`，合法空数组不能误判为失败。
+2. `loadDashboard` 同时处理成功、坏数据和 Promise 拒绝，并返回对应 `LoadState`。
+3. `render` 用同一个 `switch` 生成 loading、success、failure 的文字数组。
+4. `runRegressionTests` 真正检查正常、空数组、坏数据和 offline 四条路径。
+
+## 精确期望输出
 
 ```text
 State: loading
@@ -52,10 +155,6 @@ Done: 1
 Minutes: 75
 Tests passed: 4/4
 ```
-
-限制：不使用 `any`、非空断言 `!` 或 `as StudyTask[]`；不能吞掉异常后伪装成成功。
-
-完成标准：右击运行 `practice.ts` 后输出完全一致；四条测试确实检查结果，而不是无条件累加；能画出 Promise、unknown、验证器、LoadState 的顺序。
 
 ## 本题易漏语法
 
@@ -70,4 +169,4 @@ Tests passed: 4/4
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

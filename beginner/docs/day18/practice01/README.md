@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day18/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day18/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day18/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,78 @@ new StudyCounter(...) ──> types / modules 两个独立实例
 message ──> MessageFormatter.format ──> 格式文字
                          └── detachedFormat 仍绑定实例
 实例结果 + 汇总 + 格式文字 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["new StudyCounter(TypeScript)"] --> B["types，minutes = 0"]
+  C["new StudyCounter(Modules)"] --> D["modules，minutes = 0"]
+  B --> E["依次调用 add(30)、add(15)、add(-5)"]
+  E --> F{"minutes > 0？"}
+  F -- "是" --> G["更新当前实例 this.minutes"]
+  F -- "否" --> H["忽略本次参数"]
+  D --> I["调用 add(20)<br/>更新 modules"]
+  B --> J["调用 types.summary()<br/>return 摘要"]
+  D --> K["调用 modules.summary()<br/>return 摘要"]
+  B --> L["new Dashboard(types)"]
+  L --> M["调用 render"]
+  M --> N["provider.summary()<br/>return 面板文字"]
+  O["new MessageFormatter([学习])"] --> P["detachedFormat = formatter.format"]
+  P --> Q["调用 detachedFormat(完成复习)"]
+  Q --> R["箭头函数读取 this.prefix<br/>return 格式文字"]
+  J --> S["console.log"]
+  K --> S
+  N --> S
+  R --> S
+```
+
+## 起始代码
+
+接口、类结构、固定实例、方法调用和四行输出都已给出。你需要完成 `add` 的判断、各方法的 `return`，以及 `format` 箭头函数的主体。
+
+```ts
+interface SummaryProvider { summary(): string; }
+
+class StudyCounter implements SummaryProvider {
+  private minutes = 0;
+  constructor(public readonly topic: string) {}
+  add(minutes: number): void {
+    // TODO：判断 minutes，只更新当前实例。
+  }
+  summary(): string {
+    throw new Error("TODO：读取 this.topic、this.minutes 并 return 摘要");
+  }
+}
+
+class Dashboard {
+  constructor(private readonly provider: SummaryProvider) {}
+  render(): string {
+    throw new Error("TODO：使用 provider.summary() 并 return 面板文字");
+  }
+}
+
+class MessageFormatter {
+  constructor(private readonly prefix: string) {}
+  format = (message: string): string => {
+    throw new Error("TODO：使用 this.prefix 和 message 并 return 文字");
+  };
+}
+
+const types = new StudyCounter("TypeScript");
+const modules = new StudyCounter("Modules");
+types.add(30);
+types.add(15);
+types.add(-5);
+modules.add(20);
+const dashboard = new Dashboard(types);
+const formatter = new MessageFormatter("[学习]");
+const detachedFormat = formatter.format;
+console.log(types.summary());
+console.log(modules.summary());
+console.log(dashboard.render());
+console.log(detachedFormat("完成复习"));
 ```
 
 请从头编写“学习计数与面板”：
@@ -81,4 +153,4 @@ Dashboard | TypeScript: 45 minutes
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

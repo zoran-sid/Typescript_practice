@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day02/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day02/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day02/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -54,6 +54,50 @@ Route: Long distance
 
 Practice 01 的业务输入是一项课程文本和一个已有数字，输出重点是学习目标状态。这里同时接收重量、距离两项外部文本：两个转换结果汇入同一个费用公式，距离还会单独进入路线边界分支。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定文字 weightText = 2.5"] --> B["Number(weightText)"]
+    C["固定文字 distanceText = 30"] --> D["Number(distanceText)"]
+    B --> E["weight = 2.5"]
+    D --> F["distance = 30"]
+    G["baseFee = 8"] --> H["运费公式"]
+    E --> H
+    F --> H
+    H --> I["deliveryFee = 16"]
+    F --> J{"distance >= 30？"}
+    J -- "是" --> K["route = Long distance"]
+    J -- "否" --> L["保留 Standard"]
+    I --> M["四次 console.log"]
+    K --> M
+    L --> M
+    M --> N["输出完整报价"]
+```
+
+## 起始代码
+
+固定表单数据、费用常量、默认路线和输出调用已提供。请完成两次转换、费用公式和路线判断。
+
+```ts
+const weightText = "2.5";
+const distanceText = "30";
+const baseFee = 8;
+
+const weight = 0; // TODO：替换为 weightText 的数字转换结果。
+const distance = 0; // TODO：替换为 distanceText 的数字转换结果。
+const deliveryFee = 0; // TODO：替换为完整运费公式。
+let route = "Standard";
+if (false) {
+  // TODO：把 false 换成距离边界判断，并在命中时更新 route。
+}
+
+console.log(`Weight: ${weight} kg`);
+console.log(`Distance: ${distance} km`);
+console.log(`Fee: ${deliveryFee}`);
+console.log(`Route: ${route}`);
+```
+
 ## 写完后自检
 
 - 如果距离文本改成 `"29"`，费用和路线各会怎样变化？
@@ -62,4 +106,4 @@ Practice 01 的业务输入是一项课程文本和一个已有数字，输出�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

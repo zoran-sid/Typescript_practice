@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day21/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day21/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day21/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,57 @@ titles
 失败 request ──> Promise rejected ──> catch unknown
                                            └── errorMessage
 成功数组或错误文字 ──> main 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定标题 变量、函数、联合"] --> B["调用 loadLessons(titles)"]
+  B --> C["titles.map 回调"]
+  C --> D["每轮调用 fetchLesson({ title })<br/>return Promise<string>"]
+  D --> E["requests: Promise<string>[]"]
+  E --> F["调用 Promise.all(requests)"]
+  F --> G["await 全部完成<br/>return lessons: string[]"]
+  G --> H["console.log 完成数量和课程"]
+  I["固定失败请求 通知"] --> J["try 中 await fetchLesson"]
+  J --> K{"request.shouldFail？"}
+  K -- "false" --> L["return title"]
+  K -- "true" --> M["throw Error"]
+  M --> N["catch unknown"]
+  N --> O["调用 errorMessage(error)<br/>return 错误文字"]
+  O --> P["console.log 失败"]
+  Q["调用 main()"] --> R["顶层 await 等待 Promise<void>"]
+```
+
+## 起始代码
+
+请求类型、异步函数签名、固定标题、调用和三行输出都已给出。你需要完成 `shouldFail` 判断、`map` 回调、`Promise.all`、错误收窄和 `return`。
+
+```ts
+type LessonRequest = { title: string; shouldFail?: boolean };
+
+async function fetchLesson(request: LessonRequest): Promise<string> {
+  await Promise.resolve();
+  throw new Error("TODO：判断 shouldFail；失败时抛错，成功时 return title");
+}
+async function loadLessons(titles: readonly string[]): Promise<string[]> {
+  throw new Error("TODO：map 返回 Promise 数组，再 await/return Promise.all 的结果");
+}
+function errorMessage(error: unknown): string {
+  throw new Error("TODO：收窄 error 并 return 文字");
+}
+async function main(): Promise<void> {
+  const lessons = await loadLessons(["变量", "函数", "联合"]);
+  console.log(`完成数量：${lessons.length}`);
+  console.log(`课程：${lessons.join("、")}`);
+  try {
+    await fetchLesson({ title: "通知", shouldFail: true });
+  } catch (error: unknown) {
+    console.log(`失败：${errorMessage(error)}`);
+  }
+}
+await main();
 ```
 
 请从头编写“并行课程加载器”。
@@ -74,4 +125,4 @@ async 函数返回 Promise<T>；调用先得到 Promise，await 后的变量才�
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

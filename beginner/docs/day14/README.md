@@ -106,7 +106,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -125,30 +125,68 @@ flowchart TD
 
 ### 错误代码示例
 
+项目把金额格式化函数改成默认导出，又把订单结构移到只导出类型的文件。入口文件仍按旧习惯导入，常见结果是两类完全不同的错误：
+
+```ts
+// money.ts
+export default function formatCurrency(cents: number): string {
+  return `¥${cents / 100}`;
+}
+
+// order-types.ts
+export type Order = {
+  id: string;
+  totalCents: number;
+};
+
+// checkout.ts
+import { formatCurrency } from "./money.js"; // ❌ 默认导出不能放进花括号。
+//       ~~~~~~~~~~~~~~
+// TS2614：模块没有名为 formatCurrency 的具名导出。
+
+import type { Order } from "./order-types.js";
+
+console.log(Order);
+//          ~~~~~
+// TS2693：Order 只表示类型，却被当作运行时值使用。
+```
+
+`formatCurrency` 的函数确实存在，但导入形式与导出形式不匹配；`Order` 在编译后会被移除，运行时根本没有一个名为 `Order` 的对象。把这两个报错都理解成“路径坏了”，往往会让排查越走越偏。
+
+在 `NodeNext` 项目中，下面这条相对路径也常被误删扩展名：
+
 ```ts
 import { formatScore } from "./score-tools.js";
-// ❌ formatScore 是默认导出，默认导入不能放在花括号里。
-
-import type { Student } from "./student-types.js";
-console.log(Student); // ❌ 类型导入会在编译后消失，不能当运行时值使用。
+// 源文件是 score-tools.ts，运行时加载的是生成后的 score-tools.js。
 ```
 
 ### 正确写法
 
 ```ts
-import formatScore, { passingScore } from "./score-tools.js";
-// ✅ 默认导入写在花括号外，具名导入写在花括号内。
+import formatCurrency from "./money.js"; // ✅ 默认导入写在花括号外。
+import type { Order } from "./order-types.js";
 
-import type { Student } from "./student-types.js";
-const student: Student = { name: "Ada", completed: 12, track: "beginner" };
-console.log(formatScore(passingScore), student.name); // ✅ Student 只用于类型位置。
+const order: Order = {
+  id: "order-1",
+  totalCents: 39900,
+};
+
+console.log(formatCurrency(order.totalCents));
 ```
+
+实际输出：
+
+```text
+¥399
+```
+
+排查模块问题时先看源文件的 `export`：`export default` 对应花括号外的默认导入，`export const` 或 `export type` 对应花括号里的具名导入。再判断这个名字在运行时是否真实存在。
 
 ## 面试时怎么回答
 
 **问：ES Module、namespace 和 `import type` 分别解决什么问题？**
 
-**答：**ES Module 用文件级 `import` / `export` 表达运行时依赖，加载器知道要执行哪些模块；`namespace` 主要是在同一命名空间中组织名称，不能替代现代项目的模块加载关系。`import type` 只把类型带给 TypeScript，编译后会被移除，所以不能拿它导入的名字去 `new` 或当运行时值使用：
+**答：**ES Module 是 JavaScript 的模块系统，`import` / `export` 同时表达文件边界和运行时依赖，浏览器或 Node.js 负责加载模块。`namespace` 是 TypeScript 用来组织名称的语法，常见于全局脚本或声明文件；普通应用代码已经按文件使用 ESM 时，一般不再靠 namespace 组织模块。`import type` 明确这项依赖只用于类型检查，生成 JavaScript 时会被移除：
 
 ```ts
 import type { Student } from "./student-types.js";
@@ -159,13 +197,17 @@ const student: Student = {
 };
 ```
 
-开发者仍要设计公开 API、依赖方向以及默认导出或具名导出；循环依赖和错误路径不会由模块语法自动解决。
+因此用 `import type` 得到的名字不能用于 `new`、`instanceof` 或输出。它也不会执行被导入模块的运行时代码。
 
-**问：模块增强会把缺少的方法实现出来吗？**
+**问：为什么 NodeNext 项目的 TypeScript 源码常写 `./tool.js`，磁盘上明明是 `tool.ts`？**
 
-**答：**不会。模块增强只是给已有模块补充类型声明，让编译器知道某个运行时成员“应该存在”。例如声明 `Logger` 多了 `debug()` 后，真实的 `Logger.prototype.debug` 仍必须由代码或库提供，否则编译可能通过，运行时照样得到“不是函数”。
+**答：**TypeScript 通常不会改写模块路径字符串。Node ESM 最终加载的是生成后的 JavaScript 文件，所以源码写出运行时会使用的 `.js` 路径；在 `NodeNext` 解析规则下，TypeScript 会用这条路径找到对应的 `.ts` 源文件做检查。是否需要扩展名取决于实际宿主和模块解析模式，不能脱离项目配置死记。
 
-**容易答错或追问：**不要把声明合并当成修改 JavaScript 对象；类型信息和运行时实现必须分别到位。`import type` 同样只影响类型检查，不会触发值模块的运行时代码。
+官方参考：
+
+- [TypeScript Handbook：Modules - Theory](https://www.typescriptlang.org/docs/handbook/modules/theory.html)
+- [TypeScript Handbook：Modules - Reference 与类型导入](https://www.typescriptlang.org/docs/handbook/modules/reference.html)
+- [TypeScript Handbook：Namespaces](https://www.typescriptlang.org/docs/handbook/namespaces.html)
 
 ## 拓展思考（不要求写代码）
 

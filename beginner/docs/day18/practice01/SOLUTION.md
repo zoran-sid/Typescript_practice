@@ -1,17 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day18/practice01/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 的 `// 调用关系：` 注释标出了实例状态、组合调用和脱离实例后的箭头函数调用。
 
-## 方案一
+## 直接调用逻辑
 
-1. 让每个 `StudyCounter` 实例在私有字段中维护自己的分钟数。
-2. 让 `Dashboard` 只通过 `SummaryProvider` 接口取得摘要，形成组合关系。
-3. 把格式器方法作为独立回调传出，并在入口统一展示各对象交回的文字。
+1. 两个 `StudyCounter` 实例各自保存 `minutes`；`add` 只让正数进入当前实例状态。
+2. `types.summary()` 与 `modules.summary()` 分别返回各自摘要。
+3. `Dashboard` 保存 `types` 作为 `SummaryProvider`，`render()` 再调用它的 `summary()`。
+4. `detachedFormat` 指向箭头函数字段，独立调用时仍读取原 `formatter` 的 `prefix`。
 
-## 关键检查点
-
-- 更新分钟时使用当前实例状态，并拒绝无效输入。
-
-- 脱离实例调用的方法仍需保留正确的 `this`。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

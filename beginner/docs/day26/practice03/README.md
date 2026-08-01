@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day26/practice03/practice.ts)
-- 结构提示代码：[solution.ts](../../../day26/practice03/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day26/practice03/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 从异步仓库读取 unknown，验证天气数据并渲染 loading、success、failure 三种状态。
 
@@ -25,6 +25,88 @@ MemoryWeatherRepository.load() ──> Promise<unknown>
                                                          └── 非法 ──> failure
 Promise 抛错 ─────────────────────────────────────────────────> failure
 success / failure ──> render ──> 天气面板输出
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定天气对象<br/>Shanghai / 31"] --> B["MemoryWeatherRepository"]
+  C["固定坏天气<br/>temperature='31'"] --> B
+  B --> D["await loadWeather(repository)"]
+  D --> E["await repository.load() 得到 unknown"]
+  E --> F["isWeather(value)"]
+  F --> G["isRecord + city/temperature 检查"]
+  G --> H{"验证通过？"}
+  H -- "是" --> I["return success(weather)"]
+  H -- "否" --> J["return failure('Weather data is invalid')"]
+  K["仓库拒绝"] --> L["catch unknown"]
+  L --> M["return failure(error message)"]
+  N["固定 loading state"] --> O["render(state)"]
+  I --> O
+  J --> O
+  M --> O
+  O --> P{"switch status"}
+  P --> Q["return 对应 string[]"]
+  Q --> R["for...of 输出每行"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type Weather = { city: string; temperature: number };
+type State =
+  | { status: "loading" }
+  | { status: "success"; weather: Weather }
+  | { status: "failure"; message: string };
+interface WeatherRepository { load(): Promise<unknown>; }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // TODO：对象判断并 return。
+  void value;
+  return false;
+}
+function isWeather(value: unknown): value is Weather {
+  // TODO：检查 city 和 temperature，并 return。
+  void value;
+  return false;
+}
+async function loadWeather(repository: WeatherRepository): Promise<State> {
+  // TODO：await、验证、catch，并 return 状态。
+  void repository;
+  return { status: "failure", message: "" };
+}
+function render(state: State): string[] {
+  // TODO：switch status 并 return 要显示的字符串数组。
+  void state;
+  return [];
+}
+class MemoryWeatherRepository implements WeatherRepository {
+  constructor(private readonly value: unknown, private readonly error?: Error) {}
+  async load(): Promise<unknown> {
+    // TODO：有 error 时抛出；否则异步 return value。
+    return Promise.resolve(this.value);
+  }
+}
+for (const line of render({ status: "loading" })) console.log(line);
+const success = await loadWeather(
+  new MemoryWeatherRepository({ city: "Shanghai", temperature: 31 }),
+);
+for (const line of render(success)) console.log(line);
+const failure = await loadWeather(
+  new MemoryWeatherRepository({ city: "Shanghai", temperature: "31" }),
+);
+for (const line of render(failure)) console.log(line);
+const rejected = await loadWeather(
+  new MemoryWeatherRepository(undefined, new Error("Weather service offline")),
+);
+// 这次调用专门覆盖 Promise 拒绝路径，不增加题目规定的输出行。
+void rejected;
 ```
 
 ## 任务要求
@@ -56,4 +138,4 @@ Message: Weather data is invalid
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

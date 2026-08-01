@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day09/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day09/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day09/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -54,6 +54,60 @@ Practice 01 的输入数据是带嵌套进度的 `Project`，并区分多层只�
 
 另写一个构建配置类型：包含 `readonly releaseId`、`environment`、可选 `note`，以及 `readonly targets: ReadonlyArray<string>`。创建一个配置后，分别尝试修改环境、编号、目标数组项，观察哪些写法通过类型检查；不要用 `as` 绕过错误。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["Task 类型契约"] --> B["检查固定对象 task"]
+    B --> C["调用 describeTask(task)"]
+    C --> D{"task.done？"}
+    D -- "true" --> E["status = 已完成"]
+    D -- "false" --> F["status = 未完成"]
+    C --> G["task.note ?? 无"]
+    E --> H["组合两行摘要"]
+    F --> H
+    G --> H
+    H --> I["return description"]
+    J["固定只读数组 tags"] --> K["tags.join"]
+    K --> L["tagsText"]
+    I --> M["console.log 任务摘要"]
+    L --> N["console.log 标签"]
+    M --> O["输出三行任务卡片"]
+    N --> O
+```
+
+## 起始代码
+
+类型、固定任务和标签、函数签名、调用与输出都已给出。状态判断、备注默认值、标签连接和 return 由你完成。
+
+```ts
+type TaskId = string;
+
+interface Task {
+  readonly id: TaskId;
+  title: string;
+  done: boolean;
+  note?: string;
+}
+
+function describeTask(task: Task): string {
+  const status = ""; // TODO：替换为根据 done 选择出的状态。
+  const note = ""; // TODO：替换为可选备注与默认值。
+  return ""; // TODO：替换为两行任务摘要。
+}
+
+const task: Task = {
+  id: "T-01",
+  title: "学习 type 和 interface",
+  done: false,
+};
+const tags: ReadonlyArray<string> = ["TypeScript", "基础"];
+const tagsText = ""; // TODO：替换为 tags 的连接结果。
+
+console.log(describeTask(task));
+console.log(`标签: ${tagsText}`);
+```
+
 ## 写完后自检
 
 - 如果 `done` 改成 `true`，第一行中的状态文字应怎样变化？如果 `note` 是空字符串，`?? "无"` 会不会替换它？
@@ -62,4 +116,4 @@ Practice 01 的输入数据是带嵌套进度的 `Project`，并区分多层只�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

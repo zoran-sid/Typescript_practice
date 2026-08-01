@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day32/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day32/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day32/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -27,21 +27,100 @@ message ──> MessageService ──> Formatter ──> 最终文字
 装饰、Mixin、组合三条结果 ──> 输出
 ```
 
-从零完成“带追踪的价格服务”。
 
-必须名称：`tracedMethod`、`registerClass`、`withTag`、`PriceCalculator`、`Formatter`、`UppercaseFormatter`、`MessageService`。
+## 代码流程图
 
-需求：
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
 
-1. `tracedMethod<This, Args extends unknown[], Return>` 使用标准 `ClassMethodDecoratorContext`，调用前输出方法名并保持原签名。
-2. `registerClass` 使用标准 `ClassDecoratorContext`，类定义时输出类名。
-3. PriceCalculator 同时应用类装饰器；其 `total(quantity, unitPrice)` 应用方法装饰器并返回乘积。
-4. `withTag` 给对象增加只读字面量 tag `advanced`，保留原对象类型。
-5. UppercaseFormatter 实现 Formatter；MessageService 通过构造器组合 Formatter，`create` 返回带前缀的格式化消息。
+```mermaid
+flowchart TD
+  A["读取 PriceCalculator 类定义"] --> B["先执行 tracedMethod(target,context)"]
+  B --> C["return 普通 function 包装器"]
+  C --> D["再执行 registerClass(target,context)"]
+  D --> E["读取 context.name"]
+  E --> F["console.log 注册类"]
+  H["固定 new PriceCalculator"] --> I["withTag(value)"]
+  I --> J["Object.assign 增加 tag"]
+  J --> K["return calculator 交叉类型"]
+  K --> L["console.log 标签"]
+  K --> M["调用 calculator.total(3,8)"]
+  M --> N["进入已安装的包装器，console.log 调用方法名"]
+  N --> O["target.call(this,...args)"]
+  O --> P["原方法 return 24"]
+  P --> Q["包装器 return 24"]
+  Q --> R["console.log 总价"]
+  S["固定 UppercaseFormatter"] --> T["new MessageService(formatter)"]
+  T --> U["create('TypeScript')"]
+  U --> V["formatter.format(message)"]
+  V --> W["return TYPESCRIPT"]
+  W --> X["create return 消息文字"]
+  X --> Y["console.log 消息"]
+```
 
-固定调用：为 new PriceCalculator 混入 tag；计算 3×8；服务处理 `TypeScript`。
+## 起始代码
 
-精确输出：
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+function tracedMethod<This, Args extends unknown[], Return>(
+  target: (this: This, ...args: Args) => Return,
+  context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => Return>,
+): (this: This, ...args: Args) => Return {
+  // TODO：return 包装函数；显示名称；call 原方法；return 原结果。
+  void context;
+  return target;
+}
+function registerClass<Value extends abstract new (...args: never[]) => object>(
+  target: Value,
+  context: ClassDecoratorContext<Value>,
+): void {
+  // TODO：读取 context.name 并显示类名。
+  void target;
+  void context;
+}
+function withTag<Value extends object>(
+  value: Value,
+): Value & { readonly tag: "advanced" } {
+  // TODO：增加 tag 并 return。
+  return Object.assign(value, { tag: "advanced" as const });
+}
+@registerClass
+class PriceCalculator {
+  @tracedMethod
+  total(quantity: number, unitPrice: number): number {
+    return quantity * unitPrice;
+  }
+}
+interface Formatter { format(value: string): string; }
+class UppercaseFormatter implements Formatter {
+  format(value: string): string {
+    // TODO：return 大写文字。
+    return value;
+  }
+}
+class MessageService {
+  constructor(private readonly formatter: Formatter) {}
+  create(message: string): string {
+    // TODO：把 message 交给 formatter，并 return 带“消息: ”的文字。
+    void message;
+    return "";
+  }
+}
+const calculator = withTag(new PriceCalculator());
+console.log(`标签: ${calculator.tag}`);
+console.log(`总价: ${calculator.total(3, 8)}`);
+console.log(new MessageService(new UppercaseFormatter()).create("TypeScript"));
+```
+
+
+## 任务要求
+
+1. `registerClass` 与 `tracedMethod` 使用 TS 5 标准装饰器的 `(value, context)` 形式。
+2. 方法包装器必须保留 `this`、全部参数和原返回值。
+3. `withTag` 在运行时增加 `advanced`，返回类型同时保留原对象能力。
+4. `MessageService` 通过构造器组合格式器，并使用其返回值组成消息。
+
+## 精确期望输出
 
 ```text
 注册类: PriceCalculator
@@ -50,10 +129,6 @@ message ──> MessageService ──> Formatter ──> 最终文字
 总价: 24
 消息: TYPESCRIPT
 ```
-
-限制：不使用 `any`；不写 descriptor 三参数装饰器；不启用 `experimentalDecorators`；包装方法不能丢失 this、参数或返回类型。
-
-完成标准：右击运行 `practice.ts` 后输出完全一致；能说出标准方法装饰器的两个参数，并解释这里为什么对格式器使用组合。
 
 ## 本题易漏语法
 
@@ -68,4 +143,4 @@ message ──> MessageService ──> Formatter ──> 最终文字
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

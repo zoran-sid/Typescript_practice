@@ -207,7 +207,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -226,31 +226,87 @@ flowchart TD
 
 ### 错误代码示例
 
+旧版 CSV 解析器可能抛出字符串，而新版解析器抛出 `Error`。导入任务为了“保证任务不失败”，把捕获值写成 `any`，读取不存在的 `message` 后又返回空数组：
+
 ```ts
-try {
-  throw "端口错误"; // ❌ 抛字符串没有标准 Error 的名称和堆栈信息。
-} catch (error: any) {
-  console.log(error.message); // ❌ any 允许读取并不存在的属性，结果可能是 undefined。
+function legacyCsvParser(): string[] {
+  throw "CSV 表头缺失";
 }
+
+function importRows(): string[] {
+  try {
+    return legacyCsvParser();
+  } catch (error: any) { // ❌ any 放过了不安全的 message 读取。
+    console.log("导入失败：" + error.message);
+    return [];
+  }
+}
+
+const rows = importRows();
+console.log("成功导入：" + rows.length);
 ```
+
+实际输出：
+
+```text
+导入失败：undefined
+成功导入：0
+```
+
+日志丢掉了真实原因，任务状态还把失败报告成“成功导入 0 条”。`any` 没有把字符串变成 `Error`，空数组也不是一次成功导入的可信结果。生产环境里这会让告警、重试和人工处理全部失去依据。
 
 ### 正确写法
 
 ```ts
-try {
-  throw new RangeError("端口错误"); // ✅ 抛出标准错误对象并保留堆栈。
-} catch (error: unknown) {
-  // ✅ 捕获值先保持 unknown，经过真实检查后再读取 message。
-  const message = error instanceof Error ? error.message : "未知错误";
-  console.log(message);
+type ImportResult =
+  | { ok: true; rows: string[] }
+  | { ok: false; error: string };
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "未知错误";
+}
+
+function importRows(): ImportResult {
+  try {
+    return {
+      ok: true,
+      rows: legacyCsvParser(),
+    };
+  } catch (error: unknown) { // ✅ 先保留 unknown，再统一转换失败原因。
+    return {
+      ok: false,
+      error: errorMessage(error),
+    };
+  }
+}
+
+const result = importRows();
+if (result.ok) {
+  console.log("成功导入：" + result.rows.length);
+} else {
+  console.log("导入失败：" + result.error);
 }
 ```
+
+实际输出：
+
+```text
+导入失败：CSV 表头缺失
+```
+
+自己控制的代码应优先抛出标准 `Error` 对象；系统边界仍把捕获值当作 `unknown`，因为依赖库和旧代码可能抛出任意值。适配层再把异常转换成明确的失败结果，外层就不会把失败误当成功。
 
 ## 面试时怎么回答
 
 **问：`any` 和 `unknown` 都能保存未知值，为什么更推荐 `unknown`？**
 
-**答：**`any` 会让后续属性读取、调用和赋值几乎都跳过检查，错误被推迟到运行时；`unknown` 允许先接住值，但使用前必须用真实条件收窄：
+**答：**`any` 会让属性读取、函数调用和赋值跳过大部分类型检查；`unknown` 可以接收任何值，但使用前必须通过 `typeof`、`instanceof` 或类型守卫收窄：
 
 ```ts
 function getMessage(error: unknown): string {
@@ -258,13 +314,18 @@ function getMessage(error: unknown): string {
 }
 ```
 
-TypeScript 负责在 `instanceof` 成功分支开放 `message`，开发者仍要决定还接受哪些错误形状。`unknown` 在运行时没有包装或转换，拿到的仍是原值；而且 JavaScript 可以抛出任意值，所以 `catch` 中不能假设一定是 `Error`。
+`unknown` 不会包装或转换运行值。JavaScript 允许抛出任意值，所以 `catch` 变量在严格模式下采用 `unknown`，能迫使错误处理代码先确认真实形状。
 
 **问：什么时候用 `Result`，什么时候用 `throw`？**
 
-**答：**可预期、调用者经常需要分支处理的业务失败适合 `Result`，例如端口被占用；无法在当前层正常继续的解析失败或程序异常可以抛出。
+**答：**要看调用约定。调用者日常需要处理、并且通常会继续当前流程的失败，适合放进 `Result`，例如优惠码被拒绝；当前函数无法给出可信返回值、需要把控制权交给错误边界时，可以 `throw`。在批处理边界，也可以捕获单项异常并转换成 `Result`，让下一项继续。
 
-**容易答错或追问：**不要只按“严重程度”机械划分。真正要看调用约定：`Result` 显式但每次都要检查，异常传递方便却会跳出当前路径，两种方案都不能用假成功值掩盖失败。
+`Result` 要求每个调用者显式检查分支；异常会跳出当前调用路径。团队应保持约定一致，两种方式都不能用空数组、`0` 或默认对象伪装成功。
+
+官方参考：
+
+- [TypeScript 4.4：catch 变量默认使用 `unknown`](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-4.html#defaulting-to-the-unknown-type-in-catch-variables)
+- [MDN：`try...catch`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch)
 
 ## 拓展思考（不要求写代码）
 

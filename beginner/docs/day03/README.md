@@ -159,7 +159,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -174,51 +174,91 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const studyMinutes = [30, 45, 20];
-let totalMinutes = 0;
-let longestSession = 0;
+假设监控程序收到三次接口耗时 `[120, 450, 300]` 毫秒，要统计总耗时、最慢一次和最后一次。下面三种写法都很常见：循环每轮覆盖旧统计值、把最后一项误当成最大值，以及把数组长度直接当作最后索引。
 
-for (const minutes of studyMinutes) {
-  totalMinutes = minutes; // ❌ 覆盖旧总计，最终只剩 20。
-  longestSession = minutes; // ❌ 无条件覆盖，得到的是最后一项。
+```ts
+const requestDurations = [120, 450, 300];
+let totalDuration = 0;
+let slowestDuration = 0;
+
+for (const duration of requestDurations) {
+  totalDuration = duration; // ❌ 每轮覆盖旧总计。
+  slowestDuration = duration; // ❌ 最后一项不一定是最大值。
 }
 
-console.log(studyMinutes[studyMinutes.length]); // ❌ 越界，结果是 undefined。
+const lastDuration = requestDurations[requestDurations.length];
+// ❌ length 是项数，不能直接当作最后索引。
+
+console.log(`Total: ${totalDuration}`);
+console.log(`Slowest: ${slowestDuration}`);
+console.log(`Last: ${lastDuration}`);
 ```
+
+实际输出：
+
+```text
+Total: 300
+Slowest: 300
+Last: undefined
+```
+
+循环最后一轮把两个统计变量都覆盖成 300，所以前两次请求的数据丢了。数组有 3 项时，合法索引是 0、1、2；索引 3 指向不存在的位置，因此得到 `undefined`。如果这个值继续参与计算，错误会传到后面的平均值或告警判断中。
 
 ### 正确写法
 
 ```ts
-const studyMinutes = [30, 45, 20];
-let totalMinutes = 0;
-let longestSession = 0;
+const requestDurations = [120, 450, 300];
+let totalDuration = 0;
+let slowestDuration = 0;
 
-for (const minutes of studyMinutes) {
-  totalMinutes = totalMinutes + minutes; // ✅ 旧总计加上当前项。
+for (const duration of requestDurations) {
+  totalDuration = totalDuration + duration; // ✅ 保留旧总计再累加。
 
-  if (minutes > longestSession) {
-    longestSession = minutes; // ✅ 只在当前项更大时更新。
+  if (duration > slowestDuration) {
+    slowestDuration = duration;
   }
 }
 
-console.log(studyMinutes[studyMinutes.length - 1]); // ✅ 最后索引是数量减 1。
+const lastDuration = requestDurations[requestDurations.length - 1];
+// ✅ 最后一项的索引是项数减 1。
+
+console.log(`Total: ${totalDuration}`);
+console.log(`Slowest: ${slowestDuration}`);
+console.log(`Last: ${lastDuration}`);
 ```
+
+实际输出：
+
+```text
+Total: 870
+Slowest: 450
+Last: 300
+```
+
+累加时必须读取旧的 `totalDuration`；最大值只在当前项更大时更新；最后索引是 `.length - 1`。这里用 0 初始化最大值，是因为接口耗时不会是负数。换成可能全是负数的数据时，要重新选择初始值。
 
 ## 面试时怎么回答
 
 **问：`number[]`、`Array<number>` 和元组有什么区别？**
 
-`number[]` 与 `Array<number>` 都表示“任意长度、每一项都是数字”的数组，只是写法不同。例如 `[10, 20].length` 输出 `2`，循环时可以逐项处理。元组则用位置表达不同含义，例如 `[string, number]` 可以表示“第 0 项是姓名，第 1 项是分数”；它适合长度和位置含义固定的数据，不是普通数组的另一种漂亮写法。
+可以这样回答：
 
-还要说明数组索引的现实边界：类型写成 `number[]` 并不能证明第 0 项一定存在。空数组 `const scores: number[] = []` 读取 `scores[0]`，运行时会得到 `undefined`。开启 `noUncheckedIndexedAccess` 后，TypeScript 会把这类读取提醒为 `number | undefined`。因此要先检查长度，或设计一个能明确表示“可能没有结果”的返回类型。
+`number[]` 与 `Array<number>` 都表示元素为数字的数组，只是语法不同。元组会把长度和每个位置的类型写进契约，例如 `[string, number]` 表示第 0 项是字符串、第 1 项是数字。普通同类列表用数组；位置数量固定、每个位置含义不同的数据才适合元组。
+
+还要说明数组索引的现实边界：类型写成 `number[]` 并不能证明第 0 项一定存在。空数组 `const scores: number[] = []` 读取 `scores[0]`，运行时会得到 `undefined`。开启 `noUncheckedIndexedAccess` 后，TypeScript 会把这类读取提醒为 `number | undefined`。运行时必须处理空数组；要同时让类型检查确认安全，可以先保存 `const first = scores[0]`，再判断 `first !== undefined` 后使用，或让返回类型明确包含 `undefined`。只检查普通数组的 `scores.length > 0`，目前不一定能让 TypeScript 把 `scores[0]` 自动收窄成 `number`。
+
+官方参考：
+
+- [TypeScript：Everyday Types 中的数组](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays)
+- [TypeScript：Object Types 中的元组](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types)
+- [TypeScript：TSConfig `noUncheckedIndexedAccess`](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
 
 ## 拓展思考（不要求写代码）
 
 如果同样的“找最大值”程序处理的是全为负数的冬季温度，`longestSession` 这种从 0 开始的初始化方式为什么会得到错误结果，初始值更适合从哪里取得？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照循环每一轮如何更新状态。

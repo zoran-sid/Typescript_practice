@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day06/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day06/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day06/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -74,6 +74,85 @@ originalTask 与 copiedTask ──> 修改副本后比较输出
 
 对象值写 `const student = { name: "Mei", scores: [88] };`：变量名后用 `=`，值属性内部用 `:`，属性之间用逗号，数组用 `[]`。对象参数类型写 `{ name: string; scores: number[] }`：属性名与类型之间仍用 `:`，类型属性推荐用分号。对象值关闭后是 `};`，函数或循环代码块关闭后通常只有 `}`。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定对象 originalTask"] --> B["全局 for...of 遍历 scores"]
+    B --> C["每轮 copiedScores.push(score)"]
+    C --> D["得到 copiedScores"]
+    A --> E["调用 copyScores(originalTask.scores)"]
+    E --> F["函数内建立 result"]
+    F --> G["for...of 逐项 push"]
+    G --> H["return result"]
+    H --> I["scoresFromFunction"]
+    A --> J["读取 title、done、student"]
+    D --> K["建立独立 copiedTask"]
+    J --> K
+    K --> L["只把 copiedTask.done 改为 true"]
+    K --> M["调用 calculateAverage(copiedTask)"]
+    M --> N["循环累加分数"]
+    N --> O["return total / length"]
+    O --> P["averageScore"]
+    L --> Q["四次 console.log"]
+    P --> Q
+    Q --> R["输出原对象、副本与平均分"]
+```
+
+## 起始代码
+
+固定对象、两个函数签名、调用和输出已经给出。循环、push、对象复制、状态修改、平均分计算与 return 由你完成。
+
+```ts
+const originalTask = {
+  title: "完成对象练习",
+  done: false,
+  student: { name: "Mei", city: "成都" },
+  scores: [88, 92, 90],
+};
+
+const copiedScores: number[] = [];
+for (const score of originalTask.scores) {
+  // TODO：把本轮 score 追加到 copiedScores。
+}
+
+function copyScores(source: number[]): number[] {
+  const result: number[] = [];
+  for (const score of source) {
+    // TODO：把本轮 score 追加到 result。
+  }
+  return []; // TODO：把占位数组换成本轮生成的 result。
+}
+
+const scoresFromFunction = copyScores(originalTask.scores);
+void scoresFromFunction;
+
+const copiedTask = {
+  title: "", // TODO：读取原任务标题。
+  done: false, // TODO：读取原任务初始状态。
+  student: {
+    name: "", // TODO：读取原学生姓名。
+    city: "", // TODO：读取原学生城市。
+  },
+  scores: copiedScores,
+};
+// TODO：只把 copiedTask.done 更新为 true。
+
+function calculateAverage(record: { scores: number[] }): number {
+  let total = 0;
+  for (const score of record.scores) {
+    // TODO：把本轮 score 累加到 total。
+  }
+  return 0; // TODO：替换为平均分计算结果。
+}
+
+const averageScore = calculateAverage(copiedTask);
+console.log(`原任务完成: ${originalTask.done}`);
+console.log(`副本完成: ${copiedTask.done}`);
+console.log(`学生: ${copiedTask.student.name}（${copiedTask.student.city}）`);
+console.log(`平均分: ${averageScore}`);
+```
+
 ## 写完后自检
 
 - 如果把成绩改成 `[88, 92, 100]`，平均分会怎样变化？如果数组为空，当前除法会产生什么结果，函数需要怎样的输入约定？
@@ -83,4 +162,4 @@ originalTask 与 copiedTask ──> 修改副本后比较输出
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

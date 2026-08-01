@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day08/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day08/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day08/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -57,6 +57,54 @@ Practice 01 的输入数据包含可能缺少的嵌套地址，查找后要继�
 
 不改现有四行输出，另建一个播放器设置对象：`volume?: number` 与 `caption?: string`。分别测试 `{ volume: 0, caption: "" }` 和空对象，用 `??` 生成显示值。重点观察 0、空字符串和真正缺失时，后备值分别会不会启用。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定 contacts 数组"] --> B["调用 contacts.find"]
+    B --> C["回调 return 姓名是否为 Mei"]
+    C -- "匹配" --> D["selectedContact"]
+    C -- "不匹配" --> B
+    D --> E["selectedContact?.name ?? 未找到"]
+    D --> F["selectedContact?.phone ?? 未提供"]
+    G["score = 0"] --> H["score ?? 100"]
+    I["nickname = 空字符串"] --> J["nickname ?? 匿名"]
+    H --> K["保留 0"]
+    J --> L["保留空字符串"]
+    E --> M["四次 console.log"]
+    F --> M
+    K --> M
+    L --> M
+    M --> N["输出联系人与默认值对比"]
+```
+
+## 起始代码
+
+固定联系人、find 调用、0/空字符串和输出都已给出。回调、安全属性访问与 ?? 表达式由你完成。
+
+```ts
+const contacts: Array<{ name: string; phone?: string }> = [
+  { name: "Lin", phone: "13800000000" },
+  { name: "Mei" },
+];
+
+const selectedContact = contacts.find((contact) => {
+  return false; // TODO：替换为姓名是否为 "Mei"。
+});
+
+const selectedName = ""; // TODO：替换为安全读取姓名与默认值的表达式。
+const phone = ""; // TODO：替换为安全读取电话与默认值的表达式。
+const score: number | undefined = 0;
+const nickname: string | undefined = "";
+const displayedScore = -1; // TODO：用 ?? 在缺失时选择 100。
+const displayedNickname = "TODO"; // TODO：用 ?? 在缺失时选择“匿名”。
+
+console.log(`联系人: ${selectedName}`);
+console.log(`电话: ${phone}`);
+console.log(`分数显示: ${displayedScore}`);
+console.log(`昵称显示: ${JSON.stringify(displayedNickname)}`);
+```
+
 ## 写完后自检
 
 - 如果查找名字改成不存在的 `"Noah"`，联系人和电话两行应分别显示什么？
@@ -65,4 +113,4 @@ Practice 01 的输入数据包含可能缺少的嵌套地址，查找后要继�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

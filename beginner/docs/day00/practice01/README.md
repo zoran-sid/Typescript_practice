@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day00/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day00/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day00/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -57,6 +57,25 @@ Hello, TypeScript!
 
 console.log(message); 中函数名后是圆括号，参数在括号内，语句以分号结束。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定文字：Hello, TypeScript!"] --> B["保存到 message"]
+    B --> C["调用 console.log(message)"]
+    C --> D["终端输出：Hello, TypeScript!"]
+```
+
+## 起始代码
+
+这道入门题没有判断或循环，固定数据和输出位置已经给出。请亲手输入一遍，重点留意引号、圆括号和分号。
+
+```ts
+const message = "Hello, TypeScript!";
+
+console.log(message);
+```
+
 ## 写完后自检
 
 - 如果欢迎语改成 `"Hello, Lin!"`，哪一处输入需要变化，终端会显示什么？
@@ -66,4 +85,4 @@ console.log(message); 中函数名后是圆括号，参数在括号内，语句�
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

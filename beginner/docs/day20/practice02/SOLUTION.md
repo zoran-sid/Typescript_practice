@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day20/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 中的 `// 调用关系：` 注释把每个原始批次连接到解析结果和最终输出。
 
-## 方案一
+## 直接调用逻辑
 
-1. 先把解析结果保留为 `unknown`，语法错误立即变成失败 Result。
-2. 用 `Array.isArray` 检查批次容器，再遍历数组里的 unknown 项。
-3. `isNotification` 先用会排除 `null` 和数组的 `isRecord` 确认普通记录对象，再按 kind 检查对应字段。
-4. 合法项加入 `valid`，其余项只累计 rejected；外层按 Result 输出批次结果。
+1. `raw` 进入 `parseBatch`；语法错误直接返回失败 Result，成功解析的值仍是 `unknown`。
+2. 数组检查通过后，循环把每个 `item` 交给 `isNotification`。
+3. 合法项加入 `valid`，坏项只增加 `rejectedCount`；循环结束返回 `BatchSummary`。
+4. 调用处根据 `result.ok` 输出合法渠道和丢弃数，或只输出批次错误。
 
-## 关键检查点
-
-- `typeof null` 和数组都会落入 `object`；`isRecord` 必须同时排除 `null` 和数组。
-
-- email 与 push 的字段不同，不能只检查 kind 就承诺整个联合成员。
-
-- 容器错误、单项错误和 JSON 语法错误属于不同层级，不要混成同一个 `false`。
+完整实现位于 `solution.ts`，其中没有 TODO、断言或占位返回值。

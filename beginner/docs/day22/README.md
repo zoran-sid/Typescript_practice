@@ -131,7 +131,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -150,52 +150,93 @@ flowchart TD
 
 ### 错误代码示例
 
+演出票系统规定：预订数量超过余票时必须抛出 `RangeError`。下面的测试把“被测函数的错误”和“测试自己报告的失败”放进同一个 `try`，因此正常返回也会被误报为通过：
+
 ```ts
-function assertThrows(action: () => void): void {
-  try {
-    action();
-    throw new Error("被测函数没有抛错");
-  } catch {
-    // ❌ 这里也会捕获上一行由测试自己抛出的 Error，造成“假通过”。
-    console.log("测试通过");
+function reserveTickets(requested: number, available: number): number {
+  if (requested > available) {
+    throw new RangeError("余票不足");
   }
+  return available - requested;
 }
 
-const actual = greeting("小夏");
-// ❌ actual 是 Promise<string>，还不是最终的问候字符串。
-console.log(actual === "你好，小夏");
+try {
+  reserveTickets(2, 3);
+  throw new Error("测试失败：本应抛出 RangeError");
+} catch {
+  // ❌ reserveTickets 正常返回后，测试自己抛出的 Error 也被这里接住了。
+  console.log("通过: 超过余票会报错");
+}
 ```
+
+这次只订 2 张、还有 3 张票，本来不该抛错，终端却仍然显示：
+
+```text
+通过: 超过余票会报错
+```
+
+持续集成会显示绿色，但“超额预订必须失败”这条规则没有真正受到保护。只要出现任意错误就算通过也有问题：即使代码因为读取 `undefined` 抛出 `TypeError`，测试仍会把它当成预期的 `RangeError`。
+
+异步测试也可能提前宣布成功。下面的函数启动刷新后没有等待，日志先打印出来，Promise 稍后才拒绝：
+
+```ts
+async function refreshAvailability(): Promise<void> {
+  throw new Error("库存服务离线");
+}
+
+void refreshAvailability();
+// ❌ Promise 尚未完成，测试已经打印“通过”并结束。
+console.log("通过: 库存已刷新");
+```
+
+这个拒绝可能变成未处理的 Promise 拒绝，或者在“通过”之后才出现在日志里。
 
 ### 正确写法
 
+这里不用新的测试库，直接把捕获到的错误保存为 `unknown`，再在 `try/catch` 外核对。这样测试自己抛出的失败不会被原来的 `catch` 接住。
+
 ```ts
-function assertThrows(action: () => void): void {
-  try {
-    action();
-  } catch (error: unknown) {
-    if (error instanceof RangeError) {
-      console.log("测试通过");
-      return;
-    }
-    throw error;
-  }
-
-  // ✅ 只有被测函数完全没有抛错时，才由测试在 try 外报告失败。
-  throw new Error("被测函数没有抛出预期的 RangeError");
+let reservationError: unknown;
+try {
+  reserveTickets(4, 3);
+} catch (error: unknown) {
+  reservationError = error;
 }
+if (!(reservationError instanceof RangeError)) {
+  // ✅ 没抛错或抛了其他错误，都会在 catch 外让测试失败。
+  throw new Error("预期得到余票不足的 RangeError");
+}
+console.log("通过: 超过余票会报错");
 
-// ✅ 先等待 Promise 完成，再断言解析后的 string。
-const actual = await greeting("小夏");
-console.log(actual === "你好，小夏");
+let refreshError: unknown;
+try {
+  // ✅ await 保证拒绝发生在这个 try/catch 的执行期间。
+  await refreshAvailability();
+} catch (error: unknown) {
+  refreshError = error;
+}
+if (
+  !(refreshError instanceof Error) ||
+  refreshError.message !== "库存服务离线"
+) {
+  throw new Error("刷新没有按预期失败");
+}
+console.log("通过: 离线刷新会失败");
 ```
+
+测试现在只接受约定好的失败。`reserveTickets` 没抛错、抛了其他类型，或异步刷新意外成功，都会让对应断言失败。
 
 ## 面试时怎么回答
 
 **问：** TypeScript 已经能检查参数类型，为什么还要写业务测试？
 
-**答：** 类型检查回答的是“值能不能这样传”，业务测试回答的是“算出来对不对”。例如 `cartTotal(20, 3)` 的两个实参都是 `number`，即使函数里误写成 `price + quantity`，TypeScript 也不会报错，但测试比较实际值 `23` 与期望值 `60` 时会失败。我会按正常、边界、错误三类选输入：`20 × 3` 得 `60`，`20 × 0` 得 `0`，数量 `-1` 抛 `RangeError`；异步函数还要先 `await`，再比较 Promise 完成后的值。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要回答“有类型就不会出 bug”，也不要把 `console.log` 当断言。面试官可能继续问测试的边界：测试只保护写过的场景，断言函数本身也可能写错；所以要故意改坏一次期望值，确认它真的会失败。业务函数用 `return` 交出可比较结果，测试负责报告差异，两者职责不同。
+TypeScript 检查的是静态类型关系，测试检查的是程序运行后的行为。`price + quantity` 和 `price * quantity` 在类型上都会得到 `number`，所以编译器无法知道哪一个才符合购物车规则；测试可以用具体输入比较实际值和期望值。我的用例通常至少覆盖正常值、边界值和失败路径。异步测试必须返回或等待 Promise，因为测试函数返回的 Promise 被拒绝时，测试运行器才会把它算作失败。异常测试也要核对错误类型或消息，不能只要“有任何错误”就通过。
+
+如果继续追问测试的边界，可以补充：测试只保护已经写出的案例，断言本身也可能有错误。我会先让测试通过，再故意改错一次实现或期望值，确认它确实会失败，避免留下假通过。
+
+官方参考：[Node.js Test Runner](https://nodejs.org/api/test.html)、[Node.js Assert](https://nodejs.org/api/assert.html)
 
 ## 拓展思考（不要求写代码）
 

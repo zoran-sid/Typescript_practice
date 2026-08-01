@@ -201,7 +201,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -217,62 +217,108 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const student { name = "Lin" };
-// ❌ 变量名后缺少 =；对象属性的名称和值之间应使用 :。
-```
-
-即使对象语法写对，下面的写法仍没有复制数据：
+假设个人资料页从缓存取出一份资料，再创建“编辑草稿”。开发者希望用户点保存前只修改草稿，却直接把缓存对象赋给了另一个变量：
 
 ```ts
-const originalTask = {
-  student: { name: "Lin" },
-  scores: [88, 92],
+const cachedProfile = {
+  name: "Lin",
+  address: { city: "上海" },
+  permissions: ["reader"],
 };
 
-const copiedTask = originalTask;
-copiedTask.scores.push(100);
-// ❌ 两个变量指向同一个对象，原任务的 scores 也被修改。
+const editDraft = cachedProfile;
+// ❌ 只复制了引用，没有创建独立草稿。
+
+editDraft.address.city = "成都";
+editDraft.permissions.push("editor");
+
+console.log(`缓存城市: ${cachedProfile.address.city}`);
+console.log(`缓存权限数: ${cachedProfile.permissions.length}`);
+console.log(`缓存第二权限: ${cachedProfile.permissions[1]}`);
 ```
+
+实际输出：
+
+```text
+缓存城市: 成都
+缓存权限数: 2
+缓存第二权限: editor
+```
+
+`editDraft` 没有创建新对象，它只是给同一个对象增加了第二个入口。修改嵌套地址和权限数组时，缓存立即被改掉；用户即使点击“取消编辑”，原资料也已经变化。这是表单草稿、状态管理和缓存代码里常见的引用错误。
+
+对象刚开始写不出来时，还要先排除语法问题：
+
+```ts
+const profile { name = "Lin" };
+// 变量名后缺少 =，对象属性内部也应使用 :。
+```
+
+正确的对象声明格式是 `const profile = { name: "Lin" };`：声明处用 `=`，对象属性内部用 `:`。
 
 ### 正确写法
 
 ```ts
-const student = { name: "Lin" };
-// ✅ = 把右侧对象赋给变量；对象内部用 : 连接属性名和值；语句以 ; 结束。
-
-const originalTask = {
-  student,
-  scores: [88, 92],
+const cachedProfile = {
+  name: "Lin",
+  address: { city: "上海" },
+  permissions: ["reader"],
 };
-const copiedScores: number[] = [];
 
-for (const score of originalTask.scores) {
-  copiedScores.push(score); // ✅ 逐项加入显式创建的新数组。
+const copiedPermissions: string[] = [];
+
+for (const permission of cachedProfile.permissions) {
+  copiedPermissions.push(permission);
 }
 
-const copiedTask = {
-  student: { name: originalTask.student.name }, // ✅ 新的嵌套对象。
-  scores: copiedScores, // ✅ 与原对象使用不同的数组。
+const editDraft = {
+  name: cachedProfile.name,
+  address: { city: cachedProfile.address.city }, // ✅ 新的嵌套对象。
+  permissions: copiedPermissions,
 };
 
-copiedTask.scores.push(100); // ✅ 只修改副本的数组。
+editDraft.address.city = "成都";
+editDraft.permissions.push("editor");
+
+console.log(`缓存城市: ${cachedProfile.address.city}`);
+console.log(`草稿城市: ${editDraft.address.city}`);
+console.log(`缓存权限数: ${cachedProfile.permissions.length}`);
+console.log(`草稿权限数: ${editDraft.permissions.length}`);
 ```
+
+实际输出：
+
+```text
+缓存城市: 上海
+草稿城市: 成都
+缓存权限数: 1
+草稿权限数: 2
+```
+
+这里按已知结构分别创建了新的外层对象、`address` 对象和 `permissions` 数组，所以草稿修改不会回到缓存。只创建新外层对象还不够：任何直接沿用的嵌套对象或数组仍会共享引用。
 
 ## 面试时怎么回答
 
 **问：把循环写在全局和封装成函数有什么区别？对象传入函数后为什么可能被改掉？**
 
-两种写法都能完成一次 `push`，差别在职责和复用。全局循环直接依赖外部的 `scores`，适合一次性的顺序脚本；函数把输入写成参数、把工作集中在一个名字下，同一逻辑可以用于不同数组，也更容易单独测试。参数不是自动复制数据：数组和对象传入函数时，函数拿到的仍是同一个引用，因此在函数里 `scores.push(90)`，外面的数组也会多出 `90`。
+可以这样回答：
+
+全局循环直接使用当前文件里的变量，适合一次性的顺序处理。封装成函数后，输入通过参数进入，结果通过 `return` 交回，同一段逻辑可以处理不同数组，也更容易单独测试。把代码放进函数不会自动复制参数：对象和数组的引用仍指向原来的数据，所以函数内部修改属性或调用 `push`，调用者也能看到变化。
 
 这也解释了 `const` 的边界：`const scores = [80]` 禁止把变量重新指向另一数组，却允许 `scores.push(90)`，最终输出 `[80, 90]`。`readonly` 可以在类型检查阶段限制写操作，但通常也是浅层限制，并不会在运行时自动冻结对象。若函数不应修改原数据，应返回副本并把这条约定写进类型和名称。
+
+官方参考：
+
+- [MDN：Functions——对象参数的修改](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions)
+- [TypeScript：Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html)
+- [MDN：Array.prototype.push()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
 
 ## 拓展思考（不要求写代码）
 
 如果 `copiedTask.student` 直接使用 `originalTask.student`，随后修改副本学生的城市，为什么原任务中的城市也会变化，而本题单独创建嵌套对象后不会？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，并尝试画出两套对象结构。

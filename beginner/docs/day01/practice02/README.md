@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day01/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day01/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day01/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -55,6 +55,46 @@ isTracked = true ─────────────────────
 
 Practice 01 用多种变量描述一份学习档案，重点是给数据命名并输出。这里追踪的是同一个库存值在两个时刻的状态：先保存快照，再连续修改当前值，代码顺序会直接影响结果。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数据：Keyboard、stock = 5、isTracked = true"] --> B["修改前保存 beforeStock = 5"]
+    B --> C["第一次出库：stock 减 1"]
+    C --> D["第二次出库：stock 再减 1"]
+    D --> E["当前库存 stock = 3"]
+    A --> F["生成商品与跟踪文字"]
+    B --> G["生成出库前文字"]
+    E --> H["生成出库后文字"]
+    F --> I["四次 console.log"]
+    G --> I
+    H --> I
+    I --> J["输出库存快照"]
+```
+
+## 起始代码
+
+固定数据、快照位置和输出调用都已提供。请完成两次库存更新与四条模板字符串。
+
+```ts
+const productName: string = "Keyboard";
+let stock: number = 5;
+const isTracked: boolean = true;
+
+const beforeStock = stock;
+// TODO：让 stock 连续减少两次，每次减少 1。
+
+const productLine = ""; // TODO：替换为商品模板字符串。
+const beforeLine = ""; // TODO：替换为出库前库存模板字符串。
+const afterLine = ""; // TODO：替换为出库后库存模板字符串。
+const trackingLine = ""; // TODO：替换为库存跟踪模板字符串。
+
+console.log(productLine);
+console.log(beforeLine);
+console.log(afterLine);
+console.log(trackingLine);
+```
+
 ## 写完后自检
 
 - 如果初始库存改成 1，仍连续出库两次，`beforeStock` 和最终 `stock` 分别会是多少？
@@ -63,4 +103,4 @@ Practice 01 用多种变量描述一份学习档案，重点是给数据命名�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

@@ -1,18 +1,13 @@
-# Day 09 · Practice 02 解题结构提示
+# Practice 02 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day09/practice02/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。任务类型、固定对象和只读标签数组已保留，状态、备注、摘要与标签连接仍是 `TODO`。
+[打开 solution.ts](../../../day09/practice02/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-先用命名类型约束任务卡，`readonly id` 表达标识创建后不应更换，`note?` 表达备注可能缺失。描述函数通过参数读取状态和备注，分别生成局部显示值，再组合返回字符串。
+## 直接调用逻辑
 
-标签用 `ReadonlyArray<string>`，这里只读取并连接，不修改原数组。
+`Task` 接口检查固定 `task` → `describeTask(task)` → 根据 `done` 选择状态、用 `??` 处理备注 → return 两行摘要；`tags` → `join(", ")` → `tagsText` → 两次 `console.log` 合计输出三行。
 
-## 自检
-
-- 可选属性缺失时不会输出 `undefined`。
-- 状态文字由 `done` 推导，不是固定写死。
-- 标签输出来自只读数组的连接结果。
-- 函数没有读取外部 `task` 变量。
+任务对象与标签数组是两条独立数据流，只在最终输出阶段并列展示。

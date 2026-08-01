@@ -107,7 +107,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -127,47 +127,112 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-type PublicArticle = Omit<Article, "summary">;
-const publicArticle: PublicArticle = article;
-// ❌ 类型允许赋值不代表运行时删除了 summary；对象里仍然有这个字段。
+通知配置从启动数据中读取渠道列表。开发者给配置加了 `as const`，便以为渠道数组也在运行时被冻结，不会再被别处修改：
 
-const labels = {
-  draft: "草稿",
-} as Record<Status, string>; // ❌ 断言掩盖了 published、archived 等漏键。
+```ts
+const channelsFromStartup = ["email"];
+
+const notificationConfig = {
+  channels: channelsFromStartup,
+  retry: {
+    maxAttempts: 3,
+  },
+} as const;
+
+channelsFromStartup.push("sms"); // ❌ 两处仍引用同一个数组。
+console.log(notificationConfig.channels.join("、"));
 ```
+
+实际输出：
+
+```text
+email、sms
+```
+
+`as const` 负责类型检查：它尽量保留字面量，并把对象属性标记为只读。它不会复制数组，也不会在 JavaScript 运行时调用冻结功能。这里的 `channelsFromStartup` 和 `notificationConfig.channels` 指向同一个数组，所以从前者 `push`，配置里也会看到新增项。
+
+另一类常见错误发生在文件格式与扩展名的对应表。为了尽快消除漏键报错，有人会使用断言：
+
+```ts
+type ExportFormat = "csv" | "json" | "xlsx";
+const extensions = {
+  csv: ".csv",
+  json: ".json",
+} as Record<ExportFormat, string>;
+
+console.log(extensions.xlsx);
+```
+
+实际输出：
+
+```text
+undefined
+```
+
+断言没有补出 `xlsx`，只是让编译器停止追问。
 
 ### 正确写法
 
-```ts
-const { summary: _privateSummary, ...publicArticle } = article;
-// ✅ 解构 rest 真正在运行时创建不含 summary 的对象。
+下面会用到两个 JavaScript 动作：
 
-const labels = {
-  draft: "草稿",
-  published: "已发布",
-  archived: "已归档",
-} satisfies Record<Status, string>; // ✅ 漏键或值类型错误都会被检查。
+- `[...原数组]` 会把数组中的现有项目放进一个新数组，避免新配置继续和外部共用同一个数组。
+- `Object.freeze(对象)` 会在运行时冻结这个对象，使它不能再新增、删除或改写当前层的属性。它只处理当前这一层，嵌套的数组或对象要分别冻结。
+
+```ts
+const channelsFromStartup = ["email"];
+
+const notificationConfig = Object.freeze({
+  // ✅ 先复制外部数组，再冻结配置实际保存的副本。
+  channels: Object.freeze([...channelsFromStartup]),
+  retry: Object.freeze({
+    maxAttempts: 3,
+  }),
+});
+
+channelsFromStartup.push("sms");
+console.log(notificationConfig.channels.join("、"));
+
+const extensions = {
+  csv: ".csv",
+  json: ".json",
+  xlsx: ".xlsx",
+} satisfies Record<ExportFormat, string>;
 ```
+
+实际输出：
+
+```text
+email
+```
+
+数组展开 `[...channelsFromStartup]` 会创建一个新数组，避免配置继续共享外部数组；`Object.freeze` 是 JavaScript 的运行时冻结方法。它只冻结当前这一层，所以示例把渠道数组、`retry` 对象和最外层对象分别冻结。
+
+`satisfies` 解决的是另一件事：它在编译时检查三种文件格式是否都有扩展名，但不会在运行时补键。类型检查与运行时数据保护不能互相替代。
 
 ## 面试时怎么回答
 
 **问：Utility Types、`as const` 和 `satisfies` 各自解决什么问题？**
 
-**答：**Utility Types 从主要类型派生新用途，减少复制后字段不同步；`as const` 保留字面量并得到只读类型；`satisfies` 检查一个值是否满足目标结构，同时尽量保留这个值自己的推断。例如：
+**答：**Utility Types 根据已有类型计算新类型，例如 `Pick` 选字段、`Omit` 排除字段、`Partial` 把字段变成可选。`as const` 阻止字面量被扩大，并让对象属性成为只读、数组成为只读元组。`satisfies` 检查一个表达式能否赋给目标类型，同时保留表达式本身较精确的推断：
 
 ```ts
-const statuses = ["draft", "published"] as const;
-type Status = (typeof statuses)[number];
-const labels = {
-  draft: "草稿",
-  published: "已发布",
-} satisfies Record<Status, string>;
+const environments = ["development", "production"] as const;
+type Environment = (typeof environments)[number];
+const baseUrls = {
+  development: "http://localhost:3000",
+  production: "https://api.example.com",
+} satisfies Record<Environment, string>;
 ```
 
-漏掉状态或多写错误键时会在编译期提示。开发者仍要选择事实来源、允许更新和公开的字段。
+漏掉环境或写错键时会在编译期提示，`baseUrls` 的每个属性仍保留自己的具体类型。
 
-**容易答错或追问：**这些工具都不负责运行时转换。`Omit<Article, "summary">` 不会从真实对象中删除 `summary`，仍要实际构造公开对象；`as const` 不等于 `Object.freeze`；`satisfies` 也不会补齐字段或改变运行值。派生类型太多时，最终形状反而难追踪，应让每个别名对应明确用途。
+三者都不会进行运行时转换：`Omit` 不会删除真实字段，`as const` 不等于深度 `Object.freeze`，`satisfies` 也不会补齐对象。公开数据、冻结和验证仍要由运行时代码完成。
+
+官方参考：
+
+- [TypeScript Handbook：Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+- [TypeScript 3.4：`const` assertions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions)
+- [TypeScript 4.9：`satisfies` Operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator)
 
 ## 拓展思考（不要求写代码）
 

@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day14/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day14/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day14/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -37,6 +37,48 @@ featuredProduct ──> Product 约束
 priceCents ──> formatPrice ──> 价格文字
 product ──> stockLabel ──> 库存文字
 仓库 + 商品 + 两个工具结果 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["inventory-types.ts<br/>Product"] --> B["import type<br/>检查 selected 形状"]
+  C["inventory-data.ts 默认导出"] --> D["featuredProduct"]
+  C --> E["warehouseName as warehouse"]
+  D --> F["selected: Product"]
+  B --> F
+  G["inventory-tools.ts 默认导出"] --> H["formatPrice"]
+  G --> I["stockLabel 具名导入"]
+  F --> J["调用 formatPrice(selected.priceCents)"]
+  H --> J
+  J --> K["return priceText"]
+  F --> L["调用 stockLabel(selected)"]
+  I --> L
+  L --> M["判断 stock > 0<br/>return stockText"]
+  E --> N["console.log 仓库"]
+  F --> O["console.log 商品"]
+  K --> P["console.log 价格"]
+  M --> Q["console.log 库存"]
+```
+
+## 起始代码
+
+默认导入、具名导入、别名、`import type`、变量、函数调用和四行输出都已给出。先沿导入名称核对来源，再遮住导入区自己重写一次。
+
+```ts
+import featuredProduct, { warehouseName as warehouse } from "./inventory-data.js";
+import formatPrice, { stockLabel } from "./inventory-tools.js";
+import type { Product } from "./inventory-types.js";
+
+// TODO：先遮住上面的导入区，独立重写一遍后再对照。
+const selected: Product = featuredProduct;
+const priceText = formatPrice(selected.priceCents);
+const stockText = stockLabel(selected);
+console.log(`仓库：${warehouse}`);
+console.log(`商品：${selected.name}（${selected.sku}）`);
+console.log(`价格：${priceText}`);
+console.log(`库存：${stockText}`);
 ```
 
 ## 要完成的功能
@@ -77,4 +119,4 @@ product ──> stockLabel ──> 库存文字
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

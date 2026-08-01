@@ -1,48 +1,54 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 interface AuditSink {
   record(message: string): void;
 }
+
 class MemoryAuditSink implements AuditSink {
   private readonly entries: string[] = [];
 
   record(message: string): void {
-    // TODO 1：把当前 message 加入 entries。空函数体目前会丢掉所有审计记录。
-    void message;
+    this.entries.push(message);
   }
 
   get count(): number {
-    // TODO 2：返回当前 entries 的真实长度；0 只是临时占位。
-    return 0;
+    return this.entries.length;
   }
 
   last(): string | undefined {
-    // TODO 3：返回最后一条记录；没有记录时返回 undefined。
-    // 下面的 undefined 目前忽略了已有记录。
-    return undefined;
+    return this.entries.at(-1);
   }
 }
+
 class PaymentService {
   constructor(private readonly audit: AuditSink) {}
 
   pay(quantity: number, unitPrice: number): number {
-    // TODO 4：先验证 quantity 是正整数，unitPrice 是有限非负数字；失败时抛 RangeError。
-    // 通过后计算 total，记录“paid 数量 x 单价”，最后返回 total。
-    // 下面的 0 没有使用输入，也没有记录，只是 number 占位。
-    return 0;
+    // 判断关系：先完成全部校验，失败时立即 throw，不能提前写审计记录。
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new RangeError("quantity must be a positive integer");
+    }
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      throw new RangeError("unitPrice must be a finite non-negative number");
+    }
+    const total = quantity * unitPrice;
+    this.audit.record(`paid ${quantity} x ${unitPrice}`);
+    return total;
   }
 }
+
 const audit = new MemoryAuditSink();
 const service = new PaymentService(audit);
+// 调用关系：固定数量/单价 -> service.pay -> 校验 -> audit.record -> total -> 输出。
 const total = service.pay(3, 8);
 console.log(`Paid: ${total}`);
 console.log(`Audit count: ${audit.count}`);
 console.log(`Last audit: ${audit.last() ?? "none"}`);
+
+// 调用关系：无效数量 -> pay 在 record 前抛错 -> catch 只接收 RangeError -> 审计数保持不变。
 try {
   service.pay(0, 8);
   console.log("Invalid quantity: accepted");
 } catch (error: unknown) {
-  // TODO 5：只有捕获到 RangeError 才输出 rejected；其他错误继续抛出，
-  // 不能把实现 bug 也伪装成正确的输入拒绝。
-  console.log(error instanceof RangeError ? "Invalid quantity: rejected" : "Invalid quantity: wrong error");
+  if (!(error instanceof RangeError)) throw error;
+  console.log("Invalid quantity: rejected");
 }
 console.log(`Audit after failure: ${audit.count}`);

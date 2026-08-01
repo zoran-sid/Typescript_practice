@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day06/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day06/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day06/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -54,6 +54,53 @@ Practice 01 要复制带嵌套对象与数组的任务数据，再比较原数�
 
 不改本题三行输出，另写一个独立的 `describeDevice(device)`。设备至少包含 `model: string` 和 `online: boolean`，分别用一台在线设备、一台离线设备调用它。重点检查函数是否只读取自己的参数，而不是偷偷读取外部某个固定设备。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定对象 book"] --> B["调用 describeBook(book)"]
+    B --> C["形参 item 接住 book"]
+    C --> D{"item.available？"}
+    D -- "true" --> E["status = 可借阅"]
+    D -- "false" --> F["status = 已借出"]
+    E --> G["组合书名、页数、状态三行文字"]
+    F --> G
+    G --> H["return description"]
+    H --> I["变量 description"]
+    I --> J["console.log(description)"]
+    J --> K["输出图书说明"]
+```
+
+## 起始代码
+
+固定图书、函数签名、调用和输出已经给出。请完成函数中的判断、三行文字和 return。
+
+```ts
+const book = {
+  title: "TypeScript 入门",
+  pages: 320,
+  available: true,
+};
+
+function describeBook(item: {
+  title: string;
+  pages: number;
+  available: boolean;
+}): string {
+  let status = "";
+  if (item.available) {
+    // TODO：写入可借阅状态。
+  } else {
+    // TODO：写入已借出状态。
+  }
+  const description = ""; // TODO：替换为三行图书说明。
+  return description;
+}
+
+const description = describeBook(book);
+console.log(description);
+```
+
 ## 写完后自检
 
 - 如果 `available` 改成 `false`，第三行应该显示什么？前两行是否变化？
@@ -62,4 +109,4 @@ Practice 01 要复制带嵌套对象与数组的任务数据，再比较原数�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示，它们不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

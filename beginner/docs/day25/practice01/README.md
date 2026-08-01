@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day25/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day25/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day25/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -25,6 +25,104 @@ original
    │                          └── buildReport ──> report
    └── 保持不变 ────────────────────────────────┐
 original + updated + planned + report ────────┴──> 业务输出
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 original：4 个 StudyTask"] --> B["completeTask(original,'a')"]
+  B --> C["调用 updateById"]
+  C --> D["map 回调逐项比较 item.id"]
+  D --> E{"id 命中？"}
+  E -- "是" --> F["update 回调创建 {...task,status:'done'}"]
+  E -- "否" --> G["return 原 item 引用"]
+  F --> H["return updated 新数组"]
+  G --> H
+  H --> I["plannedByDuration(updated)"]
+  I --> J["filter 回调保留 todo"]
+  J --> K["sort 回调按 minutes 升序"]
+  K --> L["return planned"]
+  H --> M["buildReport(updated)"]
+  M --> N["for...of 循环累计 counts 和 totalMinutes"]
+  N --> O["return report"]
+  A --> P["保留 original 用于引用比较"]
+  H --> Q["updated 首项/数组/未命中项引用"]
+  L --> R["输出 Planned"]
+  O --> S["输出 Counts / Minutes"]
+  P --> Q
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type TaskStatus = "todo" | "doing" | "done";
+type StudyTask = { readonly id: string; title: string; minutes: number; status: TaskStatus };
+type Report = { counts: Record<TaskStatus, number>; totalMinutes: number };
+function updateById<T extends { readonly id: string }>(
+  items: readonly T[], id: string, update: (item: T) => T,
+): T[] {
+  // TODO：map、判断 id、执行 update，并 return 新数组。
+  void id;
+  void update;
+  return [...items];
+}
+function completeTask(tasks: readonly StudyTask[], id: string): StudyTask[] {
+  // TODO：把参数交给 updateById，并提供不可变更新回调。
+  void id;
+  return [...tasks];
+}
+function plannedByDuration(tasks: readonly StudyTask[]): StudyTask[] {
+  // TODO：filter、sort、return。
+  void tasks;
+  return [];
+}
+function buildReport(tasks: readonly StudyTask[]): Report {
+  // TODO：for...of 循环累计并 return Report。
+  void tasks;
+  return { counts: { todo: 0, doing: 0, done: 0 }, totalMinutes: 0 };
+}
+const original: StudyTask[] = [
+  { id: "a", title: "Types", minutes: 30, status: "todo" },
+  { id: "b", title: "Modules", minutes: 45, status: "doing" },
+  { id: "c", title: "Validation", minutes: 20, status: "todo" },
+  { id: "d", title: "Variables", minutes: 50, status: "todo" },
+];
+const updated = completeTask(original, "a");
+const planned = plannedByDuration(updated);
+const report = buildReport(updated);
+console.log(`Original first: ${original[0]?.status}`);
+console.log(`Updated first: ${updated[0]?.status}`);
+console.log(`Same array: ${original === updated}`);
+console.log(`Same untouched task: ${original[1] === updated[1]}`);
+console.log(`Planned: ${planned.map((task) => task.title).join(", ")}`);
+console.log(`Counts: todo=${report.counts.todo}, doing=${report.counts.doing}, done=${report.counts.done}`);
+console.log(`Minutes: ${report.totalMinutes}`);
+```
+
+
+## 任务要求
+
+1. `updateById` 使用 `map` 创建新数组，命中 id 才执行更新回调，未命中项保持原引用。
+2. `completeTask` 复用通用更新器并创建新任务对象，不能修改 `original`。
+3. `plannedByDuration` 只保留 todo，并在新数组上按分钟升序排列。
+4. `buildReport` 循环累计三种状态计数和总分钟。
+
+## 精确期望输出
+
+```text
+Original first: todo
+Updated first: done
+Same array: false
+Same untouched task: true
+Planned: Validation, Variables
+Counts: todo=2, doing=1, done=1
+Minutes: 145
 ```
 
 ## 要完成的功能
@@ -124,4 +222,4 @@ Minutes: 145
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

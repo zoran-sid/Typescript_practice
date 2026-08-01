@@ -128,7 +128,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -143,38 +143,78 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const completedLessons = 0;
-completedLessons = completedLessons + 1; // ❌ const 变量不能重新赋值。
+假设夜间备份任务要向运维面板报告任务名称、已处理文件数，以及当前是不是试运行。下面的代码能通过类型检查，但两处细节会让面板文字和后续配置判断都不可靠：
 
-const isBeginner = "true"; // ❌ 这是 string，不是 boolean。
-console.log("已完成: ${completedLessons}"); // ❌ 普通引号不会插入变量。
+```ts
+const backupJobName = "nightly-backup";
+let processedFiles = 0;
+const isDryRun = "false"; // ❌ 保存的是 string，不是 boolean。
+
+processedFiles = processedFiles + 1;
+
+console.log("任务: ${backupJobName}"); // ❌ 普通引号不会插入变量。
+console.log(`已处理文件: ${processedFiles}`);
+console.log(`试运行: ${isDryRun}`);
 ```
+
+实际输出：
+
+```text
+任务: ${backupJobName}
+已处理文件: 1
+试运行: false
+```
+
+第一行使用普通双引号，所以 `${backupJobName}` 只是原样文字。第三行看起来显示了 `false`，但变量中保存的是字符串 `"false"`，不是布尔值 `false`；仅凭终端文字无法看出这个区别。等配置被交给只接收布尔值的函数或接口时，TypeScript 才会指出类型不匹配。若其他 JavaScript 代码把非空字符串当成条件，字符串 `"false"` 甚至会被当作成立，可能让本应执行的正式备份继续停留在试运行模式。
+
+另一个常见改错是把会增长的计数声明为 `const`：
+
+```ts
+const processedFiles = 0;
+processedFiles = processedFiles + 1;
+// TypeScript：不能给 const 变量重新赋值。
+```
+
+这里不是数字不能变化，而是变量 `processedFiles` 不能再绑定到计算后的新数字。
 
 ### 正确写法
 
 ```ts
-let completedLessons = 0;
-completedLessons = completedLessons + 1; // ✅ 会变化的绑定使用 let。
+const backupJobName = "nightly-backup";
+let processedFiles = 0;
+const isDryRun = false; // ✅ 布尔值不加引号。
 
-const isBeginner = true; // ✅ 布尔值不加引号。
-console.log(`已完成: ${completedLessons}`); // ✅ 模板字符串使用反引号。
+processedFiles = processedFiles + 1;
+
+console.log(`任务: ${backupJobName}`); // ✅ 反引号会处理 ${...}。
+console.log(`已处理文件: ${processedFiles}`);
+console.log(`试运行: ${isDryRun}`);
 ```
+
+实际输出仍然包含文字 `false`，但现在 `isDryRun` 的真实类型是 `boolean`。会重新赋值的文件数使用 `let`；任务名和运行模式创建后没有重新赋值，继续使用 `const`；需要插入变量的三行文字都使用反引号。
 
 ## 面试时怎么回答
 
 **问：类型标注和类型推断有什么区别？`const` 定义的对象还能修改吗？**
 
-类型推断是让 TypeScript 根据右侧的值自己得出类型，例如 `let age = 18` 会推断为 `number`；使用 `const age = 18` 时，编译器还可能保留更具体的字面量类型 `18`。类型标注则是开发者明确写出契约，例如 `const age: number = 18`。局部变量一眼能看懂时通常让它推断，函数参数、公开返回值或需要限制范围的位置再主动标注。标注越多并不自动代表代码越安全，关键是类型有没有表达真实约束。
+可以这样回答：
+
+类型推断是 TypeScript 根据初始化值和使用位置推导类型，例如 `let age = 18` 会得到 `number`。类型标注是开发者明确写出要求，例如 `const age: number = 18`。初始化值已经很清楚的局部变量通常可以依赖推断；函数参数、公开返回值和需要表达固定契约的位置更常主动标注。标注数量多不等于更安全，类型要与真实数据一致才有用。
 
 `const` 固定的是变量与当前值的绑定，不是把对象“冻住”。`const student = { name: "小林" }` 之后，`student.name = "小周"` 可以通过并输出“小周”，但 `student = { name: "小周" }` 不可以。还要注意声明必须有 `=`：`const student { name: "小林" }` 少了赋值符号，本身就是语法错误。若要限制属性修改，需要 `readonly`；若要在运行时冻结对象，则是另一套机制。
+
+官方参考：
+
+- [TypeScript：Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
+- [TypeScript：Type Inference](https://www.typescriptlang.org/docs/handbook/type-inference.html)
+- [MDN：const](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const)
 
 ## 拓展思考（不要求写代码）
 
 如果课程名称也要在程序运行过程中从 `"TypeScript"` 改成 `"JavaScript"`，应只把哪一个变量从 `const` 改成 `let`，为什么其他变量不需要跟着改变？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`。先比较自己的变量选择和更新过程，再比较输出格式。

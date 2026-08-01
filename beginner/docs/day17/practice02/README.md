@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day17/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day17/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day17/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -34,6 +34,65 @@ role + action ──> can ─────────┘
 
 Member ── Pick ──> MemberCard(name, role)
 三次权限结果 + MemberCard ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 roles as const"] --> B["派生 Role"]
+  C["固定 actions as const"] --> D["派生 Action"]
+  B --> E["固定 permissions<br/>satisfies Record"]
+  D --> E
+  F["固定三组 role + action"] --> G["调用 can(role, action)"]
+  E --> G
+  G --> H["for...of 遍历 allowedAction"]
+  H --> I{"allowedAction === action？"}
+  I -- "是" --> J["return true"]
+  I -- "否，还有下一项" --> H
+  I -- "循环结束" --> K["return false"]
+  J --> L["三个权限结果变量"]
+  K --> L
+  M["固定 member: Member"] --> N["创建 card: MemberCard"]
+  L --> O["console.log 三个判断"]
+  N --> P["console.log 成员卡片"]
+```
+
+## 起始代码
+
+角色、动作、权限表、成员、函数签名、三次调用和输出都已给出。你需要写 `can` 中的循环、判断和 `return`。
+
+```ts
+const roles = ["viewer", "editor", "admin"] as const;
+type Role = (typeof roles)[number];
+const actions = ["read", "edit", "close"] as const;
+type Action = (typeof actions)[number];
+type Member = { readonly id: number; name: string; email: string; role: Role };
+type MemberCard = Pick<Member, "name" | "role">;
+const permissions = {
+  viewer: ["read"],
+  editor: ["read", "edit"],
+  admin: ["read", "edit", "close"],
+} satisfies Record<Role, readonly Action[]>;
+
+function can(role: Role, action: Action): boolean {
+  throw new Error("TODO：循环比较允许动作，并在对应路径 return boolean");
+}
+
+const member: Member = {
+  id: 1,
+  name: "Ada",
+  email: "ada@example.com",
+  role: "editor",
+};
+const card: MemberCard = { name: member.name, role: member.role };
+const viewerCanEdit = can("viewer", "edit");
+const editorCanClose = can("editor", "close");
+const adminCanClose = can("admin", "close");
+console.log(`viewer 可编辑：${viewerCanEdit}`);
+console.log(`editor 可关闭：${editorCanClose}`);
+console.log(`admin 可关闭：${adminCanClose}`);
+console.log(`成员：${card.name} / ${card.role}`);
 ```
 
 ## 要完成的功能
@@ -78,4 +137,4 @@ admin 可关闭：true
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

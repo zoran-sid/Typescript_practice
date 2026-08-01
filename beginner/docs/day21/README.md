@@ -154,7 +154,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -174,50 +174,122 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const lesson: string = fetchText("课程");
-// ❌ async 函数返回 Promise<string>，不是已经完成的 string。
+消息同步任务要保存两条记录，全部保存后才能把批次标为完成。开发者把同步回调改成 `async`，却继续使用原来的 `forEach`：
 
-["课程", "进度"].forEach(async (name) => {
-  await fetchText(name);
-});
-console.log("全部完成"); // ❌ forEach 不收集 Promise，这一行会提前执行。
+```ts
+async function saveMessage(message: string): Promise<void> {
+  await Promise.resolve();
+  console.log("已保存：" + message);
+}
+
+async function saveBatch(): Promise<void> {
+  ["订单", "通知"].forEach(async (message) => { // ❌ forEach 不等待 Promise。
+    await saveMessage(message);
+  });
+
+  console.log("批次完成");
+}
+
+await saveBatch();
 ```
+
+实际输出：
+
+```text
+批次完成
+已保存：订单
+已保存：通知
+```
+
+`forEach` 只调用回调，并忽略回调返回的 Promise。`saveBatch` 没有任何可等待的任务，所以先报告完成；如果某次保存拒绝，外层对 `saveBatch()` 的 `try/catch` 也接不到那条无人等待的 Promise。
 
 ### 正确写法
 
 ```ts
-const lesson: string = await fetchText("课程"); // ✅ await 后才得到成功值。
+async function saveBatch(): Promise<void> {
+  const requests = ["订单", "通知"].map(
+    (message) => saveMessage(message),
+  );
 
-const requests = ["课程", "进度"].map((name) => fetchText(name));
-await Promise.all(requests); // ✅ map 收集所有 Promise，再统一等待。
-console.log("全部完成");
+  await Promise.all(requests); // ✅ 统一等待收集到的 Promise。
+  console.log("批次完成");
+}
+
+await saveBatch();
 ```
+
+实际输出：
+
+```text
+已保存：订单
+已保存：通知
+批次完成
+```
+
+`map` 把每次调用返回的 Promise 收集进数组，`Promise.all` 返回一份代表整批任务的 Promise。外层等待它，就能在所有保存完成后再更新批次状态，也能在任一保存失败时进入统一错误处理。
 
 ## 面试时怎么回答
 
 **问：`async` 函数抛错后，为什么外层有时捕获不到？**
 
-**答：**`async` 函数总会返回 Promise。函数内部 `return "课程"` 会变成成功的 `Promise<string>`，内部抛错会变成 rejected Promise；调用它本身通常不会把错误同步抛到外层，必须等待或返回这个 Promise：
+**答：**每次调用 `async` 函数都会得到 Promise。函数内部抛错时，调用者收到的是 rejected Promise，而不是一次可以被普通同步 `try/catch` 直接抓住的抛错。
+
+要让**当前函数里的** `catch` 处理这次失败，必须在它对应的 `try` 中 `await` 这个 Promise：
 
 ```ts
 async function load(): Promise<string> {
   throw new Error("网络不可用");
 }
+
+async function loadWithFallback(): Promise<string> {
+  try {
+    return await load();
+  } catch (error: unknown) {
+    console.log("当前函数捕获：网络不可用");
+    return "使用缓存内容";
+  }
+}
+
+console.log(await loadWithFallback());
+```
+
+实际输出：
+
+```text
+当前函数捕获：网络不可用
+使用缓存内容
+```
+
+如果在 `try` 中直接 `return load()`，当前函数只是把这份 Promise 交给外层，并没有用 `await` 把拒绝转换成当前这一层可以捕获的抛错，因此当前 `catch` 不会执行：
+
+```ts
+async function passFailureOutward(): Promise<string> {
+  try {
+    return load(); // ❌ 只向外传播拒绝，下面的 catch 不会捕获它。
+  } catch (error: unknown) {
+    return "这里不会执行";
+  }
+}
+
 try {
-  await load();
+  await passFailureOutward();
 } catch (error: unknown) {
-  // 这里才能观察到拒绝
+  console.log("外层捕获：网络不可用");
 }
 ```
 
-运行环境负责在 Promise 完成后继续，开发者仍要决定由哪一层 `await`、捕获和记录错误。忘记等待会留下未处理拒绝。
+`return Promise` 可以把失败继续传给调用者，但不等于“当前层已经处理”。最终必须有某一层使用 `await` 配合 `try/catch`，或使用 `.catch(...)` 挂接拒绝处理；完全不处理则可能产生未处理的 Promise rejection。
 
 **问：`Promise.all` 是否等于“更快且自动取消”？**
 
-**答：**它适合互不依赖的任务：先全部启动，再统一等待，并按输入顺序交回结果。任一 Promise 拒绝时，组合结果会尽快拒绝，但其他已启动任务不会因此自动取消。
+**答：**不是。`Promise.all` 接收一组已经创建的 Promise，所有任务成功时按输入顺序返回结果；任一任务拒绝时，组合 Promise 会拒绝。它不会自动启动没有调用的函数，也不会取消其他已经开始的任务。只有互不依赖并且适合一起失败的任务，才适合这样组合。
 
-**容易答错或追问：**不要把并行当成永远更好；请求过多会增加压力，有依赖的任务仍要顺序等待，`forEach(async ...)` 也不会替你收集和等待回调返回的 Promise。
+有数据依赖的步骤仍要顺序等待；并发数量过大时还要另做限制。`forEach(async ...)` 不会替调用者收集 Promise。
+
+官方参考：
+
+- [MDN：`async function`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)
+- [MDN：`Promise.all()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 
 ## 拓展思考（不要求写代码）
 

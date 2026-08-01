@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day24/practice03/practice.ts)
-- 结构提示代码：[solution.ts](../../../day24/practice03/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day24/practice03/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 从 unknown JSON 中筛出合法订单并统计金额，拒绝字段类型错误的数据。
 
@@ -25,6 +25,64 @@
                                              │                        └── reduce ──> total
                                              └── values.length - orders.length ──> rejected
 orders.length + rejected + total ──> 导入报告
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 text<br/>A、B、C 三项 JSON"] --> B["JSON.parse(text)"]
+  B --> C["parsed: unknown"]
+  C --> D{"Array.isArray(parsed)？"}
+  D -- "否" --> E["values = []"]
+  D -- "是" --> F["values = parsed"]
+  E --> G["filter 回调调用 isOrder"]
+  F --> G
+  G --> H["isRecord + id/quantity/unitPrice 检查"]
+  H --> I{"合法订单？"}
+  I -- "是" --> J["进入 orders"]
+  I -- "否" --> K["计入 rejected"]
+  J --> L["reduce 回调：quantity * unitPrice"]
+  L --> M["return 累计 total"]
+  J --> N["orders.length"]
+  K --> O["values.length - orders.length"]
+  M --> P["输出 Order total"]
+  N --> Q["输出 Accepted"]
+  O --> R["输出 Rejected"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type Order = { readonly id: string; quantity: number; unitPrice: number };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // TODO：检查对象并 return。
+  void value;
+  return false;
+}
+function isOrder(value: unknown): value is Order {
+  // TODO：检查 id、正 quantity、有限非负 unitPrice，并 return。
+  void value;
+  return false;
+}
+const text = JSON.stringify([
+  { id: "A", quantity: 2, unitPrice: 30 },
+  { id: "B", quantity: 1, unitPrice: 100 },
+  { id: "C", quantity: "2", unitPrice: 20 },
+]);
+const parsed: unknown = JSON.parse(text);
+const values: unknown[] = Array.isArray(parsed) ? parsed : [];
+// TODO：filter 回调得到 orders；reduce 回调得到 total。
+const orders: Order[] = [];
+const total = 0;
+console.log(`Accepted orders: ${orders.length}`);
+console.log(`Rejected orders: ${values.length - orders.length}`);
+console.log(`Order total: ${total}`);
 ```
 
 ## 任务要求
@@ -53,4 +111,4 @@ Order total: 160
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

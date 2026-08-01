@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day24/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day24/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day24/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题采用“整批通过或整批拒绝”的导入协议。成功批次用于报表，另一个字段类型错误的批次用来确认失败边界。
 
@@ -25,6 +25,96 @@ text ──> importTasks ──> parsed: unknown
                                 └── isTaskState
 全部合法 ──> result.tasks ──> describeState + minutes 合计
 任一非法/坏 JSON ──> result.message
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定成功 JSON<br/>2 项任务"] --> B["importTasks(text)"]
+  B --> C{"JSON.parse 成功且 parsed 是数组？"}
+  C -- "否" --> D["return failure"]
+  C -- "是" --> E["every 回调调用 isStudyTask"]
+  E --> F{"每一项都合法吗？"}
+  F -- "否" --> G["return {ok:false,message}"]
+  F -- "是" --> H["return {ok:true,tasks}"]
+  H --> I["result"]
+  I --> J{"result.ok？"}
+  J -- "是" --> K["读取 first"]
+  K --> L["describeState(first.state)"]
+  L --> M["switch status 后 return 描述"]
+  K --> N["reduce 回调累计 totalMinutes"]
+  M --> O["输出首项"]
+  N --> P["输出总分钟"]
+  Q["固定坏 minutes JSON"] --> B
+  G --> R["输出 Invalid import"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type TaskState =
+  | { status: "todo" }
+  | { status: "doing"; startedAt: string }
+  | { status: "done"; startedAt: string; completedAt: string };
+type StudyTask = {
+  readonly id: string;
+  title: string;
+  minutes: number;
+  state: TaskState;
+};
+type ImportResult =
+  | { ok: true; tasks: StudyTask[] }
+  | { ok: false; message: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // TODO：return 对象检查结果。
+  void value;
+  return false;
+}
+function isTaskState(value: unknown): value is TaskState {
+  // TODO：判断 todo/doing/done。
+  void value;
+  return false;
+}
+function isStudyTask(value: unknown): value is StudyTask {
+  // TODO：检查全部字段。
+  void value;
+  return false;
+}
+function importTasks(text: string): ImportResult {
+  // TODO：解析，并用 every 进行整批验证后 return。
+  void text;
+  return { ok: false, message: "" };
+}
+function describeState(state: TaskState): string {
+  // TODO：switch 并 return。
+  void state;
+  return "";
+}
+const text = JSON.stringify([
+  { id: "ts-24", title: "Validate data", minutes: 45, state: { status: "doing", startedAt: "09:00" } },
+  { id: "ts-25", title: "Build report", minutes: 60, state: { status: "todo" } },
+]);
+const result = importTasks(text);
+if (result.ok) {
+  const first = result.tasks[0];
+  // TODO：reduce 得到 totalMinutes。
+  const totalMinutes = 0;
+  console.log(`Import succeeded: ${result.tasks.length} tasks`);
+  console.log(first ? `First: ${first.title} (${describeState(first.state)})` : "First: none");
+  console.log(`Total planned minutes: ${totalMinutes}`);
+}
+const invalidText = JSON.stringify([
+  { id: "broken", title: "Broken", minutes: "45", state: { status: "todo" } },
+]);
+const invalidResult = importTasks(invalidText);
+if (!invalidResult.ok) console.log(`Invalid import: ${invalidResult.message}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -63,4 +153,4 @@ Invalid import: Task data is invalid
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

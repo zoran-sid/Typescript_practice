@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day16/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。请沿 `solution.ts` 中的 `// 调用关系：` 注释查看第一次更新的返回值如何直接成为第二次调用的输入。
 
-## 方案一
+## 直接调用逻辑
 
-1. 让 `Key` 受 `keyof Item` 约束，再用 `Item[Key]` 约束同一次调用的 `nextValue`。
-2. 更新函数使用对象 spread 创建新对象，只在最后覆盖目标键。
-3. 先用 `SettingName` 变量执行数字字段更新，再用字符串字面量执行布尔字段更新。
-4. 最后同时读取原设置与两次更新后的结果。
+1. `originalSettings`、`pageSizeKey` 和数字 `50` 进入第一次 `updateProperty`。
+2. `pageUpdated` 接住新对象，再与 `"showTips"`、布尔值 `false` 进入第二次调用。
+3. `updatedSettings` 保存两次更新后的最终结果，`originalSettings` 仍保持原值。
+4. 输出同时读取新旧对象，验证键值类型关系和不可变更新。
 
-## 关键检查点
-
-- 键和值必须由同一个 `Key` 连接，不能各自退化成宽联合。
-
-- spread 中目标属性要放在旧对象之后，否则旧值会覆盖新值。
-
-- 返回新对象，确保原设置仍能用于撤销或对照。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

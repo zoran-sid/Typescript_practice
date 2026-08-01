@@ -1,26 +1,40 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 type MessageFormatter = (message: string) => string;
 type MessageSink = (message: string) => void;
+
 function createFormatter(prefix = "[系统]"): MessageFormatter {
-  // TODO：返回箭头函数；它接收之后传入的 message，并使用当前 prefix 组成“prefix message”。
-  // 下面的函数只返回空字符串，是等待替换的 formatter 占位。
-  return (_message) => "";
+  // 返回的函数会记住本次调用 createFormatter 时收到的 prefix。
+  return (message) => `${prefix} ${message}`;
 }
+
 function dispatch(
   message: string,
   formatter: MessageFormatter,
   ...sinks: MessageSink[]
 ): number {
-  // TODO：只调用一次 formatter(message)，把结果保存在局部变量中；
-  // 再遍历 sinks，把同一结果交给每个 sink，并返回实际调用数量。
-  // 下面的 0 是尚未投递时的占位，不能代替真实计数。
-  return 0;
+  // 调用关系：message -> formatter(message) -> formattedMessage，只格式化一次。
+  const formattedMessage = formatter(message);
+  for (const sink of sinks) {
+    // 每个 sink 都收到同一个 formattedMessage。
+    sink(formattedMessage);
+  }
+  return sinks.length;
 }
+
 const archived: string[] = [];
 const archiveSink: MessageSink = (message) => {
-  // TODO：把当前 message 加入 archived；不要在这里直接输出。
-  void message;
+  archived.push(message);
 };
+
+// 调用关系："[课程]" -> createFormatter -> formatter 闭包。
 const formatter = createFormatter("[课程]");
-// TODO：把“课程已更新”、formatter、console.log 和 archiveSink 交给 dispatch，让返回值保存为 deliveredCount。
-// TODO：dispatch 会产生第一行；随后输出 deliveredCount，并读取 archived 第一项组成存档行。
+// 调用关系：消息 + formatter + 两个 sink -> dispatch -> deliveredCount。
+const deliveredCount = dispatch(
+  "课程已更新",
+  formatter,
+  console.log,
+  archiveSink,
+);
+
+console.log(`投递数量：${deliveredCount}`);
+// 调用关系：archiveSink 写入 archived[0] -> 存档输出。
+console.log(`存档：${archived[0]}`);

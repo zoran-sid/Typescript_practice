@@ -114,7 +114,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -132,51 +132,112 @@ flowchart TD
 
 ### 错误代码示例
 
+媒体服务写了一个计时包装器，用来记录图片预览函数耗时。参数全部写成 `any[]` 后，包装器不再保护原函数的参数顺序和类型：
+
 ```ts
-type Progress = (number | boolean)[];
-const progress: Progress = [3, true, 99];
-// ❌ 普通数组没有固定长度，也没有保证第二项一定是 total。
-
-function invoke(fn: (...args: any[]) => any, ...args: any[]): any {
-  // ❌ any[] 丢掉了参数顺序、参数类型和返回类型之间的关系。
-  return fn(...args);
+function measureWrong(
+  fn: (...args: any[]) => any,
+  ...args: any[]
+): { result: any; elapsedMs: number } {
+  const startedAt = Date.now();
+  return {
+    result: fn(...args),
+    elapsedMs: Date.now() - startedAt,
+  };
 }
 
-function describe(context: CourseContext, prefix: string): string {
-  // ❌ 这把 context 变成普通实参，并没有描述调用者 this。
-  return `${prefix}: ${context.title}`;
+function previewPixels(width: number, height: number): number {
+  return width * height;
 }
+
+const measured = measureWrong(previewPixels, "800", 600);
+// ❌ 字符串 "800" 本应在调用处被拒绝，却因 any 穿过检查。
+console.log(measured.result);
 ```
+
+实际输出是 `480000`，因为 JavaScript 乘法会把 `"800"` 隐式转成数字。程序没有立即崩溃，错误输入反而被悄悄接受；换成加法、文件路径或布尔参数后，结果可能完全不同。
+
+同一项目还可能把队列记录写成宽泛数组，并把位置放反：
+
+```ts
+type QueueEntry = (string | number | boolean)[];
+const entry: QueueEntry = [true, "job-7", 3];
+// ❌ 类型允许任意长度和顺序，无法保证 [jobId, attempts, urgent]。
+```
+
+日志方法依赖对象里的服务名，单独取出后再调用也会丢失 `this`：
+
+```ts
+const audit = {
+  service: "media",
+  write(action: string): string {
+    return `[${this.service}] ${action}`;
+  },
+};
+
+const write = audit.write;
+console.log(write("upload"));
+// ❌ 严格模式下 this 是 undefined，读取 this.service 会失败。
+```
+
+这三处错误分别丢掉了函数参数之间的关系、元组位置含义和方法的调用上下文。
 
 ### 正确写法
 
-```ts
-type Progress = readonly [completed: number, total: number];
-const progress: Progress = [3, 5]; // ✅ 长度和两个位置的意义都固定。
+`Date.now()` 返回当前时间的毫秒数，两次结果相减可以得到这段同步代码的大致耗时。`.bind(context)` 不会立即执行函数；它返回一个新函数，并把以后调用时的 `this` 固定为 `context`。
 
-function invoke<Args extends unknown[], Result>(
+```ts
+type QueueEntry = readonly [
+  jobId: string,
+  attempts: number,
+  urgent: boolean,
+];
+
+type Measured<Result> = {
+  result: Result;
+  elapsedMs: number;
+};
+
+function measure<Args extends unknown[], Result>(
   fn: (...args: Args) => Result,
   ...args: Args
-): Result {
-  // ✅ 同一个 Args 同时约束函数和实参，Result 原样返回。
-  return fn(...args);
+): Measured<Result> {
+  const startedAt = Date.now();
+  const result = fn(...args);
+  // ✅ Args 保留原参数关系，Result 进入计时结果对象。
+  return { result, elapsedMs: Date.now() - startedAt };
 }
 
-function describe(this: CourseContext, prefix: string): string {
-  return `${prefix}: ${this.title}`;
+interface AuditScope {
+  service: string;
 }
 
-// ✅ 显式 this 不是第一个普通实参，而是由 call 提供调用者。
-console.log(describe.call({ title: "Functions", day: 28 }, "Day 28"));
+function writeAudit(this: AuditScope, action: string): string {
+  return `[${this.service}] ${action}`;
+}
+
+const entry: QueueEntry = ["job-7", 3, true];
+const measured = measure(previewPixels, 800, 600);
+const mediaAudit = writeAudit.bind({ service: "media" });
+
+console.log(`${entry[0]}: ${entry[1]} attempts`);
+console.log(measured.result);
+console.log(mediaAudit("upload"));
 ```
+
+现在 `measure(previewPixels, "800", 600)` 会在编译阶段被拒绝；元组固定了队列字段的位置；`bind` 返回的 `mediaAudit` 已经带着正确的 `this`。计时包装器还刻意返回 `Measured<Result>`，它不等同于一个只做转发的普通调用器。
 
 ## 面试时怎么回答
 
 **问：** 元组和数组、重载和联合类型、显式 `this` 分别该怎么选？
 
-**答：** 元组适合位置和长度有业务含义的数据，例如 `readonly [title: string, minutes: number]` 明确第一项是标题、第二项是分钟；`string[]` 只表示任意数量的字符串。重载适合不同输入对应不同返回类型，例如 `normalize(string): string` 和 `normalize(readonly string[]): string[]`；实现仍要用一次联合参数覆盖两种情况。`function label(this: { prefix: string }, value: string)` 的 `this` 只参加类型检查，运行时由 `.call({ prefix: "TS" }, "typed")` 提供上下文。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要说重载会生成多份函数，运行时只有一个实现；若输入输出没有对应关系，一个联合签名往往更简单。实现重载时也别用 `if (value)` 代替类型判断，因为合法的 `0`、空字符串会进入错误分支，应检查 `typeof value` 或参数数量。元组不是运行时自动冻结的数组，`readonly` 只是阻止类型层面的修改。显式 `this` 不是第一个普通实参，而且箭头函数没有动态 `this`。面试官若问包装器，还要说明 `Args extends unknown[]` 同时连接原函数和 `...args`，防止漏传或错序。
+元组适合长度和位置都有含义的数据，例如 `[invoiceId: string, total: number]`；普通数组只约束每一项的类型，不固定长度和顺序。函数重载适合“不同输入对应不同返回类型”，例如字符串输入返回字符串、字符串数组输入返回字符串数组；运行时仍然只有一个实现签名。如果输入和输出没有这种对应关系，用联合类型通常更简单。
+
+显式 `this` 参数只参加类型检查，不占运行时普通参数的位置；真正的调用上下文由方法调用、`call`、`apply` 或 `bind` 决定。箭头函数没有自己的动态 `this`，不适合需要由调用者提供上下文的场景。通用包装器可以用 `Args extends unknown[]` 同时连接原函数参数和 `...args`，再用 `Result` 保留返回类型，避免退回 `any[]`。
+
+官方参考：[TypeScript More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html)、[TypeScript 3.0 可变参数元组](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-0.html#tuples-in-rest-parameters-and-spread-expressions)、[MDN `Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
 
 ## 拓展思考（不要求写代码）
 

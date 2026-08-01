@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day29/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day29/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day29/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题不再生成表单开关。你会从一份 API 数据模型派生方法名、异步结果和数组元素类型，并把编译阶段的派生关系连接到真实客户端调用。
 
@@ -25,6 +25,77 @@ ApiModel 的资源键
 client.getUser() ──> Promise<User> ──> Resolved<T> ──> User
 ApiModel["orders"] ──> ElementOf<T> ──> Order
 真实客户端调用 ──> user + orders ──> 可观察输出
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["ApiModel 的 user/orders 键"] --> B["Getters 映射并重映射键"]
+  B --> C["得到 getUser/getOrders 函数契约"]
+  D["固定 client 实现"] --> E["satisfies Getters<ApiModel>"]
+  E --> F["调用 client.getUser()"]
+  E --> G["调用 client.getOrders()"]
+  F --> H["Promise resolve 用户"]
+  G --> I["Promise resolve 订单数组"]
+  H --> J["await 得到 user"]
+  I --> K["await 得到 orders"]
+  L["getUser 返回类型"] --> M["Resolved 条件类型 infer Value"]
+  N["orders 数组类型"] --> O["ElementOf 条件类型 infer Item"]
+  M --> P["LoadedUser 测试变量"]
+  O --> Q["Order 测试变量"]
+  R["固定 method='getUser'"] --> S["console.log Method"]
+  J --> T["console.log User"]
+  K --> U["索引 0 + ?? 后 console.log First order"]
+  K --> V["console.log Loaded orders"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type ApiModel = {
+  user: { readonly id: string; name: string };
+  orders: readonly { readonly id: string; item: string }[];
+};
+type GetterName<Name extends string> = `get${Capitalize<Name>}`;
+type Getters<T> = {
+  // TODO：理解键重映射怎样连接资源与 Promise 返回值。
+  [Key in keyof T as Key extends string ? GetterName<Key> : never]:
+    () => Promise<T[Key]>;
+};
+type Resolved<T> = T extends Promise<infer Value> ? Value : T;
+type ElementOf<T> = T extends readonly (infer Item)[] ? Item : never;
+
+const client = {
+  async getUser(): Promise<ApiModel["user"]> {
+    // TODO：return 固定用户。
+    return { id: "", name: "" };
+  },
+  async getOrders(): Promise<ApiModel["orders"]> {
+    // TODO：return keyboard、mouse 两项。
+    return [];
+  },
+} satisfies Getters<ApiModel>;
+
+type LoadedUser = Resolved<ReturnType<typeof client.getUser>>;
+type Order = ElementOf<ApiModel["orders"]>;
+const checkedUser: LoadedUser = { id: "usr_1", name: "Ada" };
+const checkedOrder: Order = { id: "order_1", item: "keyboard" };
+void checkedUser;
+void checkedOrder;
+
+const method: GetterName<"user"> = "getUser";
+const user = await client.getUser();
+const orders = await client.getOrders();
+console.log(`Method: ${method}`);
+console.log(`User: ${user.name}`);
+console.log(`First order: ${orders[0]?.item ?? "none"}`);
+console.log(`Loaded orders: ${orders.length}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -60,4 +131,4 @@ Loaded orders: 2
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

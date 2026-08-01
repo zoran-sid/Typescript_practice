@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day09/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day09/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day09/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -81,6 +81,56 @@ P-01 | TypeScript 练习
 
 interface 内写 field: string;；创建值写 const value: Name = { field: "x" };。类型成员用分号，值属性用逗号。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["Project 类型契约"] --> B["检查固定对象 project"]
+    B --> C["调用 describeProject(project)"]
+    C --> D["形参 project 读取 members"]
+    D --> E["join -> members"]
+    C --> F["读取可选 note"]
+    F --> G["?? 无 -> note"]
+    C --> H["读取 id、title、progress"]
+    E --> I["组合四行摘要"]
+    G --> I
+    H --> I
+    I --> J["return description"]
+    J --> K["console.log"]
+    K --> L["输出项目摘要"]
+```
+
+## 起始代码
+
+类型名称、接口字段、固定对象、函数签名、调用和输出已经提供。成员连接、可选备注处理与 return 由你完成。
+
+```ts
+type ProjectId = string;
+
+interface Project {
+  readonly id: ProjectId;
+  title: string;
+  members: ReadonlyArray<string>;
+  readonly progress: { completed: number; total: number };
+  note?: string;
+}
+
+function describeProject(project: Project): string {
+  const members = ""; // TODO：替换为成员连接结果。
+  const note = ""; // TODO：替换为可选备注与默认值。
+  return ""; // TODO：替换为使用 project、members、note 的四行摘要。
+}
+
+const project: Project = {
+  id: "P-01",
+  title: "TypeScript 练习",
+  members: ["Lin", "Mei"],
+  progress: { completed: 2, total: 5 },
+};
+
+console.log(describeProject(project));
+```
+
 ## 写完后自检
 
 - 如果 `note` 明确保存空字符串，`project.note ?? "无"` 会显示空字符串还是“无”？它和属性缺失有什么区别？
@@ -90,4 +140,4 @@ interface 内写 field: string;；创建值写 const value: Name = { field: "x" 
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

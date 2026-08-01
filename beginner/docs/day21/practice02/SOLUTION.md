@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day21/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 的 `// 调用关系：` 注释把并行、依赖和失败三条异步路径分开标明。
 
-## 方案一
+## 直接调用逻辑
 
-1. 让三个请求函数各自返回清晰的 `Promise<T>`；失败仍通过 rejected Promise 传播。
-2. 在 `main` 中先创建课程和进度 Promise，再把二者一起交给 `Promise.all`。
-3. 权限请求要等 `fetchUserId` 交回 id 后才能创建，因此保留顺序 `await`。
-4. 最后单独等待失败通知，在 `catch` 中把 `unknown` 交给错误文字函数。
+1. `coursePromise` 和 `progressPromise` 都在第一次 `await` 前创建，再一起进入 `Promise.all`。
+2. `fetchUserId` 的返回值先保存为 `userId`，然后作为参数传给 `fetchPermission`，这是顺序依赖。
+3. 失败的通知请求在 `try` 中等待，异常经过 `errorMessage` 后输出。
+4. `main()` 的三个阶段依次产生并行结果、依赖结果和错误结果，顶层 `await` 等待全部完成。
 
-## 关键检查点
-
-- 是否并行由数据依赖决定，不由函数是不是 `async` 决定。
-
-- `Promise.all` 的结果顺序跟传入 Promise 的顺序一致。
-
-- 失败 Promise 必须被观察，不能留下未处理拒绝。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

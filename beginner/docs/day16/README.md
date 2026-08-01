@@ -131,7 +131,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -151,31 +151,75 @@ flowchart TD
 
 ### 错误代码示例
 
+工单列表允许开发者在配置中指定“显示哪一列”。为了让函数接受任意配置值，有人把列名写成普通 `string`，读取属性时再用断言告诉 TypeScript：“这个字符串肯定是工单的键”：
+
 ```ts
-function getProperty<Item>(
-  item: Item,
-  key: string,
-): Item[keyof Item] {
-  return item[key]; // ❌ string 可能不是 Item 的键，而且返回值丢失了具体键关系。
+type Ticket = {
+  id: string;
+  title: string;
+  priority: number;
+};
+
+function readColumnLoose(
+  ticket: Ticket,
+  column: string,
+): string | number {
+  // ❌ 断言掩盖了拼错的列名。
+  return ticket[column as keyof Ticket];
 }
+
+const ticket: Ticket = {
+  id: "T-1024",
+  title: "支付页无法打开",
+  priority: 2,
+};
+
+const title = readColumnLoose(ticket, "titel") as string;
+console.log(title.toUpperCase());
 ```
+
+实际运行结果：
+
+```text
+TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+```
+
+对象里没有 `"titel"`，所以属性读取的真实结果是 `undefined`。两次断言只让编译器暂时相信这些值，并没有纠正拼写，也没有在运行时创建标题。列表配置、表格列名和排序字段都很容易出现这种问题。
 
 ### 正确写法
 
+如果列名写在项目代码中，让“本次选中的键”成为泛型参数：
+
 ```ts
-function getProperty<Item, Key extends keyof Item>(
-  item: Item,
-  key: Key,
+function readColumn<Item, Key extends keyof Item>(
+  row: Item,
+  column: Key,
 ): Item[Key] {
-  return item[key]; // ✅ Key 只能取合法键，Item[Key] 保留该键对应的精确值类型。
+  return row[column]; // ✅ 具体键决定返回值类型。
 }
+
+const title = readColumn(ticket, "title");
+console.log(title.toUpperCase());
+
+// readColumn(ticket, "titel");
+//                         ^ 编译期报错：Ticket 没有这个键。
 ```
+
+实际输出：
+
+```text
+支付页无法打开
+```
+
+`Key` 保存本次传入的具体键，`Item[Key]` 再取出这个键对应的值类型。因此传入 `"title"` 后，返回值就是 `string`，而不是 `string | number`。
+
+如果列名来自接口、地址栏或本地存储，它在运行时仍然只是普通字符串。泛型不会替你验证外部数据；要先检查它是否真的是对象的键，再交给 `readColumn`。
 
 ## 面试时怎么回答
 
 **问：为什么读取对象属性时要写 `Key extends keyof Item` 和 `Item[Key]`？**
 
-**答：**它解决“键名可能拼错”和“返回类型过宽”两个问题。`keyof Item` 得到对象真实键名的联合，`Key extends ...` 保留本次选中的那个键，`Item[Key]` 再取出它对应的值类型：
+**答：**`keyof Item` 得到 `Item` 的键联合，`Key extends keyof Item` 再保存本次调用选中的具体键，`Item[Key]` 就是这个键对应的值类型。这样既能拒绝不存在的键，也不会把返回值扩大成所有属性值的联合：
 
 ```ts
 function read<Item, Key extends keyof Item>(
@@ -187,9 +231,15 @@ function read<Item, Key extends keyof Item>(
 const title = read({ title: "TS", lessons: 21 }, "title"); // string
 ```
 
-TypeScript 负责检查 `"title"` 存在并推断 `string`；开发者仍要决定函数允许读取哪些对象和哪些字段。
+同样的关系也能用于安全更新：第三个参数写成 `Item[Key]` 后，数字字段不能接收字符串。
 
-**容易答错或追问：**约束不会在运行时给对象补属性，也不会把用户输入的任意字符串自动变成合法键。来自输入框的 `string` 仍需先检查。`keyof T` 也不保证只得到 `string`：数字或 symbol 键、索引签名都可能让结果包含 `number` 或 `symbol`，需要拼接字符串时应主动限制为 `Key & string`。约束还应只描述实现真正依赖的最小结构；写得太严会降低复用，写得太松又无法安全访问属性。
+这些规则只检查静态类型。来自输入框或地址栏的值仍是普通 `string`，要先做运行时验证才能缩窄成合法键。`keyof T` 也不保证只有字符串；数字键、symbol 键和索引签名会影响结果。
+
+官方参考：
+
+- [TypeScript Handbook：Generics 与泛型约束](https://www.typescriptlang.org/docs/handbook/2/generics.html)
+- [TypeScript Handbook：`keyof` Type Operator](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html)
+- [TypeScript Handbook：Indexed Access Types](https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html)
 
 ## 拓展思考（不要求写代码）
 

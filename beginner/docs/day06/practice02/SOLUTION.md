@@ -1,18 +1,13 @@
-# Day 06 · Practice 02 解题结构提示
+# Practice 02 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day06/practice02/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。`solution.ts` 保留对象形状、函数参数、分支与返回位置，状态文字和三行字符串仍是 `TODO`。
+[打开 solution.ts](../../../day06/practice02/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-外部 `book` 是实参；进入调用后，参数 `item` 在函数内代表同一个传入对象。函数只通过 `item.title`、`item.pages` 与 `item.available` 读取数据，不直接访问外部变量名 `book`。
+## 直接调用逻辑
 
-状态变量是函数局部变量，由可借阅布尔值的分支决定。随后另一个局部变量组合完整说明，`return` 把它交给外部 `description`，最后才输出。
+`book` → `describeBook(book)` → 形参 `item` → 根据 `item.available` 得到 `status` → 组合三行 `description` → return 到外部变量 `description` → `console.log(description)`。
 
-## 自检
-
-- 函数参数类型列出三个属性及正确类型。
-- 两个状态分支都会让局部状态得到字符串。
-- 返回字符串读取参数与局部状态，而不是固定整段文字。
-- 函数内部不输出，调用处只输出一次返回值。
+函数只读取形参，不依赖外部同名变量，因此以后传入另一对象也能得到对应描述。

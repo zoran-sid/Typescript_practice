@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day04/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day04/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day04/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -77,6 +77,52 @@ discount + orderTotal ──> amountToPay ──> 输出
 
 比较用 >=、严格相等用 ===；多分支写 } else if (...) {，不要把互斥规则拆成叠加的 if。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定订单数据"] --> B["计算 canUseMemberDiscount"]
+    A --> C{"orderTotal >= 200？"}
+    C -- "是" --> D["discount = 40"]
+    C -- "否" --> E{"会员优惠可用？"}
+    E -- "是" --> F["discount = 20"]
+    E -- "否" --> G{"有券或满 80？"}
+    G -- "是" --> H["discount = 10"]
+    G -- "否" --> I["保留 discount = 0"]
+    D --> J["amountToPay = orderTotal - discount"]
+    F --> J
+    H --> J
+    I --> J
+    B --> K["三次 console.log"]
+    J --> K
+    K --> L["输出优惠报告"]
+```
+
+## 起始代码
+
+固定订单、默认优惠和输出调用已提供。请完成布尔表达式、按优先级排列的分支和应付金额。
+
+```ts
+const orderTotal = 120;
+const isMember = true;
+const hasCoupon = false;
+
+const canUseMemberDiscount = false; // TODO：替换为完整会员优惠条件。
+let discount = 0;
+if (false) {
+  // TODO：最高优先级条件成立时更新 discount。
+} else if (canUseMemberDiscount) {
+  // TODO：会员条件成立时更新 discount。
+} else if (false) {
+  // TODO：替换为普通优惠条件，并更新 discount。
+}
+const amountToPay = 0; // TODO：替换为订单总额减最终优惠。
+
+console.log(`会员优惠可用: ${canUseMemberDiscount}`);
+console.log(`优惠: ${discount}`);
+console.log(`应付: ${amountToPay}`);
+```
+
 ## 写完后自检
 
 - 如果 `orderTotal` 恰好是 200，同时会员条件也成立，会应用哪一档优惠？
@@ -86,4 +132,4 @@ discount + orderTotal ──> amountToPay ──> 输出
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

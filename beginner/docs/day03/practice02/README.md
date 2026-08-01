@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day03/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day03/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day03/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -58,6 +58,47 @@ Slow positions: 2, 4
 
 Practice 01 的输入数据只需逐项取值，用 `for...of` 累加总时长并寻找最长值。这里的输出需要任务位置，因此控制流程必须保留数组下标，同时累计命中数量并逐步拼出给人看的序号文字。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数组 taskMinutes 与边界 10"] --> B["for 用 index 读取 minutes"]
+    B --> C{"minutes >= slowBoundary？"}
+    C -- "否" --> G{"还有下一项？"}
+    C -- "是" --> D["slowCount 加 1"]
+    D --> E{"是不是第一个慢任务？"}
+    E -- "是" --> F["直接追加 index + 1"]
+    E -- "否" --> H["先追加逗号空格，再追加 index + 1"]
+    F --> G
+    H --> G
+    G -- "有" --> B
+    G -- "没有" --> I["三次 console.log"]
+    I --> J["输出慢任务数量和位置"]
+```
+
+## 起始代码
+
+固定任务时长、慢任务边界、统计变量和输出调用已提供。循环、判断、计数和位置拼接由你完成。
+
+```ts
+const taskMinutes: number[] = [5, 12, 8, 15];
+const slowBoundary = 10;
+let slowCount = 0;
+let slowPositionsText = "";
+
+for (let index = 0; index < taskMinutes.length; index++) {
+  const minutes = taskMinutes[index];
+  const isSlow = false; // TODO：替换为慢任务边界判断。
+  if (isSlow) {
+    // TODO：更新 slowCount，并拼接从 1 开始的位置。
+  }
+}
+
+console.log(`Tasks: ${taskMinutes.length}`);
+console.log(`Slow tasks: ${slowCount}`);
+console.log(`Slow positions: ${slowPositionsText}`);
+```
+
 ## 写完后自检
 
 - 如果数据改成 `[10, 9]`，`slowCount` 和 `slowPositionsText` 应分别是什么？
@@ -66,4 +107,4 @@ Practice 01 的输入数据只需逐项取值，用 `for...of` 累加总时长�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

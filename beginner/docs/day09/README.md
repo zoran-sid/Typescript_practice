@@ -176,7 +176,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -191,67 +191,106 @@ flowchart TD
 
 ### 错误代码示例
 
+假设多个接口请求共用一份客户端配置。为了让一次健康检查更快超时，开发者在临时逻辑中修改了 `config.retry.timeoutMs`。接口把 `retry` 标成了 `readonly`，于是开发者误以为里面的超时时间也不能变化：
+
 ```ts
-interface Project {
-  readonly progress: {
-    completed: number;
-    total: number;
+interface ClientConfig {
+  readonly service: string;
+  readonly retry: {
+    timeoutMs: number;
   };
-  members: ReadonlyArray<string>;
+  endpoints: ReadonlyArray<string>;
 }
 
-const project: Project = {
-  progress: { completed: 2, total: 5 },
-  members: ["Lin"],
+const config: ClientConfig = {
+  service: "inventory",
+  retry: { timeoutMs: 5000 },
+  endpoints: ["/items", "/stock"],
 };
 
-project.progress.completed = 3;
-// ❌ 这行竟然允许：readonly 只保护 progress 这个引用，不会自动深入对象。
+config.retry.timeoutMs = 100;
+// ❌ 外层 readonly 没有保护内层 timeoutMs。
 
-project.members.push("Mei");
-// ❌ ReadonlyArray 没有可修改数组的 push 方法。
+console.log(`Next request timeout: ${config.retry.timeoutMs}`);
 ```
+
+实际输出：
+
+```text
+Next request timeout: 100
+```
+
+这行修改能通过类型检查，因为 `readonly retry` 只禁止 `config.retry = 另一个对象`，没有限制里面的 `timeoutMs`。临时健康检查修改了共享对象后，后续普通请求也只剩 100 毫秒，可能产生大量意外超时。
+
+同一个接口里的 `endpoints: ReadonlyArray<string>` 则会让下面的代码在检查阶段失败：
+
+```ts
+config.endpoints.push("/admin");
+// TypeScript：ReadonlyArray 没有 push 方法。
+```
+
+`readonly` 修饰到哪一层，只保护哪一层；不能只看外层出现了这个单词，就假设整棵对象都不可变。
 
 ### 正确写法
 
 ```ts
-interface Project {
-  readonly progress: {
-    readonly completed: number;
-    readonly total: number;
+interface ClientConfig {
+  readonly service: string;
+  readonly retry: {
+    readonly timeoutMs: number;
   };
-  members: ReadonlyArray<string>;
+  endpoints: ReadonlyArray<string>;
 }
 
-const project: Project = {
-  progress: { completed: 2, total: 5 },
-  members: ["Lin"],
+const config: ClientConfig = {
+  service: "inventory",
+  retry: { timeoutMs: 5000 },
+  endpoints: ["/items", "/stock"],
 };
 
-// ✅ 需要新进度时创建新对象，而不是修改只读数据。
-const nextProject: Project = {
-  members: project.members,
-  progress: {
-    completed: project.progress.completed + 1,
-    total: project.progress.total,
-  },
+const healthCheckConfig: ClientConfig = {
+  service: config.service,
+  retry: { timeoutMs: 100 }, // ✅ 创建新的嵌套对象。
+  endpoints: config.endpoints,
 };
+
+console.log(`Normal timeout: ${config.retry.timeoutMs}`);
+console.log(
+  `Health check timeout: ${healthCheckConfig.retry.timeoutMs}`,
+);
 ```
+
+实际输出：
+
+```text
+Normal timeout: 5000
+Health check timeout: 100
+```
+
+内层 `timeoutMs` 也明确标记为 `readonly`。健康检查需要不同配置时，代码创建新的外层对象和新的 `retry` 对象；原配置继续保持 5000。`endpoints` 本身是只读数组，两个配置共享它时，这两个变量都不能通过当前类型调用 `push`。
 
 ## 面试时怎么回答
 
 **问：`interface` 和 `type` 应该怎么选？`readonly` 能让对象完全不可变吗？**
 
-二者都能描述对象形状，不必背成“对象只能用 `interface`”。`interface` 支持同名声明合并，适合需要被扩展的公开对象契约；`type` 还能直接表示联合类型、元组和其他类型运算。一个对象形状的类型别名也可以被类实现，例如 `type Named = { name: string }` 之后，类可以 `implements Named`。真正的选择要看是否需要声明合并，以及要表达的是开放对象契约还是类型组合。
+可以这样回答：
+
+`interface` 和对象类型别名都能描述对象形状。`interface` 可以重新打开并合并同名声明，常用于需要扩展的对象契约；`type` 还能直接给联合类型、元组和其他类型组合取名。大多数普通对象两者都能用，团队应保持一致，只有需要声明合并或类型组合时再利用各自差异。
 
 `readonly` 主要是编译期写入限制，而且默认是浅层的。`readonly profile: { name: string }` 会阻止把 `profile` 换成另一个对象，却不一定阻止 `profile.name = "新名字"`；生成 JavaScript 后也没有自动的冻结代码。复制可以避免改动原对象，但副本仍然可变；要在运行时阻止当前对象的写入，需要冻结对象或封装修改入口，嵌套对象仍要逐层处理。需要深层只读时则要设计递归类型，并理解它仍只是静态约束。
+
+官方参考：
+
+- [TypeScript：Everyday Types 中的 `type` 与 `interface`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces)
+- [TypeScript：Object Types 中的 `readonly`](https://www.typescriptlang.org/docs/handbook/2/objects.html#readonly-properties)
+- [TypeScript：Object Types 中的 `ReadonlyArray`](https://www.typescriptlang.org/docs/handbook/2/objects.html#the-readonlyarray-type)
 
 ## 拓展思考（不要求写代码）
 
 接口中 `readonly progress: { completed: number; total: number }` 为什么只阻止替换整个 `progress` 对象，却不阻止 `progress.completed = 3`，若业务要求完全只读还需要改变哪里？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点检查类型设计是否表达了题目意图。

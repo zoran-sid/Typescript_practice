@@ -36,36 +36,42 @@ console.log(legacyScore.score([10, 20]));
 
 这里的“模块命名空间对象”不是 TypeScript 的 `namespace` 关键字，也不会把模块内容复制到全局。路径拼错、真实 JS 没有该导出，运行时仍会失败；`.d.ts` 只能描述这些成员，不能创造它们。
 
-### `.prototype`：给已有类的所有实例补上运行时方法
+### `.prototype`：通过本地声明合并给已有类补上运行时方法
 
-JavaScript 类构造函数自带 `.prototype` 对象。实例读取自身没有的成员时，会继续到这个原型对象上查找。`LegacyUser.prototype.label = function (...) { ... }` 的左边是要安装方法的位置，右边的普通函数是实际实现；以后所有 `LegacyUser` 实例都能找到它。
+JavaScript 类构造函数自带 `.prototype` 对象。实例读取自身没有的成员时，会继续到这个原型对象上查找。`ArchiveRecord.prototype.describe = function (...) { ... }` 的左边是要安装方法的位置，右边的普通函数是实际实现；以后所有 `ArchiveRecord` 实例都能找到它。
 
 ```ts
-class LegacyUser {
-  constructor(public name: string) {}
+class ArchiveRecord {
+  constructor(public fileCount: number) {}
 }
 
-interface LegacyUser {
-  label(): string;
+// 与上面的 class 位于同一作用域、名称也相同：
+// TypeScript 会把这两个声明合在一起。
+interface ArchiveRecord {
+  describe(): string;
 }
 
-console.log(typeof LegacyUser.prototype.label);
+console.log(typeof ArchiveRecord.prototype.describe);
 
-LegacyUser.prototype.label = function (this: LegacyUser): string {
-  return `${this.name} (legacy)`;
+ArchiveRecord.prototype.describe = function (
+  this: ArchiveRecord,
+): string {
+  return `Archived files: ${this.fileCount}`;
 };
 
-console.log(new LegacyUser("Ada").label());
+console.log(new ArchiveRecord(3).describe());
 ```
 
 实际输出：
 
 ```text
 undefined
-Ada (legacy)
+Archived files: 3
 ```
 
-这段代码要配合类型声明才会通过 TypeScript 检查，但声明和实现职责不同：模块增强只是让编译器知道 `label`，给 `.prototype` 赋值才真正把方法装到运行时。原型补丁会影响该构造函数创建的所有实例，且普通函数里的动态 `this` 才会指向实例；不要在这里随手换成箭头函数。
+这里使用的是**本地声明合并**：同一作用域中的 `class ArchiveRecord` 和 `interface ArchiveRecord` 名称相同，所以 TypeScript 把两份类型信息合在一起。它不是模块增强。`interface` 只让编译器知道实例可以调用 `describe()`；给 `.prototype` 赋值，才真正把方法安装到 JavaScript 运行时。
+
+如果类来自另一个模块，才需要写 `declare module "./模块路径.js" { ... }` 来做**模块增强**，而且这里的路径必须和 `import` 使用的路径一致。模块增强同样只补充类型信息，不会生成方法实现；仍然要给原型赋值。原型补丁会影响该构造函数创建的所有实例，且普通函数里的动态 `this` 才会指向实例；不要在这里随手换成箭头函数。
 
 ## 核心讲解
 
@@ -141,7 +147,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -160,35 +166,142 @@ flowchart TD
 
 ### 错误代码示例
 
+监控包升级后，`summarize` 从“只返回平均值”改成了“返回平均值和样本数”。运行时文件已经更新，声明文件仍保留旧返回类型。
+
+`metrics.js` 是真实运行时代码：
+
+```js
+export function summarize(samples) {
+  const total = samples.reduce((sum, sample) => sum + sample, 0);
+  return {
+    average: total / samples.length,
+    sampleCount: samples.length,
+  };
+}
+```
+
+`metrics.d.ts` 忘记同步：
+
 ```ts
-// score.js 的真实实现返回 number：
-export function score(values) {
-  return values.reduce((sum, value) => sum + value, 0);
+export declare function summarize(
+  samples: readonly number[],
+): number;
+```
+
+`report.ts` 正确导入了函数，但 TypeScript 只能依据错误的 `.d.ts` 检查：
+
+```ts
+import { summarize } from "./metrics.js";
+
+const result = summarize([120, 180]);
+console.log(result.toFixed(0));
+// ❌ 运行时 result 是对象，常见结果是：
+// TypeError: result.toFixed is not a function
+```
+
+这段调用会通过类型检查，因为声明声称 `result` 是 `number`。Node 实际执行 `metrics.js` 后得到对象，直到调用 `toFixed` 才失败。错误声明会把一份错误契约传播给所有调用者。
+
+模块增强有另一条边界。假设旧包提供下面两个文件：
+
+`legacy-device.js`：
+
+```js
+export class LegacyDevice {
+  constructor(serial) {
+    this.serial = serial;
+  }
+}
+```
+
+`legacy-device.d.ts`：
+
+```ts
+export declare class LegacyDevice {
+  constructor(serial: string);
+  readonly serial: string;
+}
+```
+
+调用方可以增强类型，但只写声明不会安装方法：
+
+```ts
+import { LegacyDevice } from "./legacy-device.js";
+
+declare module "./legacy-device.js" {
+  interface LegacyDevice {
+    displayName(): string;
+  }
 }
 
-// score.d.ts 却这样声明：
-export declare function score(values: number[]): string;
-// ❌ 声明让编译器相信了错误的返回类型，却不会改变真实 JS。
+const device = new LegacyDevice("A-17");
+device.displayName();
+// ❌ 类型检查相信 displayName 存在，运行时原型上却没有它：
+// TypeError: device.displayName is not a function
 ```
 
 ### 正确写法
 
-```ts
-// score.d.ts 必须忠实描述 score.js 已存在的参数与返回值：
-export declare function score(values: readonly number[]): number;
+先让声明文件忠实描述 `metrics.js`：
 
-// ✅ .d.ts 只提供类型；运行时仍由 score.js 提供真正实现。
-import { score } from "./score.js";
-console.log(score([10, 20]).toFixed(0));
+```ts
+// metrics.d.ts
+export interface MetricSummary {
+  average: number;
+  sampleCount: number;
+}
+
+export declare function summarize(
+  samples: readonly number[],
+): MetricSummary;
 ```
+
+调用方随后按对象读取：
+
+```ts
+// report.ts
+import { summarize } from "./metrics.js";
+
+const result = summarize([120, 180]);
+console.log(result.average.toFixed(0));
+console.log(result.sampleCount);
+```
+
+原型扩展则按“导入构造函数、增强类型、安装实现、创建实例”的顺序写在同一个模块中：
+
+```ts
+// device-label.ts
+import { LegacyDevice } from "./legacy-device.js";
+
+declare module "./legacy-device.js" {
+  interface LegacyDevice {
+    displayName(): string;
+  }
+}
+
+// ✅ declare module 只补类型；这行赋值才把方法装到真实原型上。
+LegacyDevice.prototype.displayName = function (
+  this: LegacyDevice,
+): string {
+  return `Device ${this.serial}`;
+};
+
+const device = new LegacyDevice("A-17");
+console.log(device.displayName());
+```
+
+`declare module` 中的路径必须与导入路径一致，增强的也必须是目标模块已有的命名导出。导入让当前文件拿到运行时的 `LegacyDevice` 构造函数；接口增强让编译器认识 `displayName`；原型赋值才提供真实实现。维护这类边界时要同时做类型检查和运行测试。
 
 ## 面试时怎么回答
 
 **问：** `.d.ts`、声明合并、模块增强和 `enum` 各自有什么运行时边界？
 
-**答：** `.d.ts` 只描述已经存在的值。例如 `export declare function score(values: readonly number[]): number` 能让 TypeScript 检查调用，但真正的 `score` 必须由 `score.js` 提供。两段同名 `interface LessonInfo` 会在类型层合并字段；模块增强也是给现有模块补类型成员，不能凭空创建实现。普通 `enum Status { Draft, Published }` 则不同，它通常会生成可在运行时读取的 JavaScript 对象；现代固定状态也常用 `as const` 对象配合值联合。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要说“写了声明或模块增强，函数运行时就存在”。声明若写错，编译器只会更坚定地相信错误信息，最终仍在运行时报错；只写一个空的 `declare module "old-lib"` 还会让该模块近似落入 `any`，只是把问题藏起来。声明合并也不是普通对象自动合并，它发生在特定声明上，`type` 别名不能重复声明。面试官可能继续问第三方库扩展：先导入目标模块，再声明同名模块补充类型，同时必须另有真实代码安装对应方法。
+`.d.ts` 只包含类型信息，不生成 JavaScript，所以它必须忠实描述已经存在的运行时值。声明合并是编译器把同名声明组合成一个定义，最常见的是 interface 合并；它不是把两个普通对象在运行时合并。模块增强会把新增成员并入现有模块的类型，但真实方法仍要由原模块或原型补丁提供。
+
+普通 `enum` 同时创建类型和值，通常会产生运行时代码；`interface` 和 `type` 只存在于类型层。维护第三方扩展时，我会先导入目标模块，再增强它的命名导出类型，并确保另有代码安装实现。错误 `.d.ts` 会让编译器相信不存在的行为，所以声明更新要和运行测试、包版本一起管理。
+
+官方参考：[TypeScript `.d.ts` Files](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html#dts-files)、[Declaration Merging 与 Module Augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html)、[Modules Reference](https://www.typescriptlang.org/docs/handbook/modules/reference)
 
 ## 拓展思考（不要求写代码）
 

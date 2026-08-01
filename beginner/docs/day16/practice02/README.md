@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day16/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day16/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day16/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -35,6 +35,56 @@ pageUpdated
           └── updateProperty ──> updatedSettings
 
 originalSettings + updatedSettings ──> 对照输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 originalSettings<br/>20 页、显示提示"] --> B["调用 updateProperty(originalSettings, pageSize, 50)"]
+  B --> C["spread 复制 item<br/>计算属性 [key] 覆盖值"]
+  C --> D["return pageUpdated"]
+  D --> E["调用 updateProperty(pageUpdated, showTips, false)"]
+  E --> F["spread 复制并覆盖 showTips"]
+  F --> G["return updatedSettings"]
+  A --> H["读取原 pageSize、showTips"]
+  G --> I["读取新 pageSize、showTips"]
+  H --> J["console.log 新旧对照"]
+  I --> J
+```
+
+## 起始代码
+
+固定设置、泛型函数签名、两次连续调用和四行输出已给出。你需要完成创建新对象的表达式并 `return` 它。
+
+```ts
+type Settings = {
+  theme: "light" | "dark";
+  pageSize: number;
+  showTips: boolean;
+};
+type SettingName = keyof Settings;
+
+function updateProperty<Item, Key extends keyof Item>(
+  item: Item,
+  key: Key,
+  nextValue: Item[Key],
+): Item {
+  throw new Error("TODO：使用 spread 和 [key] 创建并 return 新对象");
+}
+
+const originalSettings: Settings = {
+  theme: "light",
+  pageSize: 20,
+  showTips: true,
+};
+const pageSizeKey: SettingName = "pageSize";
+const pageUpdated = updateProperty(originalSettings, pageSizeKey, 50);
+const updatedSettings = updateProperty(pageUpdated, "showTips", false);
+console.log(`原页数：${originalSettings.pageSize}`);
+console.log(`新页数：${updatedSettings.pageSize}`);
+console.log(`原提示：${originalSettings.showTips}`);
+console.log(`新提示：${updatedSettings.showTips}`);
 ```
 
 ## 要完成的功能
@@ -73,4 +123,4 @@ originalSettings + updatedSettings ──> 对照输出
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

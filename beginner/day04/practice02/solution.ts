@@ -1,24 +1,25 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 const failedChecks = 0;
 const hasApproval = true;
 const isHotfix = true;
 
-const hasFailure = false; // TODO：让它表示“至少有一项检查失败”。
-const canFastTrack = false; // TODO：让它表示“这是热修复，并且已经得到审批”。
+const hasFailure = failedChecks > 0;
+const canFastTrack = isHotfix && hasApproval;
 
 let decision = "";
+// 失败检查优先级最高；没有失败时，才继续检查快速通道和普通审批。
 if (hasFailure) {
-  // TODO：失败检查优先级最高，把 decision 更新为 "Blocked"。
+  decision = "Blocked";
 } else if (canFastTrack) {
-  // TODO：没有失败且满足快速通道条件，把 decision 更新为 "Fast track"。
+  decision = "Fast track";
 } else if (hasApproval) {
-  // TODO：没有失败、不是快速通道，但已有审批，把 decision 更新为 "Ready"。
+  decision = "Ready";
 } else {
-  // TODO：前面都不成立，把 decision 更新为 "Waiting approval"。
+  decision = "Waiting approval";
 }
 
-const canDeploy = false; // TODO：同时检查“没有失败”与“已经审批”，保存最终布尔结果。
+const canDeploy = !hasFailure && hasApproval;
 
+// 调用关系：发布数据 -> 两个布尔结果 -> 优先级分支 -> decision/canDeploy -> 输出。
 console.log(`Decision: ${decision}`);
 console.log(`Can deploy: ${canDeploy}`);
 console.log(`Failed checks: ${failedChecks}`);

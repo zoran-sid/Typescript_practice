@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day05/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day05/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day05/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -67,6 +67,64 @@ subtotal + discount + amountToPay ──> 账单输出
 
 函数头写 function 名称(参数: 类型): 返回类型 {；形参与实参用逗号，return 值; 交回结果。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数据：quantity、unitPrice、isMember"] --> B["调用 calculateSubtotal(quantity, unitPrice)"]
+    B --> C["函数内相乘"]
+    C --> D["return subtotal"]
+    D --> E["变量 subtotal"]
+    E --> F["调用 calculateDiscount(subtotal, isMember)"]
+    F --> G{"会员且小计 >= 100？"}
+    G -- "是" --> H["return subtotal * 0.1"]
+    G -- "否" --> I["return 0"]
+    H --> J["变量 discount"]
+    I --> J
+    E --> K["调用 calculateAmountToPay(subtotal, discount)"]
+    J --> K
+    K --> L["return subtotal - discount"]
+    L --> M["变量 amountToPay"]
+    E --> N["三次 console.log"]
+    J --> N
+    M --> N
+    N --> O["输出金额报告"]
+```
+
+## 起始代码
+
+三个函数签名、固定数据、调用顺序和输出已经提供。函数内部的计算、判断和 return 由你完成。
+
+```ts
+function calculateSubtotal(quantity: number, unitPrice: number): number {
+  return 0; // TODO：替换为 quantity 与 unitPrice 的计算结果。
+}
+
+function calculateDiscount(subtotal: number, isMember: boolean): number {
+  const canDiscount = false; // TODO：替换为会员优惠条件。
+  if (canDiscount) {
+    return 0; // TODO：替换为 10% 优惠金额。
+  }
+  return 0;
+}
+
+function calculateAmountToPay(subtotal: number, discount: number): number {
+  return 0; // TODO：替换为应付金额。
+}
+
+const quantity = 3;
+const unitPrice = 40;
+const isMember = true;
+
+const subtotal = calculateSubtotal(quantity, unitPrice);
+const discount = calculateDiscount(subtotal, isMember);
+const amountToPay = calculateAmountToPay(subtotal, discount);
+
+console.log(`小计: ${subtotal}`);
+console.log(`优惠: ${discount}`);
+console.log(`应付: ${amountToPay}`);
+```
+
 ## 写完后自检
 
 - 如果 `isMember` 改成 `false`，小计、优惠和应付金额会分别是多少？
@@ -76,4 +134,4 @@ subtotal + discount + amountToPay ──> 账单输出
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

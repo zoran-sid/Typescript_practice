@@ -159,7 +159,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -174,41 +174,70 @@ flowchart TD
 
 ### 错误代码示例
 
+假设结算页从数量输入框收到 `"3"`，每件商品 40 元，另收 8 元运费。开发者知道输入要转数字，却把 `Number(...)` 包在了错误的位置：
+
 ```ts
-const completedText = "3";
-const plannedLessons = 2;
+const quantityText = "3";
+const unitPrice = 40;
+const shippingFee = 8;
 
-const totalLessons = completedText + plannedLessons;
-// ❌ 字符串参与 + 运算，结果是 "32"，不是数字 5。
+const total = Number(quantityText + unitPrice) + shippingFee;
+// ❌ 括号内先发生字符串拼接，转换时已经得到错误的 "340"。
 
-const converted: number = completedText;
-// ❌ 类型标注只提出要求，不能把 string 自动转换成 number。
+console.log(`Total: ${total}`);
 ```
+
+代码能通过类型检查，最终的 `total` 也确实是 `number`，但实际输出是：
+
+```text
+Total: 348
+```
+
+圆括号内部先执行：`"3" + 40` 得到字符串 `"340"`；随后 `Number("340")` 得到数字 340；最后再加运费得到 348。真实应付金额应是 `3 * 40 + 8`，也就是 128。这个错误危险的地方在于最终类型正确，TypeScript 无法知道 348 不符合结算公式。
 
 ### 正确写法
 
 ```ts
-const completedText = "3";
-const plannedLessons = 2;
+const quantityText = "3";
+const unitPrice = 40;
+const shippingFee = 8;
 
-const completed = Number(completedText); // ✅ 先在运行时转换。
-const totalLessons = completed + plannedLessons; // ✅ 3 + 2 得到数字 5。
+const quantity = Number(quantityText); // ✅ 入口处先转换单个外部值。
+const total = quantity * unitPrice + shippingFee;
+
+console.log(`Total: ${total}`);
 ```
+
+实际输出：
+
+```text
+Total: 128
+```
+
+先把外部文字转换成 `quantity`，后面的乘法和加法就都在数字之间进行。真实表单还要处理空字符串和非法文字产生的 `NaN`；本例只聚焦“转换位置会改变执行顺序”。
 
 ## 面试时怎么回答
 
 **问：`Number(value)` 和 `value as number` 有什么不同？**
 
-`Number(value)` 会在程序运行时真正尝试转换数据。`Number("12")` 的结果是数字 `12`，而 `Number("abc")` 的结果是 `NaN`，所以转换后仍可能需要检查。类型断言 `value as number` 不转换、不验证，也不会改变控制台里的值；它只是告诉 TypeScript“先相信我把类型判断对了”。
+可以这样回答：
+
+`Number(value)` 是 JavaScript 的运行时转换。`Number("12")` 得到数字 `12`，无法转换时会得到 `NaN`，所以外部输入转换后仍要按需求检查。`value as number` 是 TypeScript 类型断言，只改变编译器怎样看待这段代码，不转换也不验证真实值。
 
 例如某个外部值运行时其实是字符串 `"12"`，强行断言成 `number` 后，它在运行时仍是字符串。继续做 `value + 1`，可能得到字符串 `"121"`，不是数字 `13`。因此接口数据、表单输入和 JSON 应先转换或校验，再让类型系统接手。面试时若只说“`as` 可以转换类型”，这正是容易答错的地方。
+
+官方参考：
+
+- [MDN：Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)
+- [MDN：Number.isNaN()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN)
+- [TypeScript：Everyday Types 中的类型断言](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)
 
 ## 拓展思考（不要求写代码）
 
 为什么 `Number(completedText + plannedLessons)` 最终也是 `number` 类型，TypeScript 却无法仅凭类型判断结果 32 不符合课程总数的业务含义？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点比较括号放置位置和实际执行顺序。

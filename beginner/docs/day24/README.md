@@ -116,7 +116,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 3 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -135,17 +135,34 @@ flowchart TD
 
 ### 错误代码示例
 
+假设合作方把课程时长从数字改成了字符串，但没有提前通知。JSON 仍然能解析，下面的断言也能让类型检查通过：
+
 ```ts
-type StudyTask = {
+type ImportedLesson = {
   id: string;
   minutes: number;
-  status: "todo" | "done";
+  status: "draft" | "published";
 };
 
-const tasks = JSON.parse(text) as StudyTask[];
-// ❌ 类型断言不会检查运行时数据；null、错误字段和错误状态都可能混进来。
-console.log(tasks[0].minutes.toFixed(0));
+const text = JSON.stringify([
+  { id: "a", minutes: 45, status: "published" },
+  { id: "b", minutes: "30", status: "draft" },
+]);
+
+// ❌ 断言只改编译器的看法，不会把字符串 "30" 转成 number。
+const lessons = JSON.parse(text) as ImportedLesson[];
+const total = lessons.reduce((sum, lesson) => sum + lesson.minutes, 0);
+
+console.log(total);
 ```
+
+TypeScript 会把 `lesson.minutes` 当成 `number`，但第二项在运行时仍是字符串。JavaScript 执行 `45 + "30"` 时会做字符串拼接，实际输出是：
+
+```text
+4530
+```
+
+报表没有立即崩溃，反而生成了一个看似合理的错误总数，这正是外部数据断言在项目里危险的地方。若数组中混入 `null`，访问字段时还可能直接出现 `TypeError`。`as ImportedLesson[]` 只改变编译器的看法，不会遍历或转换 JSON。
 
 ### 正确写法
 
@@ -155,28 +172,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
 }
 
-function isStudyTask(value: unknown): value is StudyTask {
+function isImportedLesson(value: unknown): value is ImportedLesson {
   return (
     isRecord(value) &&
     typeof value.id === "string" &&
     typeof value.minutes === "number" &&
     Number.isFinite(value.minutes) &&
-    (value.status === "todo" || value.status === "done")
+    value.minutes >= 0 &&
+    (value.status === "draft" || value.status === "published")
   );
 }
 
 const parsed: unknown = JSON.parse(text);
-// ✅ 数组外形和每一个元素都通过后，才得到可信的 StudyTask[]。
-const tasks = Array.isArray(parsed) && parsed.every(isStudyTask) ? parsed : [];
+// ✅ 数组外形和每一个元素都通过后，才进入统计。
+if (!Array.isArray(parsed) || !parsed.every(isImportedLesson)) {
+  throw new Error("Lesson data is invalid");
+}
+
+const total = parsed.reduce((sum, lesson) => sum + lesson.minutes, 0);
+console.log(total);
 ```
+
+对于上面的坏数据，程序会在统计前明确失败：
+
+```text
+Error: Lesson data is invalid
+```
+
+真实项目还可以把验证失败记录成字段路径，例如 `items[1].minutes must be a finite number`。重点是让错误停在导入边界，而不是等报表或页面使用坏数据时才发现。
 
 ## 面试时怎么回答
 
 **问：** 为什么外部 JSON 要先放进 `unknown`，类型守卫又做了什么？
 
-**答：** `JSON.parse` 成功只代表文本语法正确，不代表字段符合模型。比如 `{ "id": "a", "minutes": "20" }` 能解析，但 `minutes` 不是数字。把结果保留为 `unknown`，代码就不能直接读取字段；`isStudyTask(value): value is StudyTask` 在运行时逐项检查非空对象、`id`、`title`、有限非负的 `minutes` 和嵌套状态。它返回 `true`，是在向 TypeScript 承诺这些检查全部通过；返回 `false`，表示不能把当前值当成任务。
+**可以直接这样回答：**
 
-**容易答错或追问：** 类型谓词不是自动验证器，TypeScript 会相信你写的布尔逻辑。若守卫无条件 `return true`，类型看似安全，坏数据仍会进入程序。JSON 没有 `Date` 类型，日期字段通常以字符串传输；把响应标成 `{ createdAt: Date }` 不会自动创建 `Date`，必须验证格式并显式转换。面试官还可能问整批与部分导入：`every(isStudyTask)` 适合任一失败就拒绝，`filter(isStudyTask)` 适合保留合法项并统计拒绝数；选择哪种是业务协议，不是语言替你决定。
+`JSON.parse` 只负责把合法 JSON 文本转换成 JavaScript 值，不保证这个值符合我的业务模型。我会把解析结果放进 `unknown`，先确认它是不是数组、每项是不是非空对象，再逐字段检查字符串、有限数字和判别字段。`value is StudyTask` 这种类型谓词把运行时布尔检查与编译器收窄连接起来：返回 `true` 后，调用处可以按 `StudyTask` 使用；返回 `false` 时不能作出这份承诺。
+
+类型谓词本身不是自动验证器，TypeScript 会相信函数实现。如果守卫漏了 `minutes >= 0`，负数仍会被当成合法任务。JSON 也不会自动恢复 `Date` 或 `bigint`；日期通常先是字符串，需要验证格式后再显式转换。整批失败还是保留合法项，要由导入协议决定：事务性操作常用 `every` 全部通过，批量清洗可以用 `filter` 保留合法项并报告拒绝数。
+
+官方参考：[TypeScript Narrowing 与类型谓词](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)、[TypeScript 的 `unknown`](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-0.html#new-unknown-top-type)、[MDN `JSON.parse`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse)
 
 ## 拓展思考（不要求写代码）
 

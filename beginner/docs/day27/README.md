@@ -122,7 +122,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -140,61 +140,84 @@ flowchart TD
 
 ### 错误代码示例
 
+一个结算模块既被浏览器页面使用，也会被 Node 端的报表脚本和测试导入。若模块一加载就访问优惠码输入框，Node 甚至来不及执行报表：
+
 ```ts
-async function loadLesson(): Promise<Lesson> {
-  const response = await fetch("/lesson");
-  // ❌ 类型断言不会验证服务器实际返回的字段。
-  return (await response.json()) as Lesson;
+const couponInput = document.querySelector("#coupon");
+// ❌ Node 导入这个文件时没有 document，
+// 常见结果是 ReferenceError: document is not defined。
+
+type TaxPayload = { rate: number };
+
+async function fetchTaxRateWrong(): Promise<number> {
+  const response = await fetch("/tax-rate");
+  const payload = (await response.json()) as TaxPayload;
+  // ❌ 接口若返回 { error: "unauthorized" }，rate 实际是 undefined。
+  return payload.rate;
 }
 
-function parseDay(): number {
-  // ❌ 纯业务逻辑偷偷依赖全局 process.argv，难以单独测试。
-  return Number(process.argv[process.argv.indexOf("--day") + 1]);
+function readOutputFileWrong(): string {
+  // ❌ 当前课程项目没有安装 Node 类型声明，这里会先出现：
+  // TS2304: Cannot find name 'process'。
+  // 即使 Node 项目补好了类型，用户没传第一个业务参数时，
+  // process.argv[2] 在运行时仍然是 undefined。
+  return process.argv[2].trim();
 }
 ```
+
+三处错误都把环境值当成了可靠业务值。DOM 错误发生在模块加载阶段；税率接口可能把 `undefined` 带进金额计算，最后得到 `NaN`；CLI 还有两层问题：TypeScript 项目需要 Node 类型声明才能认识 `process`，而类型齐全也不能保证用户真的传了参数。Node 运行时缺少该参数时，代码仍会在 `undefined` 上调用 `trim`。类型声明只是在描述环境，不会替外部数据做业务验证。
 
 ### 正确写法
 
 ```ts
-interface Lesson {
-  title: string;
-}
+type RequestJson = (path: string) => Promise<unknown>;
 
-interface JsonClient {
-  get(path: string): Promise<unknown>;
-}
-
-async function loadLesson(client: JsonClient): Promise<Lesson | null> {
-  const value = await client.get("/lesson");
-  // ✅ 响应先保持 unknown，并在边界逐字段验证。
+async function requestTaxRate(
+  requestJson: RequestJson,
+): Promise<number | null> {
+  const value = await requestJson("/tax-rate");
+  // ✅ 网络响应先保持 unknown，再检查字段类型和业务范围。
   if (
     value === null ||
     typeof value !== "object" ||
-    !("title" in value) ||
-    typeof value.title !== "string"
+    !("rate" in value) ||
+    typeof value.rate !== "number" ||
+    !Number.isFinite(value.rate) ||
+    value.rate < 0 ||
+    value.rate > 1
   ) {
     return null;
   }
-  return { title: value.title };
+  return value.rate;
 }
 
-function parseDay(args: readonly string[]): number | undefined {
-  const index = args.indexOf("--day");
-  const raw = index < 0 ? undefined : args[index + 1];
-  const day =
-    raw === undefined || raw.trim() === "" ? Number.NaN : Number(raw);
-  // ✅ 环境入口负责传入 args，函数只处理普通数据。
-  return Number.isInteger(day) && day >= 0 ? day : undefined;
+function readOutputFile(
+  args: readonly string[],
+): string | undefined {
+  const first = args[0];
+  if (first === undefined) return undefined;
+
+  const cleaned = first.trim();
+  // ✅ 空字符串和缺少参数都明确返回 undefined。
+  return cleaned === "" ? undefined : cleaned;
 }
 ```
+
+浏览器入口负责读取 `HTMLInputElement`，然后只把优惠码字符串交给结算函数；Node 入口把业务参数数组交给 `readOutputFile`；请求层向业务代码提供 `RequestJson`。核心模块不再偷偷访问全局环境，测试时可以分别传入普通数组和返回固定 `unknown` 的假请求函数。
 
 ## 面试时怎么回答
 
 **问：** 同一套 TypeScript 代码怎样处理浏览器、Node 和外部请求的边界？
 
-**答：** 我会先把环境值转换成普通参数。浏览器最外层可以读取已经绑定的输入框，也可以先确认 `event.currentTarget` 是输入框，再把 `.value` 交给字符串函数；请求返回值先作为 `unknown` 验证字段；Node 的 `process.argv` 只是字符串数组，要检查 `--day` 后一项是否存在并真的是非负整数。比如 `["--day", "27"]` 可得到 `27`，`["--day"]` 只能进入缺失分支。这样业务函数不直接依赖 `document`、网络或全局参数，更容易测试。
+**可以直接这样回答：**
 
-**容易答错或追问：** 普通 Node 进程没有真实的 `document`、输入框或 `HTMLInputElement` 构造器，除非测试环境另外提供了 DOM 实现，不能为了凑输出伪造一个对象就说浏览器路径已经运行。在浏览器回调里可以用 `currentTarget instanceof HTMLInputElement`；读出 `.value` 后，跨环境的业务函数最好只接收普通字符串。面试官还可能问 DOM 类型为什么能编译却不能运行：类型声明只帮助检查，不会给 Node 创建这些运行时对象。
+我把浏览器、HTTP 和 CLI 都当作外部边界。浏览器入口负责查找元素、监听事件，再把输入框的字符串交给纯函数；HTTP 响应解析后先按 `unknown` 验证字段；Node 参数先从字符串数组解析成明确的选项对象。核心业务只接收字符串、数字和已验证对象，不直接读取 `document`、`fetch` 或 `process.argv`，因此可以在不同环境中复用和单独测试。
+
+本课程配置包含 DOM 声明，这只说明编译器知道 `document` 的类型，不会在普通 Node 进程中创建 DOM。`querySelector` 还可能返回 `null`；`response.json()` 只负责解析响应体，不保证它符合业务需要的结构；命令行参数也可能缺值。真实项目可以使用 Node 官方的 `util.parseArgs` 处理较复杂的参数，但解析后的业务值仍要按自己的范围规则检查。
+
+在 TypeScript 项目中直接使用 `process` 或导入 Node 内置模块，还需要让项目提供对应的 Node 类型声明；这与“参数内容是否有效”是两层不同检查。
+
+官方参考：[MDN `querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector)、[MDN `Response.json`](https://developer.mozilla.org/en-US/docs/Web/API/Response/json)、[Node.js `util.parseArgs`](https://nodejs.org/api/util.html#utilparseargsconfig)
 
 ## 拓展思考（不要求写代码）
 

@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day10/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day10/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day10/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -73,6 +73,60 @@ production debug: disabled
 
 Practice 01 针对工单的编号、主题、联系方式和优先级使用四种不同收窄方式，并格式化多个字段。这里让同一个联合输入先穿过规范化边界，再进入环境策略；重点是减少后续代码需要面对的状态数量。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定环境与开关输入"] --> B["调用 describeDebug(environment, input)"]
+    B --> C["内部调用 normalizeToggle(input)"]
+    C --> D{"typeof input === boolean？"}
+    D -- "是" --> E["return 原 boolean"]
+    D -- "否" --> F["比较 input === on"]
+    F --> G["return 比较结果"]
+    E --> H["requested"]
+    G --> H
+    H --> I{"requested 且非 production？"}
+    I -- "是" --> J["status = enabled"]
+    I -- "否" --> K["保留 disabled"]
+    J --> L["return environment debug: status"]
+    K --> L
+    L --> M["console.log"]
+    M --> N["输出两行调试状态"]
+```
+
+## 起始代码
+
+联合类型、两个函数签名、固定调用和输出都已提供。规范化判断、环境策略、状态分支和 return 由你完成。
+
+```ts
+type ToggleInput = boolean | "on" | "off";
+type Environment = "development" | "staging" | "production";
+
+function normalizeToggle(input: ToggleInput): boolean {
+  if (false) {
+    // TODO：把 false 换成 boolean 类型判断，并 return 原布尔值。
+    return false;
+  }
+  return false; // TODO：替换为字符串是否为 "on" 的比较结果。
+}
+
+function describeDebug(
+  environment: Environment,
+  input: ToggleInput,
+): string {
+  const requested = normalizeToggle(input);
+  const canEnable = false; // TODO：替换为请求开启且不是生产环境。
+  let status = "disabled";
+  if (canEnable) {
+    // TODO：更新为 enabled。
+  }
+  return ""; // TODO：替换为环境和最终状态组成的文字。
+}
+
+console.log(describeDebug("staging", "on"));
+console.log(describeDebug("production", true));
+```
+
 ## 写完后自检
 
 - `describeDebug("development", "off")` 会得到什么结果，数据会经过哪条分支？
@@ -81,4 +135,4 @@ Practice 01 针对工单的编号、主题、联系方式和优先级使用四�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

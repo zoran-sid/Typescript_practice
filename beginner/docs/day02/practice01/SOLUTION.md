@@ -1,18 +1,13 @@
-# Day 02 · Practice 01 解题结构提示
+# Practice 01 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day02/practice01/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。转换、加法和边界比较都在 `solution.ts` 中保留为 `TODO`。
+[打开 solution.ts](../../../day02/practice01/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-数据依次经过四个阶段：原始文本 → 运行时数字转换 → 数字运算 → `if` 更新状态。不要调换前两个阶段；一旦字符串先参与 `+`，运算含义就可能变成拼接。
+## 直接调用逻辑
 
-`status` 先保存默认值，因此需要 `let`。只有比较结果为 `true` 时才重新赋值。
+`completedText` → `Number(completedText)` → `completed` → 与 `plannedLessons` 相加 → `totalLessons` → 比较 `>= 5` → 必要时更新 `status` → 输出总课数与状态。
 
-## 自检
-
-- 类型标注不是类型转换，真正的转换发生在运行时调用中。
-- 比较包含题目要求的边界。
-- 输出读取 `totalLessons` 和最终 `status`。
-- 改变原始数字文本后，结果应重新计算，而不是仍显示固定答案。
+先转换再相加，避免字符串的 `"3" + 2` 得到拼接结果 `"32"`。

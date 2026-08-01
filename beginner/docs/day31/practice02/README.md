@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day31/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day31/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day31/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题不写 generator，也不处理 `bigint`。你要手写一个可重复遍历的分页 iterable，并直接观察两个 iterator 各自保存的游标。
 
@@ -24,6 +24,69 @@ pages[Symbol.iterator]()
    ├── firstIterator ──> next() 2 ──> next() 3 ──> next() 4 ──> done
    └── secondIterator ──> next() 2（独立 current）
 两个 iterator 的 IteratorResult ──> 输出推进顺序与完成状态
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 start=2,end=4"] --> B["createPageCursor"]
+  B --> C["return pages Iterable"]
+  C --> D["第一次调用 Symbol.iterator"]
+  C --> E["第二次调用 Symbol.iterator"]
+  D --> F["创建独立 current=2"]
+  E --> G["创建另一份 current=2"]
+  F --> H["first.next(): return 2，current=3"]
+  H --> I["first.next(): return 3，current=4"]
+  G --> J["second.next(): return 2，current=3"]
+  I --> J
+  J --> K["first.next(): return 4，current=5"]
+  K --> L["first.next(): 5 > end，return done:true"]
+  H --> M["firstPage.value"]
+  I --> M2["secondPage.value"]
+  M --> N["console.log First cursor: 2, 3"]
+  M2 --> N
+  J --> O["console.log Second cursor: 2"]
+  K --> P["console.log First resumes: 4"]
+  L --> Q["console.log First done: true"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+function createPageCursor(start: number, end: number): Iterable<number> {
+  return {
+    [Symbol.iterator](): Iterator<number, void, unknown> {
+      let current = start;
+      return {
+        next(): IteratorResult<number, void> {
+          // TODO：判断边界、保存页码、推进并 return。
+          void current;
+          void end;
+          return { done: true, value: undefined };
+        },
+      };
+    },
+  };
+}
+const pages = createPageCursor(2, 4);
+const firstIterator = pages[Symbol.iterator]();
+const secondIterator = pages[Symbol.iterator]();
+const firstPage = firstIterator.next();
+const secondPage = firstIterator.next();
+const independentPage = secondIterator.next();
+const resumedPage = firstIterator.next();
+const finished = firstIterator.next();
+// TODO：显示结果前先确认前四个 done 都是 false。
+console.log(`First cursor: ${String(firstPage.value)}, ${String(secondPage.value)}`);
+console.log(`Second cursor: ${String(independentPage.value)}`);
+console.log(`First resumes: ${String(resumedPage.value)}`);
+console.log(`First done: ${finished.done}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -59,4 +122,4 @@ First done: true
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

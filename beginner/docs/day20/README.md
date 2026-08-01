@@ -201,7 +201,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -222,41 +222,81 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const profile = JSON.parse(raw) as Profile;
-console.log(profile.contact.email.toLowerCase());
-// ❌ as Profile 没有验证 contact 或 email，真实数据缺字段时仍会崩溃。
+支付服务的 webhook 一开始一直符合接口文档，开发者便用断言把 `JSON.parse` 结果当成 `WebhookEvent`。后来上游在异常数据中传入 `customer: null`，标签数组里还混进了数字：
 
-function isProfile(value: unknown): value is Profile {
-  return typeof value === "object"; // ❌ null 也满足，而且完全没检查嵌套字段。
-}
+```ts
+type WebhookEvent = {
+  eventId: string;
+  customer: {
+    email: string;
+  };
+  tags: string[];
+};
+
+const raw =
+  '{"eventId":"evt-1","customer":null,"tags":["paid",7]}';
+
+const event = JSON.parse(raw) as WebhookEvent; // ❌ 断言没有验证外部数据。
+console.log(event.customer.email.toLowerCase());
 ```
+
+编译可以通过，运行时却会报错：
+
+```text
+TypeError: Cannot read properties of null (reading 'email')
+```
+
+`as WebhookEvent` 没有检查、转换或补齐任何字段。即使把 `customer` 修好，`tags` 中的数字仍会在后续字符串操作中制造另一个错误。
 
 ### 正确写法
 
 ```ts
-function isProfile(value: unknown): value is Profile {
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
   return (
-    isRecord(value) &&
-    typeof value.name === "string" &&
-    isRecord(value.contact) &&
-    typeof value.contact.email === "string" &&
-    Array.isArray(value.lessons) &&
-    value.lessons.every(isLesson) // ✅ 数组中的每个元素也必须通过验证。
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
   );
 }
 
-const value: unknown = JSON.parse(raw);
-if (isProfile(value)) {
-  console.log(value.contact.email.toLowerCase()); // ✅ 收窄后再进入业务逻辑。
+function isWebhookEvent(
+  value: unknown,
+): value is WebhookEvent {
+  return (
+    isRecord(value) &&
+    typeof value.eventId === "string" &&
+    isRecord(value.customer) &&
+    typeof value.customer.email === "string" &&
+    Array.isArray(value.tags) &&
+    value.tags.every(
+      (tag) => typeof tag === "string",
+    )
+  );
+}
+
+const value: unknown = JSON.parse(raw); // ✅ 验证前不允许读取业务字段。
+if (isWebhookEvent(value)) {
+  console.log(value.customer.email.toLowerCase());
+} else {
+  console.log("Webhook 数据无效");
 }
 ```
+
+实际输出：
+
+```text
+Webhook 数据无效
+```
+
+验证顺序从外向内：先确认当前值是普通记录对象，再读取嵌套字段；先确认 `tags` 是数组，再逐项确认元素。类型谓词中的承诺必须与函数体真正执行的检查一致。
 
 ## 面试时怎么回答
 
 **问：类型谓词为什么不只是把返回类型写成 `value is Course`？**
 
-**答：**它解决的是把运行时验证结果告诉类型系统。函数体中的条件必须真的检查 `Course` 要求的字段；返回 `true` 表示当前输入已通过这些检查，调用处才会收窄，返回 `false` 表示当前输入被拒绝：
+**答：**`value is Course` 是函数对类型系统作出的承诺：返回 `true` 时，参数可以收窄为 `Course`。真正的安全来自函数体在运行时检查了所有必需字段；TypeScript 不会自动审计谓词实现是否完整：
 
 ```ts
 function isCourse(value: unknown): value is Course {
@@ -266,13 +306,17 @@ function isCourse(value: unknown): value is Course {
 }
 ```
 
-类型谓词只是对检查结果的承诺，TypeScript 不会审计它是否漏字段。类型变化后，验证器也要同步维护。
+因此业务类型新增必填字段时，验证器也必须同步更新。返回 `false` 只表示本次输入没通过当前检查，具体错误原因要由验证结果另外表达。
 
 **问：`JSON.parse(raw) as Course` 会验证或转换数据吗？**
 
-**答：**不会。类型断言只让编译器暂时按 `Course` 看待这个值，不会补字段、把 `"90"` 变成 `90`，也不会抛出结构错误。需要“失败就中止并在成功后收窄”时，可以写真正执行检查并抛错的断言函数；它和单纯的 `as` 不是一回事。
+**答：**不会。`JSON.parse` 负责按 JSON 语法生成 JavaScript 值，语法错误时抛出 `SyntaxError`；它不知道业务类型。`as Course` 只改变编译器看待表达式的方式，不会补字段、把 `"90"` 转成 `90`，也不会验证嵌套对象。外部数据应先作为 `unknown`，经过守卫或验证库后再进入业务代码。
 
-**容易答错或追问：**不要把编译通过当成数据安全，也不要认为类型断言能完成运行时转换。类型谓词和断言函数是否可靠，都取决于函数体有没有做完整检查。
+官方参考：
+
+- [TypeScript Handbook：Narrowing 与类型谓词](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)
+- [TypeScript Handbook：Type Assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)
+- [MDN：`JSON.parse()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse)
 
 ## 拓展思考（不要求写代码）
 

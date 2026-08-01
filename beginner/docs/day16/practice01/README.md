@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day16/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day16/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day16/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,67 @@ courses/settings + 合法 key
 带 id 的对象 ──> describeId(泛型约束) ──> id 描述
 settings ──> keyof typeof settings ──> SettingName ──> selectedSetting
 各条精确类型结果 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 courses<br/>两门课程"] --> B["调用 describeId(courses[0], 课程)"]
+  B --> C["约束保证可读取 id<br/>return idDescription"]
+  A --> D["调用 pluck(courses, title)"]
+  D --> E["map 回调读取 item[key]"]
+  E --> F["return titles"]
+  A --> G["调用 pluck(courses, score)"]
+  G --> H["map 回调读取 item[key]"]
+  H --> I["return scores"]
+  J["固定 settings"] --> K["selectedSetting: keyof typeof settings"]
+  K --> L["调用 getProperty(settings, selectedSetting)"]
+  L --> M["return settingValue"]
+  C --> N["console.log 课程 id"]
+  F --> O["console.log 标题列表"]
+  I --> P["console.log 分数列表"]
+  M --> Q["console.log 设置键和值"]
+```
+
+## 起始代码
+
+函数签名、固定课程和设置、调用以及四行输出已给出。你需要完成属性读取、`map` 回调和每个函数的 `return`。
+
+```ts
+function getProperty<Item, Key extends keyof Item>(
+  item: Item,
+  key: Key,
+): Item[Key] {
+  throw new Error("TODO：读取 item[key] 并 return");
+}
+
+function pluck<Item, Key extends keyof Item>(
+  items: readonly Item[],
+  key: Key,
+): Item[Key][] {
+  throw new Error("TODO：用 map 回调读取同一 key，并 return 数组");
+}
+
+function describeId<Item extends { id: number }>(item: Item, prefix: string): string {
+  throw new Error("TODO：使用 item.id 并 return 描述文字");
+}
+
+const courses = [
+  { id: 7, title: "变量", score: 80, published: true },
+  { id: 8, title: "泛型", score: 95, published: false },
+] as const;
+const settings = { theme: "dark", fontSize: 16, compact: false };
+type SettingName = keyof typeof settings;
+const selectedSetting: SettingName = "theme";
+const idDescription = describeId(courses[0], "课程");
+const titles = pluck(courses, "title");
+const scores = pluck(courses, "score");
+const settingValue = getProperty(settings, selectedSetting);
+console.log(idDescription);
+console.log(`标题：${titles.join("、")}`);
+console.log(`分数：${scores.join("、")}`);
+console.log(`设置：${selectedSetting}=${settingValue}`);
 ```
 
 请从头编写“类型安全的课程取值工具”。
@@ -77,4 +138,4 @@ keyof T 产生键联合，T[K] 用方括号取属性类型；运行时读取写 
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day19/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day19/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day19/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -26,6 +26,67 @@ inputs
           │                              └── ok:false ──> error
           └── 非法 ──> throw ──> catch unknown ──> errorMessage
 两种失败通道 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 inputs<br/>3000、13、abc"] --> B["for...of 取出 input"]
+  B --> C["try 中调用 parsePort(input)"]
+  C --> D["Number 转换"]
+  D --> E{"是整数且在 1~65535？"}
+  E -- "否" --> F["throw RangeError"]
+  F --> G["catch unknown"]
+  G --> H["调用 errorMessage(error)<br/>return 错误文字"]
+  H --> I["console.log 解析失败"]
+  E -- "是" --> J["return port"]
+  J --> K["调用 savePort(port)"]
+  K --> L{"port === 13？"}
+  L -- "是" --> M["return ok:false Result"]
+  L -- "否" --> N["return ok:true Result"]
+  M --> O{"判断 result.ok"}
+  N --> O
+  O -- "true" --> P["console.log 已保存端口"]
+  O -- "false" --> Q["console.log 保存失败"]
+  I --> B
+  P --> B
+  Q --> B
+```
+
+## 起始代码
+
+类型、三个函数签名、固定输入、调用链和三种输出位置已经提供。你要完成端口判断、Result 分支和各函数的 `return`。
+
+```ts
+type Result<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: string };
+
+function parsePort(text: string): number {
+  throw new Error("TODO：转换 text，判断整数与范围，失败时抛 RangeError，成功时 return port");
+}
+function savePort(port: number): Result<number> {
+  throw new Error("TODO：判断 13，并 return 成功或失败 Result");
+}
+function errorMessage(error: unknown): string {
+  throw new Error("TODO：收窄 error，并 return message 或未知错误");
+}
+
+const inputs = ["3000", "13", "abc"];
+for (const input of inputs) {
+  try {
+    const port = parsePort(input);
+    const result = savePort(port);
+    if (result.ok) {
+      console.log(`已保存端口：${result.value}`);
+    } else {
+      console.log(`保存失败：${result.error}`);
+    }
+  } catch (error: unknown) {
+    console.log(`解析失败：${errorMessage(error)}`);
+  }
+}
 ```
 
 请从头编写“端口解析与保存器”。
@@ -69,4 +130,4 @@ throw new Error(message); 抛出，catch (error) 接住；unknown 必须先收�
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

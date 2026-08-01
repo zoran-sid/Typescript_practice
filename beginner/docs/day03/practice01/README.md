@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day03/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day03/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day03/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -69,6 +69,45 @@ Longest session: 60
 
 数组值用 []，项目用逗号；for (const item of items) { ... } 中圆括号是循环头，花括号是循环体。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数组 studyMinutes"] --> B["for...of 取出本轮 minutes"]
+    B --> C["totalMinutes 加上 minutes"]
+    C --> D{"minutes > longestSession？"}
+    D -- "是" --> E["用 minutes 更新 longestSession"]
+    D -- "否" --> F["保留旧 longestSession"]
+    E --> G{"数组还有下一项？"}
+    F --> G
+    G -- "有" --> B
+    G -- "没有" --> H["得到次数、总时长、最长时长"]
+    H --> I["三次 console.log"]
+    I --> J["输出统计报告"]
+```
+
+## 起始代码
+
+固定数组、统计变量和输出调用已提供。请亲手完成循环、累加、比较和更新。
+
+```ts
+const studyMinutes: number[] = [30, 45, 60, 20];
+let totalMinutes = 0;
+let longestSession = 0;
+
+for (const minutes of studyMinutes) {
+  // TODO：把 minutes 累加到 totalMinutes。
+  const isLonger = false; // TODO：替换为本轮时长与最长记录的比较结果。
+  if (isLonger) {
+    // TODO：更新 longestSession。
+  }
+}
+
+console.log(`Sessions: ${studyMinutes.length}`);
+console.log(`Total minutes: ${totalMinutes}`);
+console.log(`Longest session: ${longestSession}`);
+```
+
 ## 写完后自检
 
 - 如果数组末尾再加入一次 90 分钟的记录，次数、总时长和最长时长会怎样变化？
@@ -78,4 +117,4 @@ Longest session: 60
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

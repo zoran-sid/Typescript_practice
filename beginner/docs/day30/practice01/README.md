@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day30/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day30/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day30/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -26,19 +26,64 @@ LegacyStatus / ModernStatus ──> normalizeStatus ──> 现代状态
 运行时结果 ──> 输出并核对声明
 ```
 
-只编辑 `practice.ts`，从零完成“旧模块兼容入口”；不要修改 `score.js` 或 `score.d.ts`。
 
-必须名称：`LessonInfo`、`LegacyStatus`、`ModernStatus`、`normalizeStatus`。还要从 `./score.js` 导入 `score`。
+## 代码流程图
 
-需求：
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
 
-1. 阅读两个 score 文件，给 `[10, 20, 30]` 求和，并用 number 接收结果。
-2. 写两段同名 `LessonInfo` interface：第一段 title，第二段 minutes；创建 Declarations / 35 对象。
-3. 写 `LegacyStatus` 数字枚举 Draft、Published。
-4. 写现代 `ModernStatus` 常量对象与同名字面量联合类型，值为 draft、published。
-5. `normalizeStatus` 同时接受旧枚举和现代状态，并统一返回 ModernStatus。
+```mermaid
+flowchart TD
+  A["固定 [10,20,30]"] --> B["调用 score(...)"]
+  B --> C["score.js 运行时求和"]
+  D["score.d.ts 声明 number 返回值"] --> B
+  C --> E["return 60 给 result"]
+  E --> F["console.log Score"]
+  G["两段 LessonInfo interface"] --> H["声明合并 title + minutes"]
+  H --> I["固定 lesson<br/>Declarations / 35"]
+  I --> J["console.log lesson"]
+  K["LegacyStatus.Published"] --> L["normalizeStatus(value)"]
+  M["ModernStatus.Draft"] --> L
+  L --> N{"value 是 Draft 含义？"}
+  N -- "是" --> O["return ModernStatus.Draft"]
+  N -- "否" --> P["return ModernStatus.Published"]
+  O --> Q["console.log Modern"]
+  P --> R["console.log Legacy"]
+```
 
-精确输出：
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+import { score } from "../score.js";
+interface LessonInfo { title: string; }
+interface LessonInfo { minutes: number; }
+enum LegacyStatus { Draft, Published }
+const ModernStatus = { Draft: "draft", Published: "published" } as const;
+type ModernStatus = (typeof ModernStatus)[keyof typeof ModernStatus];
+
+function normalizeStatus(value: LegacyStatus | ModernStatus): ModernStatus {
+  // TODO：判断旧/新状态含义并 return 现代值。
+  void value;
+  return ModernStatus.Draft;
+}
+const result: number = score([10, 20, 30]);
+const lesson: LessonInfo = { title: "Declarations", minutes: 35 };
+console.log(`Score: ${result}`);
+console.log(`${lesson.title}: ${lesson.minutes} minutes`);
+console.log(`Legacy: ${normalizeStatus(LegacyStatus.Published)}`);
+console.log(`Modern: ${normalizeStatus(ModernStatus.Draft)}`);
+```
+
+
+## 任务要求
+
+1. 从旧模块导入 `score`，让 `.d.ts` 与真实 `.js` 一起约束固定调用。
+2. 用两段同名 `LessonInfo` 演示接口合并。
+3. 声明旧数字枚举与现代字符串状态，并在 `normalizeStatus` 中统一含义。
+4. 不要修改辅助 JavaScript 或声明文件来迎合入口代码。
+
+## 精确期望输出
 
 ```text
 Score: 60
@@ -46,10 +91,6 @@ Declarations: 35 minutes
 Legacy: published
 Modern: draft
 ```
-
-限制：不使用 `any`、类型断言或 namespace；不要修改辅助模块来迎合调用代码。
-
-完成标准：右击运行 `practice.ts` 后输出完全一致；能指出 `.js`、`.d.ts`、`.ts` 中哪些代码会在运行时执行，以及声明错误会造成什么风险。
 
 ## 本题易漏语法
 
@@ -64,4 +105,4 @@ Modern: draft
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

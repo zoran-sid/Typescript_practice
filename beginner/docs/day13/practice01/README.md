@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day13/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day13/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day13/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -25,6 +25,75 @@ patch ──> updateProfile ──> spread 合并 ──> updated
    └── 只覆盖传入字段                     └── 新对象
 
 original + updated ──> 对照输出（原对象不变）
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定数据 original: Profile"] --> B["调用 updateProfile(original)"]
+  B --> C["spread 创建新外层对象"]
+  C --> D["name 改为 Ada Lin"]
+  C --> E["数组 spread 创建新 skills"]
+  C --> F["嵌套 spread 创建新 preferences"]
+  C --> G["tasks.map 回调逐项处理任务"]
+  G --> H{"task.id === 2？"}
+  H -- "是" --> I["return 新任务对象<br/>done = true"]
+  H -- "否" --> J["return 原任务"]
+  D --> K["return 新 Profile"]
+  E --> K
+  F --> K
+  I --> K
+  J --> K
+  K --> L["updated 接住返回对象"]
+  L --> M["解构 updated.skills<br/>firstSkill + remainingSkills"]
+  A --> N["读取 original 原值"]
+  L --> O["读取 updated 新值"]
+  M --> P["console.log 输出解构结果"]
+  N --> Q["console.log 新旧对照"]
+  O --> Q
+```
+
+## 起始代码
+
+类型、原始资料、函数签名、调用和对照输出已经准备好。你只需要完成不可变更新中的 spread、`map` 回调、判断和 `return`。
+
+```ts
+type Profile = {
+  readonly id: number;
+  name: string;
+  skills: readonly string[];
+  preferences: { theme: "light" | "dark"; notifications: boolean };
+  tasks: readonly { id: number; title: string; done: boolean }[];
+};
+
+const original: Profile = {
+  id: 1,
+  name: "Ada",
+  skills: ["HTML", "CSS"],
+  preferences: { theme: "light", notifications: true },
+  tasks: [
+    { id: 1, title: "复习变量", done: false },
+    { id: 2, title: "练习对象", done: false },
+  ],
+};
+
+function updateProfile(profile: Profile): Profile {
+  throw new Error("TODO：创建新外层和嵌套对象；用 map 判断 id 并 return 每项任务");
+}
+
+const updated = updateProfile(original);
+const [firstSkill, ...remainingSkills] = updated.skills;
+console.log(`原姓名：${original.name}`);
+console.log(`新姓名：${updated.name}`);
+console.log(`原主题：${original.preferences.theme}`);
+console.log(`新主题：${updated.preferences.theme}`);
+console.log(`原技能：${original.skills.join("、")}`);
+console.log(`新技能：${updated.skills.join("、")}`);
+console.log(`第一项：${firstSkill}`);
+console.log(`其余：${remainingSkills.join("、")}`);
+console.log(`原状态：${original.tasks.map((task) => task.done).join(",")}`);
+console.log(`新状态：${updated.tasks.map((task) => task.done).join(",")}`);
 ```
 
 请在 `practice.ts` 中从头编写“学习资料不可变更新器”。
@@ -89,4 +158,4 @@ const { name, ...rest } = object 是解构收集；{ ...object, name: next } 是
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

@@ -66,10 +66,17 @@ async function main() {
   }
   const source = path.join(beginnerRoot, day, exercise.id, `${mode}.ts`);
   if (mode === "solution") {
-    return checkScaffold({
+    return runSource({
       source,
-      label: `${displayDay(day)} ${exercise.id} 解题结构`,
+      label: `${displayDay(day)} ${exercise.id} 完整参考答案`,
+      expected: exercise.expected,
+      success: "完整参考答案运行通过。请沿代码中的“调用关系”注释对照题目流程图。",
+      hints: exercise.hints,
+      typeHints: exercise.typeHints ?? exercise.hints,
+      runtimeHints: exercise.runtimeHints ?? exercise.hints,
       compilerOptions: exercise.compilerOptions ?? {},
+      sourceRequirements: exercise.sourceRequirements ?? [],
+      printPass: true,
     }) ? 0 : 1;
   }
   return runSource({
@@ -84,27 +91,6 @@ async function main() {
     sourceRequirements: exercise.sourceRequirements ?? [],
     printPass: true,
   }) ? 0 : 1;
-}
-
-function checkScaffold({ source, label, compilerOptions }) {
-  if (!existsSync(source)) {
-    courseError(`缺少源文件 ${relative(source)}。`);
-    return false;
-  }
-  const diagnostics = getDiagnostics(source, compilerOptions);
-  if (diagnostics.length > 0) {
-    console.error(`${label} 类型检查未通过。\n`);
-    diagnostics.slice(0, 3).forEach((item) => console.error(formatDiagnostic(item)));
-    return false;
-  }
-  const scaffold = readFileSync(source, "utf8");
-  if (!/\bTODO\b/.test(scaffold)) {
-    courseError(`${relative(source)} 必须保留至少一个 TODO，不能成为完整答案。`);
-    return false;
-  }
-  console.log(`PASS ${label}：主结构可通过类型检查，核心实现仍由你完成。`);
-  console.log(`请打开 ${relative(source)}，沿 TODO 补全后再运行自己的 practice.ts。`);
-  return true;
 }
 
 function runSource(options) {
@@ -385,7 +371,7 @@ function printPunctuationDifferences(actual, expected) {
 }
 function printLines(lines){lines.forEach((line)=>console.log(`  ${line}`));}
 function printHints(hints=[]){if(!Array.isArray(hints)||hints.length===0)return;console.log("\n提示：");hints.forEach((hint,index)=>console.log(`  ${index+1}. ${hint}`));}
-function printUsage(days){console.error("用法：npm run beginner -- day10 practice02");console.error("解题结构：npm run beginner:solution -- day10 practice02");console.error("example：npm run beginner:example -- day10");console.error("也可直接右击 example.ts、practice.ts；右击 solution.ts 只检查结构提示，不会运行完整答案。");printAvailableDays(days);}
+function printUsage(days){console.error("用法：npm run beginner -- day10 practice02");console.error("完整答案：npm run beginner:solution -- day10 practice02");console.error("example：npm run beginner:example -- day10");console.error("也可直接右击 example.ts、practice.ts 或 solution.ts；solution.ts 会运行完整参考答案。");printAvailableDays(days);}
 function printAvailableDays(days){if(days.length===0)return console.error("当前没有发现课程目录。");console.error(`当前课程：${days[0]} 至 ${days.at(-1)}（共 ${days.length} 天）。`);}
 function courseError(message){console.error(`课程结构错误：${message}`);console.error("这属于课程文件问题，不是你的练习答案造成的。");return 1;}
 function relative(filename){return path.relative(beginnerRoot,filename).replaceAll("\\","/");}

@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day27/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day27/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day27/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题完全在 Node 中运行，不声明 DOM 类型。你要把 API 返回的课程和 CLI 中可选的分钟覆盖值分别验证，再合并成新的课程对象。
 
@@ -26,6 +26,80 @@ API response: unknown ──> parseLesson
 ["--minutes", "soon"] ──> parseMinutesOverride ──> undefined
 baseLesson + override
    └── applyMinutesOverride ──> 新 Lesson / 保留默认 Lesson ──> 输出
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 API 对象<br/>title/minutes=35"] --> B["parseLesson(value)"]
+  B --> C["isRecord + 字段检查"]
+  C --> D{"合法？"}
+  D -- "否" --> E["return null"]
+  D -- "是" --> F["return base Lesson"]
+  G["固定 CLI args<br/>--minutes 45"] --> H["parseMinutesOverride(args)"]
+  H --> I["valueAfter 查找 flag"]
+  I --> J["Number 转换并判断有限非负整数"]
+  J --> K["return 45 或 undefined"]
+  F --> L["applyMinutesOverride(base, result)"]
+  K --> L
+  L --> M{"minutes 是 undefined？"}
+  M -- "是" --> N["return 原 lesson"]
+  M -- "否" --> O["return 新对象并覆盖 minutes"]
+  N --> P["invalid 结果"]
+  O --> Q["valid 结果"]
+  F --> R["console.log Base"]
+  Q --> S["console.log Override"]
+  P --> T["console.log Invalid minutes"]
+  U["固定坏 API minutes='35'"] --> B
+  E --> V["console.log Bad response: rejected"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type Lesson = { title: string; minutes: number };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // TODO：return 对象判断。
+  void value;
+  return false;
+}
+function parseLesson(value: unknown): Lesson | null {
+  // TODO：验证对象字段，并 return Lesson 或 null。
+  void value;
+  return null;
+}
+function valueAfter(args: readonly string[], flag: string): string | undefined {
+  // TODO：查找 flag 并 return 后一项。
+  void args;
+  void flag;
+  return undefined;
+}
+function parseMinutesOverride(args: readonly string[]): number | undefined {
+  // TODO：借助 valueAfter 读取值、转换、判断并 return。
+  void args;
+  return undefined;
+}
+function applyMinutesOverride(lesson: Lesson, minutes: number | undefined): Lesson {
+  // TODO：判断是否覆盖，return 原对象或新对象。
+  void minutes;
+  return lesson;
+}
+const base = parseLesson({ title: "Runtime boundaries", minutes: 35 });
+if (base !== null) {
+  const valid = applyMinutesOverride(base, parseMinutesOverride(["--minutes", "45"]));
+  const invalid = applyMinutesOverride(base, parseMinutesOverride(["--minutes", "soon"]));
+  console.log(`Base: ${base.title}/${base.minutes}`);
+  console.log(`Override: ${valid.title}/${valid.minutes}`);
+  console.log(`Invalid minutes: ${invalid.title}/${invalid.minutes}`);
+}
+const bad = parseLesson({ title: "Broken", minutes: "35" });
+console.log(`Bad response: ${bad === null ? "rejected" : "accepted"}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -61,4 +135,4 @@ Bad response: rejected
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

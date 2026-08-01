@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day08/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day08/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day08/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -78,6 +78,65 @@ nickname ──> ?? ──> displayedNickname
 
 ?. 是安全访问，?? 只在 null/undefined 时使用后备值；不要与普通点号或 || 混淆。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定 contacts 数组"] --> B["调用 contacts.find"]
+    B --> C["回调 return contact.name === Mei"]
+    C -- "匹配" --> D["selectedContact"]
+    C -- "不匹配" --> B
+    D --> E["?. 读取 name"]
+    D --> F["?. 读取 phone"]
+    D --> G["?. 逐层读取 address.city"]
+    E --> H["?? 未找到 -> selectedName"]
+    F --> I["?? 未提供 -> selectedPhone"]
+    G --> J["?? 未填写 -> selectedCity"]
+    K["score = 0"] --> L["score ?? 100"]
+    M["nickname = 空字符串"] --> N["nickname ?? 匿名"]
+    L --> O["displayedScore 保留 0"]
+    N --> P["displayedNickname 保留空字符串"]
+    H --> Q["五次 console.log"]
+    I --> Q
+    J --> Q
+    O --> Q
+    P --> Q
+    Q --> R["输出联系人展示"]
+```
+
+## 起始代码
+
+固定联系人、查找调用、用于比较的 0/空字符串和输出都已提供。查找回调、安全访问和空值合并表达式由你完成。
+
+```ts
+const contacts: {
+  name: string;
+  phone?: string;
+  address?: { city?: string };
+}[] = [
+  { name: "Lin", phone: "13800000000", address: { city: "上海" } },
+  { name: "Mei", address: {} },
+];
+
+const selectedContact = contacts.find((contact) => {
+  return false; // TODO：替换为姓名是否为 "Mei"。
+});
+
+const selectedName = ""; // TODO：替换为安全读取姓名与默认值的表达式。
+const selectedPhone = ""; // TODO：替换为安全读取电话与默认值的表达式。
+const selectedCity = ""; // TODO：替换为逐层读取城市与默认值的表达式。
+const score: number | undefined = 0;
+const nickname: string | undefined = "";
+const displayedScore = -1; // TODO：用 ?? 在缺失时选择 100。
+const displayedNickname = "TODO"; // TODO：用 ?? 在缺失时选择“匿名”。
+
+console.log(`联系人: ${selectedName}`);
+console.log(`电话: ${selectedPhone}`);
+console.log(`城市: ${selectedCity}`);
+console.log(`分数: ${displayedScore}`);
+console.log(`昵称: ${JSON.stringify(displayedNickname)}`);
+```
+
 ## 写完后自检
 
 - 如果查找名字改成 `"Noah"`，姓名、电话和城市三条安全访问会分别选择哪些后备值？
@@ -87,4 +146,4 @@ nickname ──> ?? ──> displayedNickname
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

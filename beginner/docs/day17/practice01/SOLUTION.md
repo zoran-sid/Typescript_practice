@@ -1,17 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day17/practice01/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 的 `// 调用关系：` 注释把部分更新、预览对象和公开对象连成了实际运行链。
 
-## 方案一
+## 直接调用逻辑
 
-1. 从唯一的 `Article` 和只读状态数组派生补丁、预览、公开数据与状态联合。
-2. 在更新函数中创建新文章，在公开转换中显式移除不应暴露的运行时字段。
-3. 用状态标签映射检查所有状态，并比较原文章与派生结果。
+1. `original` 和 `patch` 进入 `updateArticle`，spread 合并后返回 `updated`。
+2. `updated` 的三个字段组成 `preview`；完整 `updated` 同时进入 `toPublicArticle`。
+3. `toPublicArticle` 在运行时解构掉 `summary`，返回 `publicArticle`。
+4. 输出从 `preview`、`publicArticle`、`statusLabels` 和 `statuses` 读取数据，而不是只依赖类型层声明。
 
-## 关键检查点
-
-- Utility Type 只改变类型，不会自动删除运行时属性。
-
-- 把脚手架中的占位键替换为题目要求的字段，但不要扩大可更新范围。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位类型。

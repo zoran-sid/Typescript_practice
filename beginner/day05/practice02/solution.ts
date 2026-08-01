@@ -1,24 +1,29 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
-function evaluateDelivery(estimatedMinutes: number, actualMinutes: number): string {
-  const delayMinutes = 0; // TODO：计算实际时间比预计时间多出的分钟数。
-  const isOnTime = false; // TODO：判断实际时间是否没有超过预计时间。
+function evaluateDelivery(
+  estimatedMinutes: number,
+  actualMinutes: number,
+): string {
+  const delayMinutes = actualMinutes - estimatedMinutes;
+  const isOnTime = actualMinutes <= estimatedMinutes;
 
   if (isOnTime) {
-    // TODO：准时或提前时，直接把 "On time" 交回调用处。
-    return "";
+    // 准时或提前时直接 return，后面的迟到文字不会执行。
+    return "On time";
   }
 
-  // TODO：超时时，使用 delayMinutes 生成 "Late by ... minutes"，交回调用处。
-  return "";
+  return `Late by ${delayMinutes} minutes`;
 }
 
-function createDeliveryLine(deliveryId: string, result: string): string {
-  // TODO：把配送编号和评估结果组合成 "编号: 结果"，并交回调用处。
-  return "";
+function createDeliveryLine(
+  deliveryId: string,
+  result: string,
+): string {
+  return `${deliveryId}: ${result}`;
 }
 
+// 调用关系：两组固定时间 -> evaluateDelivery -> firstResult/secondResult。
 const firstResult = evaluateDelivery(30, 28);
 const secondResult = evaluateDelivery(45, 55);
 
+// 调用关系：配送编号和评估返回值 -> createDeliveryLine -> console.log。
 console.log(createDeliveryLine("A01", firstResult));
 console.log(createDeliveryLine("B02", secondResult));

@@ -149,7 +149,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -168,41 +168,141 @@ flowchart TD
 
 ### 错误代码示例
 
+日志系统想按每 2 行一组惰性读取数据，监控页面和归档任务会同时遍历同一个 iterable。这里会用到 `lines.slice(start, end)`：它创建一个新数组，包含 `start` 位置、但不包含 `end` 位置的元素，不会修改原数组。
+
+如果批次位置写在 iterable 外层，两位消费者就会共享进度：
+
 ```ts
-function* countdown(start: number): Generator<number> {
-  let current = start;
-  while (current >= 1) {
-    current -= 1;
-    yield current; // ❌ 先递减再 yield，第一次少 1，最后还会产出 0。
-  }
+function createLogBatches(
+  lines: readonly string[],
+  batchSize: number,
+): Iterable<readonly string[]> {
+  let offset = 0;
+
+  return {
+    [Symbol.iterator](): Iterator<readonly string[]> {
+      return {
+        next(): IteratorResult<readonly string[]> {
+          if (offset >= lines.length) {
+            return { done: true, value: undefined };
+          }
+
+          const batch = lines.slice(offset, offset + batchSize);
+          offset += batchSize;
+          return { done: false, value: batch };
+        },
+      };
+    },
+  };
 }
 
-const nextId = 9_007_199_254_740_993n + 1;
-// ❌ bigint 不能和 number 直接混算。
-JSON.stringify({ id: nextId }); // ❌ 原生 JSON 不能直接序列化 bigint。
+const batches = createLogBatches(
+  ["login", "upload", "logout", "cleanup"],
+  2,
+);
+const dashboard = batches[Symbol.iterator]();
+const archive = batches[Symbol.iterator]();
+
+console.log(dashboard.next().value?.join(", "));
+console.log(archive.next().value?.join(", "));
+// ❌ archive 得到第二批，而不是从第一批开始；offset 被两个 iterator 共享。
 ```
+
+实际输出：
+
+```text
+login, upload
+logout, cleanup
+```
+
+单独测试任意一位消费者时可能正常；两者交错调用后，一个任务会把另一个任务的日志批次“拿走”。每次 `[Symbol.iterator]()` 都应创建独立的遍历状态。
+
+大整数边界还有一种更隐蔽的错误：
+
+```ts
+const balance = 12_345_678_901_234_567_890n;
+const payload = JSON.stringify({ balance: Number(balance) });
+
+console.log(payload);
+// ❌ 为了绕开 JSON 的 bigint 限制而转成 number，账本金额已经改变。
+```
+
+实际会得到 `{"balance":12345678901234567000}`。程序成功生成 JSON，却改掉了原来的整数，财务系统接收后无法恢复丢失的数字。
 
 ### 正确写法
 
+`Number.isInteger(value)` 是 JavaScript 的整数检查函数：传入整数时返回 `true`，传入小数、`NaN` 或无限值时返回 `false`。批次大小还必须大于 `0`，所以这里把“不是整数”和“小于等于 0”都当成无效输入，并抛出 `RangeError`。
+
 ```ts
-function* countdown(start: number): Generator<number, void, unknown> {
-  for (let current = start; current >= 1; current -= 1) {
-    yield current; // ✅ 先交出当前值，下一轮再递减。
+function createLogBatches(
+  lines: readonly string[],
+  batchSize: number,
+): Iterable<readonly string[]> {
+  if (!Number.isInteger(batchSize) || batchSize <= 0) {
+    throw new RangeError("batchSize 必须是正整数");
   }
+
+  return {
+    [Symbol.iterator](): Iterator<readonly string[]> {
+      // ✅ 每次创建 iterator 时，都创建一份独立 offset。
+      let offset = 0;
+
+      return {
+        next(): IteratorResult<readonly string[]> {
+          if (offset >= lines.length) {
+            return { done: true, value: undefined };
+          }
+
+          const batch = lines.slice(offset, offset + batchSize);
+          offset += batchSize;
+          return { done: false, value: batch };
+        },
+      };
+    },
+  };
 }
 
-const nextId = 9_007_199_254_740_993n + 1n; // ✅ 两边都是 bigint。
-const json = JSON.stringify({ id: nextId.toString() });
-// ✅ 进入 JSON 边界前明确转为字符串，读取时再按约定恢复。
+const batches = createLogBatches(
+  ["login", "upload", "logout", "cleanup"],
+  2,
+);
+const dashboard = batches[Symbol.iterator]();
+const archive = batches[Symbol.iterator]();
+console.log(dashboard.next().value?.join(", "));
+console.log(archive.next().value?.join(", "));
+
+const balance = 12_345_678_901_234_567_890n;
+const json = JSON.stringify(
+  { balance },
+  (_key, value: unknown) =>
+    typeof value === "bigint"
+      ? `bigint:${value.toString()}`
+      : value,
+);
+// ✅ replacer 统一把 bigint 写成带标记的精确字符串。
 ```
+
+两个 iterator 现在都会先输出 `login, upload`。JSON 中的余额是 `"bigint:12345678901234567890"`，没有经过 `number`。接收方可以按约定识别 `bigint:` 前缀，再决定是否恢复成 `bigint`。
+
+如果调用 `createLogBatches(["login"], 0)`，函数会立即抛出：
+
+```text
+RangeError: batchSize 必须是正整数
+```
+
+这个校验不只是为了让报错更好看。若 `batchSize` 是 `0`，`offset += batchSize` 后仍然是 `0`，`next()` 会一直返回空批次并且永远到不了 `done: true`；若是负数，`offset` 还会向后移动，同样无法正常结束。先拒绝无效批次大小，可以避免调用方在 `for...of` 或展开操作中陷入无限迭代。
 
 ## 面试时怎么回答
 
 **问：** iterable、iterator、generator、`Symbol.iterator` 和 `bigint` 怎么串起来解释？
 
-**答：** iterable 提供 `[Symbol.iterator]()`，每次调用要创建一次遍历；返回的 iterator 保存当前位置并实现 `next()`，每次交回 `{ value, done }`。例如倒计时从 `3` 开始，前三次结果分别是 `3/false`、`2/false`、`1/false`，再下一次是 `done: true`。`Symbol.iterator` 用唯一的 symbol 键接入 `for...of` 协议；`function*` 是更简洁的生成器写法，由语言替你保存暂停点并创建迭代器。
+**可以直接这样回答：**
 
-**容易答错或追问：** iterable 和 iterator 是两个角色，同一个对象可以同时实现两者，但不能默认它们是一回事。可重复遍历的对象应让每次 `[Symbol.iterator]()` 都创建独立状态。生成器也不是提前创建数组，值在消费到 `yield` 时才产生。`bigint` 用于超过安全范围的整数，如 `9_007_199_254_740_993n + 1n`，不能和 `number` 混算；原生 JSON 也不能直接序列化它，要先约定转成字符串，读取端再按协议恢复。
+iterable 是可被遍历的对象，它提供 `[Symbol.iterator]()`；这个方法返回 iterator。iterator 保存一次遍历的当前位置，并通过 `next()` 返回 `{ value, done }`。同一个对象可以同时实现两种协议，但可重复遍历的数据源通常应在每次 `[Symbol.iterator]()` 调用时创建独立状态。生成器函数每次调用都会返回 generator 对象，语言替我保存暂停位置，执行到 `yield` 时才按需产生下一个值。
+
+`bigint` 用于需要精确表示的大整数，不能和 `number` 直接混算。原生 `JSON.stringify` 也不会默认序列化 bigint；在接口边界我会和接收方约定字符串格式，而不是先转成可能丢精度的 `number`。读取时再根据字段协议显式恢复。
+
+官方参考：[MDN Iteration Protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols)、[MDN `function*`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), [MDN `BigInt`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
 
 ## 拓展思考（不要求写代码）
 

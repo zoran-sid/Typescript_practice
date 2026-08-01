@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day07/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day07/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day07/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -72,18 +72,17 @@ completedIds + completedTotal + firstLargeId ──> 报告输出
 - 能解释每个回调返回的内容。
 - 右击运行 `practice.ts`，三行输出完全一致。
 
-## 为什么骨架里先写 `return false`
+## `return false` 在 `find` 回调里是什么意思
 
-本题已经在第 3 条规则中把“大额边界”定为 100，也就是金额达到或超过 100。骨架还没有替你写比较式，所以临时放了：
+本题把“大额边界”定为 100，也就是金额达到或超过 100。下面是实际项目中常见的错误写法：
 
 ```ts
 const firstLargeOrder = orders.find((order) => {
-  // TODO：返回“金额达到 100”的比较结果。
   return false;
 });
 ```
 
-这里的 `return false` 不是最终答案，只是未完成时的布尔占位。它对 `find` 的意思是：“当前订单不匹配，请继续检查下一笔。”如果每轮都保留它，四笔订单都会被判定为不匹配，最终得到 `undefined`。
+它对 `find` 的意思是：“当前订单不匹配，请继续检查下一笔。”每轮都返回 `false`，四笔订单都会被判定为不匹配，最终得到 `undefined`。正确回调应直接返回金额比较结果：
 
 你写的简洁形式没有问题：
 
@@ -91,11 +90,81 @@ const firstLargeOrder = orders.find((order) => {
 const firstLargeOrder = orders.find((order) => order.amount >= 100);
 ```
 
-箭头右侧只有一个表达式时，比较结果会自动交给 `find`，所以看不到单独的 `return`。它等价于带花括号并明确 `return order.amount >= 100;`，但不等价于保留骨架中的 `return false`。
+箭头右侧只有一个表达式时，比较结果会自动交给 `find`，所以看不到单独的 `return`。它等价于带花括号并明确 `return order.amount >= 100;`。
 
 ## 本题易漏语法
 
 单表达式箭头可省略 return；写了 {} 就必须显式 return。回调参数只在回调内部可用。
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定数组 orders"] --> B["调用 orders.filter"]
+    B --> C["回调逐项接收 order"]
+    C --> D{"return status === done？"}
+    D -- "true" --> E["保留当前订单"]
+    D -- "false" --> F["丢弃当前订单"]
+    E --> G["completedOrders"]
+    F --> G
+    G --> H["调用 completedOrders.map"]
+    H --> I["回调 return order.id"]
+    I --> J["completedIds"]
+    A --> K["调用 orders.find"]
+    K --> L["回调判断 amount >= 100"]
+    L -- "false" --> K
+    L -- "true" --> M["停止查找并 return 当前订单"]
+    M --> N["firstLargeOrder"]
+    G --> O["for...of 累加 amount"]
+    O --> P["completedTotal"]
+    N --> Q{"是否找到？"}
+    Q -- "是" --> R["firstLargeId = id"]
+    Q -- "否" --> S["保留 未找到"]
+    J --> T["三次 console.log"]
+    P --> T
+    R --> T
+    S --> T
+    T --> U["输出订单统计"]
+```
+
+## 起始代码
+
+固定订单、数组方法调用、结果变量和输出已提供。三个回调的 return、累加循环和查找后的判断由你完成。
+
+```ts
+const orders = [
+  { id: "A1", amount: 40, status: "done" },
+  { id: "B2", amount: 80, status: "pending" },
+  { id: "C3", amount: 60, status: "done" },
+  { id: "D4", amount: 120, status: "pending" },
+];
+
+const completedOrders = orders.filter((order) => {
+  return false; // TODO：替换为当前订单是否已完成的比较结果。
+});
+
+const completedIds = completedOrders.map((order) => {
+  return ""; // TODO：替换为当前订单 id。
+});
+
+const firstLargeOrder = orders.find((order) => {
+  return false; // TODO：替换为当前订单金额是否达到 100。
+});
+
+let completedTotal = 0;
+for (const order of completedOrders) {
+  // TODO：把当前订单金额累加到 completedTotal。
+}
+
+let firstLargeId = "未找到";
+if (false) {
+  // TODO：把 false 换成“确实找到订单”的判断，并保存订单 id。
+}
+
+console.log(`已完成订单: ${completedIds.join(", ")}`);
+console.log(`完成总额: ${completedTotal}`);
+console.log(`第一笔大额订单: ${firstLargeId}`);
+```
 
 ## 写完后自检
 
@@ -106,4 +175,4 @@ const firstLargeOrder = orders.find((order) => order.amount >= 100);
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

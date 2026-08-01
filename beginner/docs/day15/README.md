@@ -110,7 +110,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -130,39 +130,58 @@ flowchart TD
 
 ### 错误代码示例
 
+列表页通常允许“当前没有数据”。为了让通用函数看起来总能返回元素，开发者可能用断言把空数组的 `undefined` 假装成 `Item`。编辑器里的类型变得漂亮了，运行值没有改变：
+
 ```ts
-function first<Item>(items: readonly Item[]): Item {
-  // ❌ 空数组的第 0 项是 undefined，断言只是隐藏风险，不会创造 Item。
-  return items[0] as Item;
+function firstUnsafe<Item>(items: readonly Item[]): Item {
+  return items[0] as Item; // ❌ 断言没有处理空数组。
 }
 
-function firstWithAny(items: any[]): any {
-  return items[0]; // ❌ any 切断了“输入元素类型 = 返回类型”的关系。
-}
+const scores: number[] = [];
+const firstScore = firstUnsafe(scores);
+
+console.log(firstScore.toFixed(1));
 ```
+
+TypeScript 把 `firstScore` 当作 `number`，但程序运行到最后一行会报错：
+
+```text
+TypeError: Cannot read properties of undefined (reading 'toFixed')
+```
+
+这类错误在搜索结果、分页列表和缓存读取中很常见，因为“没有首项”本来就是正常数据状态。`as Item` 只压掉提示，没有创建回退值，也没有让数组变成非空。
 
 ### 正确写法
 
 ```ts
-function firstOrUndefined<Item>(
+function firstSafe<Item>(
   items: readonly Item[],
 ): Item | undefined {
-  return items[0]; // ✅ 返回类型如实表达空数组的可能性。
+  return items[0]; // ✅ 返回类型保留“可能没有首项”。
 }
 
-function firstOrFallback<Item>(
-  items: readonly Item[],
-  fallback: Item,
-): Item {
-  return items[0] ?? fallback; // ✅ 调用者提供真实回退值，函数才能保证返回 Item。
+const firstScore = firstSafe(scores);
+
+if (firstScore === undefined) {
+  console.log("暂无成绩");
+} else {
+  console.log(firstScore.toFixed(1));
 }
 ```
+
+实际输出：
+
+```text
+暂无成绩
+```
+
+如果业务要求函数始终返回 `Item`，调用者就必须传入一个真实的同类型回退值；函数不能靠类型参数凭空制造数据。
 
 ## 面试时怎么回答
 
 **问：泛型和 `any` 都能接收多种类型，它们真正的区别是什么？**
 
-**答：**先看要解决的问题：同一段逻辑既要复用，又要保留输入和输出之间的关系。`any` 会关闭关键检查，调用者不知道返回值是否仍与输入一致；泛型把本次调用推断出的具体类型记录下来：
+**答：**泛型用类型参数表达多个位置之间的关系，`any` 则跳过这些位置的大部分检查。下面同一个 `Item` 同时出现在数组元素和返回值中，因此传入字符串数组会得到 `string | undefined`，传入数字数组会得到 `number | undefined`：
 
 ```ts
 function first<Item>(items: Item[]): Item | undefined {
@@ -172,9 +191,11 @@ const name = first(["Ada"]); // string | undefined
 const score = first([90]);   // number | undefined
 ```
 
-TypeScript 负责推断并传递 `Item` 的关系，开发者仍要决定空数组为什么返回 `undefined`、哪些位置必须保持同一种类型。泛型在运行时会被擦除，不会验证接口数据。
+泛型不会在运行时生成检查，也不会保证数组非空；这些边界仍要写进返回类型和业务代码。若类型参数只出现一次，没有把任何输入与输出连接起来，通常也不需要泛型。
 
-**容易答错或追问：**不要回答“泛型就是不确定类型”。更准确地说，它是有关系的类型占位符；同一个类型参数出现在多个位置，才表达了约束。若函数只处理一种固定类型，或者输入输出没有需要保留的关系，硬加泛型只会让签名和报错更难读。
+官方参考：
+
+- [TypeScript Handbook：Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)
 
 ## 拓展思考（不要求写代码）
 

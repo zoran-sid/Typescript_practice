@@ -1,19 +1,13 @@
-# Day 06 · Practice 03 解题结构提示
+# Practice 03 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day06/practice03/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。数组复制、累加、嵌套对象复制和追加价格都在 `solution.ts` 中保留为 `TODO`。
+[打开 solution.ts](../../../day06/practice03/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-`copyPrices` 接收任意数字数组，在函数内创建新的 `result`，逐项处理后通过 `return` 交给调用者。`totalPrices` 也只读取参数，局部 `total` 负责跨循环保存累计状态。
+## 直接调用逻辑
 
-创建购物车副本时，外层对象、`customer` 嵌套对象与 `prices` 数组都要分别判断是否为新数据。追加价格必须沿副本路径进行；原数组长度是检查引用是否独立的重要证据。
+`originalCart.prices` → `copyPrices` 循环 push → return 新数组 → `copiedCart.prices` → 只向副本追加 30 → `totalPrices(copiedCart.prices)` 循环累加 → return 60 → 输出原数量、副本数量、总价和客户。
 
-## 自检
-
-- 两个函数都不读取 `originalCart`。
-- `source` / `prices` 是参数，`result` / `total` 是局部变量。
-- 新价格只进入副本数组。
-- 顾客名称从原数据读取，但嵌套对象不是同一对象引用。
-- 总价来自循环后的返回值，不是固定数字。
+`customer` 也重新建立对象，保证副本不与原购物车共享需要独立修改的嵌套值。

@@ -154,7 +154,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -169,56 +169,91 @@ flowchart TD
 
 ### 错误代码示例
 
+假设设置页允许音量为 0，用户资料中的城市可以不填写。开发者用 `||` 提供音量默认值，又为了消除编辑器提示，在嵌套属性后连续加了非空断言：
+
 ```ts
-type Contact = { address?: { city?: string } };
-
-function showContact(
-  selectedContact: Contact | undefined,
-  score: number | undefined,
+function renderSettings(
+  settings: {
+    volume?: number;
+    profile?: { city?: string };
+  },
 ): void {
-  const displayedScore = score || 100;
-  // ❌ score 为有效的 0 时，|| 仍会错误改成 100。
+  const volume = settings.volume || 50;
+  // ❌ 合法的 0 也会被 || 换成 50。
+  console.log(`Volume: ${volume}`);
 
-  const city = selectedContact!.address!.city;
-  // ❌ ! 只让编译器暂时相信值存在，运行时仍可能报错。
-
-  console.log(displayedScore, city);
+  const city = settings.profile!.city;
+  // ❌ 非空断言不会创建缺失的 profile。
+  console.log(`City: ${city}`);
 }
+
+renderSettings({ volume: 0 });
 ```
+
+程序先输出：
+
+```text
+Volume: 50
+```
+
+随后在读取 `city` 时抛出运行时错误，因为 `profile` 实际是 `undefined`。这里有两个独立问题：
+
+- `0` 是合法音量，却属于假值，所以 `0 || 50` 错误地选择了 50。
+- `!` 只删除 TypeScript 的缺失提醒，不会在运行时创建 `profile`，也不会检查对象是否存在。
+
+这类错误常见于设置页和表单：开发时的测试账号字段齐全，换成旧账号或允许清空的数值后才出现错误。
 
 ### 正确写法
 
 ```ts
-type Contact = { address?: { city?: string } };
-
-function showContact(
-  selectedContact: Contact | undefined,
-  score: number | undefined,
+function renderSettings(
+  settings: {
+    volume?: number;
+    profile?: { city?: string };
+  },
 ): void {
-  const displayedScore = score ?? 100;
-  // ✅ 只有 score 为 null 或 undefined 时才使用 100。
+  const volume = settings.volume ?? 50; // ✅ 0 会被保留。
+  const city = settings.profile?.city ?? "未填写";
+  // ✅ profile 缺失时停止访问 city。
 
-  const city = selectedContact?.address?.city ?? "未填写";
-  // ✅ 每一层都安全访问，并在确实缺失时提供默认值。
-
-  console.log(displayedScore, city);
+  console.log(`Volume: ${volume}`);
+  console.log(`City: ${city}`);
 }
+
+renderSettings({ volume: 0 });
 ```
+
+实际输出：
+
+```text
+Volume: 0
+City: 未填写
+```
+
+`settings.profile?.city` 会在 `profile` 缺失时停止访问；`??` 只在结果为 `null` 或 `undefined` 时采用后备值。因此音量 0 被保留，缺失城市得到清楚的显示文字，程序也不会中断。
 
 ## 面试时怎么回答
 
 **问：`?.`、`??`、`||` 和非空断言 `!` 应该怎么区分？**
 
-`?.` 用于“它前面的值可能缺失”：该值是 `null` 或 `undefined` 时停止这条连续访问，并得到 `undefined`。它不会自动保护后面所有层级；更深的属性也可能缺失时，要在对应位置继续写 `?.`。`??` 用于提供空值后备，只会把 `null` 和 `undefined` 当作缺失；`||` 判断的是假值，还会把 `0`、空字符串和 `false` 一并换掉。例如 `0 || 100` 输出 `100`，而 `0 ?? 100` 输出 `0`，金额、页码等业务数据通常要特别留意这个差异。
+可以这样回答：
+
+`?.` 用于安全访问：它前面的值是 `null` 或 `undefined` 时停止，并让整个访问结果变成 `undefined`；更深层也可能缺失时，要在对应层继续使用 `?.`。`??` 只在左侧为 `null` 或 `undefined` 时使用后备值。`||` 判断所有假值，所以 0、空字符串和 `false` 也会被替换。例如 `0 || 100` 得到 100，而 `0 ?? 100` 保留 0。
 
 非空断言 `value!` 不会生成运行时检查，只是让 TypeScript 暂时不再提醒 `null` 或 `undefined`。如果值真的缺失，后续属性访问照样报错。因此能通过分支判断、可选链或明确的默认值处理时，不应为了消除红线随手加 `!`。面试回答要包含这条运行时边界，而不只是背四个符号的名字。
+
+官方参考：
+
+- [MDN：Optional chaining (`?.`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+- [MDN：Nullish coalescing (`??`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing)
+- [TypeScript：Everyday Types 中的非空断言](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#non-null-assertion-operator-postfix-)
 
 ## 拓展思考（不要求写代码）
 
 若把 `score ?? 100` 改成 `score || 100`，当前分数为什么会从合法的 0 变成 100，而 `??` 不会？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照每一层缺失值是怎样被处理的。

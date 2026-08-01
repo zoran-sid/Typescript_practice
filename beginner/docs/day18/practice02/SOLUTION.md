@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day18/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 的 `// 调用关系：` 注释说明三次 `consume` 共享同一个实例状态，面板只通过接口读取摘要。
 
-## 方案一
+## 直接调用逻辑
 
-1. 让 `StorageQuota` 独占 `used` 状态；先判断输入为正数且新总量不超过上限，再决定是否更新。
-2. `consume` 用 boolean 把接受或拒绝交给调用方，拒绝分支不修改任何字段。
-3. `summary` 只读取当前实例状态并返回文字，不负责输出。
-4. 把配额实例作为 `SummaryProvider` 交给 `QuotaPanel`；面板只包装摘要，不参与容量规则。
+1. 前两次 `consume` 通过判断，把 `used` 从 `0` 更新为 `30`。
+2. 第三次调用发现 `30 + 80` 超过上限，返回 `false` 且不修改状态。
+3. `oversizedAccepted` 决定输出“接受”还是“拒绝”。
+4. `QuotaPanel.render()` 调用 `provider.summary()`，把同一份配额状态加上面板前缀。
 
-## 关键检查点
-
-- 先算“写入后会是多少”，通过检查后再修改 `used`。
-
-- `0`、负数和超额请求都返回 `false`，并保持原状态。
-
-- 组合依赖的是 `SummaryProvider` 能力，不是具体配额类的私有实现。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

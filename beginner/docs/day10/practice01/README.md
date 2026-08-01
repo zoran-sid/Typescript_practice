@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day10/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day10/practice01/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day10/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -84,6 +84,90 @@ Priority ──> 字面量分支 ──> describePriority ──> 优先级文�
 
 联合成员用 |；先用 typeof、in 或判别字段收窄，再访问特定成员。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定编号 ts-10 和 42"] --> B["调用 formatTicketId"]
+    B --> C{"typeof id === string？"}
+    C -- "是" --> D["转大写并 return 编号文字"]
+    C -- "否" --> E["加 # 并 return 编号文字"]
+    F["固定单主题与主题数组"] --> G["调用 describeTopics"]
+    G --> H{"Array.isArray(topics)？"}
+    H -- "是" --> I["join 后 return 主题列表"]
+    H -- "否" --> J["return 单主题"]
+    K["固定邮箱与电话联系人"] --> L["调用 describeContact"]
+    L --> M{"email in contact？"}
+    M -- "是" --> N["return 邮箱"]
+    M -- "否" --> O["return 电话"]
+    P["固定优先级 high"] --> Q["调用 describePriority"]
+    Q --> R{"priority === high？"}
+    R -- "是" --> S["return 立即处理文字"]
+    R -- "否" --> T["return 普通优先级文字"]
+    D --> U["七次 console.log"]
+    E --> U
+    I --> U
+    J --> U
+    N --> U
+    O --> U
+    S --> U
+    T --> U
+    U --> V["输出工单摘要"]
+```
+
+## 起始代码
+
+所有命名类型、函数签名、固定联系人、调用和输出都已提供。四个函数中的收窄判断和 return 由你完成。
+
+```ts
+type TicketId = string | number;
+type TopicInput = string | string[];
+type Priority = "low" | "medium" | "high";
+interface EmailContact { name: string; email: string }
+interface PhoneContact { name: string; phone: string }
+type Contact = EmailContact | PhoneContact;
+
+function formatTicketId(id: TicketId): string {
+  if (false) {
+    // TODO：把 false 换成字符串类型判断。
+    return ""; // TODO：返回字符串编号格式。
+  }
+  return ""; // TODO：返回数字编号格式。
+}
+function describeTopics(topics: TopicInput): string {
+  if (false) {
+    // TODO：把 false 换成数组判断。
+    return ""; // TODO：返回主题列表。
+  }
+  return ""; // TODO：返回单个主题。
+}
+function describeContact(contact: Contact): string {
+  if (false) {
+    // TODO：把 false 换成 email 字段检查。
+    return ""; // TODO：返回邮箱文字。
+  }
+  return ""; // TODO：返回电话文字。
+}
+function describePriority(priority: Priority): string {
+  if (false) {
+    // TODO：把 false 换成 high 判断。
+    return ""; // TODO：返回立即处理文字。
+  }
+  return ""; // TODO：返回普通优先级文字。
+}
+
+const emailContact: EmailContact = { name: "Lin", email: "a@example.com" };
+const phoneContact: PhoneContact = { name: "Mei", phone: "13800000000" };
+
+console.log(formatTicketId("ts-10"));
+console.log(formatTicketId(42));
+console.log(describeTopics("variables"));
+console.log(describeTopics(["variables", "arrays"]));
+console.log(describeContact(emailContact));
+console.log(describeContact(phoneContact));
+console.log(describePriority("high"));
+```
+
 ## 写完后自检
 
 - 如果优先级改成 `"medium"`，最后一行会怎样变化？如果编号改成数字 0，会进入哪条格式化分支？
@@ -93,4 +177,4 @@ Priority ──> 字面量分支 ──> describePriority ──> 优先级文�
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成并自检后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示；它们不提供完整答案。
+- 建议先在 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

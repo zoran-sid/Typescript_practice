@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day05/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day05/practice02/solution.ts)
+- 完整参考答案代码：[solution.ts](../../../day05/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -74,6 +74,52 @@ B02: Late by 10 minutes
 
 Practice 01 把同一张账单依次交给三个数值函数，每个阶段产生下一阶段的输入。这里让一个带分支的函数复用两次，产生两种不同结果，再统一交给格式化函数。
 
+## 代码流程图
+
+```mermaid
+flowchart TD
+    A["固定时间 30、28"] --> B["调用 evaluateDelivery"]
+    C["固定时间 45、55"] --> B
+    B --> D["计算 delayMinutes"]
+    D --> E{"actualMinutes <= estimatedMinutes？"}
+    E -- "是" --> F["return On time"]
+    E -- "否" --> G["return Late by ... minutes"]
+    F --> H["firstResult / secondResult"]
+    G --> H
+    H --> I["调用 createDeliveryLine(编号, result)"]
+    I --> J["return 编号: 结果"]
+    J --> K["console.log"]
+    K --> L["输出两行配送结果"]
+```
+
+## 起始代码
+
+函数签名、两组固定调用和输出已经提供。请完成函数里的时间计算、判断和 return。
+
+```ts
+function evaluateDelivery(
+  estimatedMinutes: number,
+  actualMinutes: number,
+): string {
+  const delayMinutes = 0; // TODO：替换为延迟分钟数。
+  const isOnTime = false; // TODO：替换为准时判断。
+  if (isOnTime) {
+    return ""; // TODO：替换为准时文字。
+  }
+  return ""; // TODO：替换为包含 delayMinutes 的迟到文字。
+}
+
+function createDeliveryLine(deliveryId: string, result: string): string {
+  return ""; // TODO：替换为编号与结果组合出的文字。
+}
+
+const firstResult = evaluateDelivery(30, 28);
+const secondResult = evaluateDelivery(45, 55);
+
+console.log(createDeliveryLine("A01", firstResult));
+console.log(createDeliveryLine("B02", secondResult));
+```
+
 ## 写完后自检
 
 - 如果调用 `evaluateDelivery(30, 30)`，应进入哪个分支？
@@ -82,4 +128,4 @@ Practice 01 把同一张账单依次交给三个数值函数，每个阶段产�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 结构和 `SOLUTION.md`。它们只提示步骤，不提供完整答案。
+建议先在上方链接的 `practice.ts` 独立作答；完成后再查看 `solution.ts` 完整答案和 `SOLUTION.md` 调用说明。

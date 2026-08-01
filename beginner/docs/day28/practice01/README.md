@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day28/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day28/practice01/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day28/practice01/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这是一道完整、独立的主练习。不要导入其他 practice 文件夹中的代码。
 
@@ -26,18 +26,89 @@ CourseContext + prefix ──> describe.call ──> this + 普通参数
 四条精确类型结果 ──> 输出
 ```
 
-从零完成一个“高级函数工具箱”。
 
-必须名称：`ProgressPair`、`progress`、`invoke`、`normalize`、`CourseContext`、`describe`。
+## 代码流程图
 
-需求：
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
 
-1. `progress([true, false, true, true])` 返回只读元组 `[3, 4]`。
-2. `invoke` 使用 `Args extends unknown[]` 与 `Result`，分别调用数字乘法和标题拼接函数。
-3. `normalize` 提供字符串重载和只读字符串数组重载；都执行 trim + 小写，返回类型分别是 string 和 string[]。
-4. `describe` 有显式 `this: CourseContext` 和 prefix 参数，通过 `.call` 输出课程说明。
+```mermaid
+flowchart TD
+  A["固定完成状态<br/>true,false,true,true"] --> B["progress(values)"]
+  B --> C["filter 回调保留 true"]
+  C --> D["return [completed, values.length]"]
+  D --> E["解构 completed / total"]
+  E --> F["console.log Progress"]
+  G["固定加法回调 + 12,24"] --> H["第一次 invoke(fn,...args)"]
+  H --> I["调用加法 fn(12,24)"]
+  I --> J["回调 return 36"]
+  J --> K["invoke return 36"]
+  K --> K2["console.log Total"]
+  M["固定标题回调 + 28"] --> H2["第二次 invoke(fn,...args)"]
+  H2 --> I2["调用标题 fn(28)"]
+  I2 --> J2["回调 return 'Day 28'"]
+  J2 --> K3["invoke return 'Day 28'"]
+  K3 --> L2["console.log Day 28"]
+  N["固定字符串 / 字符串数组"] --> O["normalize(value)"]
+  O --> P{"typeof value === 'string'？"}
+  P -- "是" --> Q["trim/lowercase 并 return string"]
+  P -- "否" --> R["map 回调规范化并 return string[]"]
+  Q --> S["console.log types"]
+  R --> T["join 后 console.log modules, generics"]
+  U["固定 this 上下文 + prefix"] --> V["describe.call(context,prefix)"]
+  V --> W["读取 this.day/title 并 return"]
+  W --> X["console.log Elective..."]
+```
 
-精确输出：
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type ProgressPair = readonly [completed: number, total: number];
+function progress(values: readonly boolean[]): ProgressPair {
+  // TODO：filter 统计并 return 二元组。
+  return [0, values.length];
+}
+function invoke<Args extends unknown[], Result>(
+  fn: (...args: Args) => Result, ...args: Args
+): Result {
+  // TODO：执行 fn(...args) 并 return 结果。
+  return fn(...args);
+}
+function normalize(value: string): string;
+function normalize(value: readonly string[]): string[];
+function normalize(value: string | readonly string[]): string | string[] {
+  // TODO：判断输入；单值或 map 数组；return 对应结果。
+  void value;
+  return "";
+}
+type CourseContext = { title: string; day: number };
+function describe(this: CourseContext, prefix: string): string {
+  // TODO：读取 this 并 return 描述。
+  void prefix;
+  return "";
+}
+const [completed, total] = progress([true, false, true, true]);
+console.log(`Progress: ${completed}/${total}`);
+const sum = invoke((left: number, right: number) => left + right, 12, 24);
+console.log(`Total: ${sum}`);
+const title = invoke((day: number) => `Day ${day}`, 28);
+console.log(title);
+console.log(normalize("  TYPES "));
+const normalizedTopics = normalize([" Modules ", " GENERICS "]);
+console.log(normalizedTopics.join(", "));
+console.log(describe.call({ title: "Advanced functions", day: 28 }, "Elective"));
+```
+
+
+## 任务要求
+
+1. `progress` 返回固定二元组；`invoke` 保留回调参数组与返回类型的关系。
+2. `normalize` 提供单字符串和字符串数组两个公开重载。
+3. `describe` 使用显式 `this`，并通过 `.call` 接收固定上下文。
+4. 所有结果都从函数返回值进入固定的显示位置。
+
+## 精确期望输出
 
 ```text
 Progress: 3/4
@@ -47,12 +118,6 @@ types
 modules, generics
 Elective Day 28: Advanced functions
 ```
-
-固定输入：乘法 12×3；标题函数接收 `"Day "`、28；normalize 输入 `"  TYPES "` 及 `[" Modules ", " GENERICS "]`；上下文 title 为 Advanced functions、day 为 28。
-
-限制：不使用 `any`、类型断言或普通数组冒充元组；实现签名必须覆盖两个重载。
-
-完成标准：右击运行 `practice.ts` 后输出完全一致；能指出每个泛型参数连接了哪些位置，并说明 `this` 参数为何不出现在运行时实参数组中。
 
 ## 本题易漏语法
 
@@ -67,4 +132,4 @@ Elective Day 28: Advanced functions
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 独立完成后，再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+- 独立完成后，再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

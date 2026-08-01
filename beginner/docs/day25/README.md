@@ -101,7 +101,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 3 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 3 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -120,35 +120,94 @@ flowchart TD
 
 ### 错误代码示例
 
+课程看板把同一批任务同时交给“当前列表”和“操作历史”。下面这种写法看起来已经复制了数组，但目标任务对象和嵌套字段仍然与原数据共享：
+
 ```ts
-function completeFirst(tasks: StudyTask[]): StudyTask[] {
-  tasks[0].status = "done"; // ❌ 修改了调用者持有的原任务对象。
-  return tasks.sort((a, b) => a.minutes - b.minutes);
-  // ❌ sort 还会原地重排调用者的原数组。
+type BoardTask = {
+  readonly id: string;
+  title: string;
+  minutes: number;
+  status: "todo" | "done";
+  details: {
+    labels: string[];
+  };
+};
+
+function completeForBoard(tasks: BoardTask[], id: string): BoardTask[] {
+  // ❌ 这里只复制了数组，数组里的任务对象仍与调用者共享。
+  const copied = [...tasks];
+  const target = copied.find((task) => task.id === id);
+
+  if (target) {
+    target.status = "done";
+    target.details.labels.push("completed");
+  }
+
+  return copied.sort((a, b) => a.minutes - b.minutes);
 }
+
+const history: BoardTask[] = [
+  {
+    id: "a",
+    title: "Types",
+    minutes: 30,
+    status: "todo",
+    details: { labels: ["beginner"] },
+  },
+];
+
+const board = completeForBoard(history, "a");
+console.log(history[0]?.status);
+console.log(history[0]?.details.labels.join(", "));
 ```
+
+实际输出：
+
+```text
+done
+beginner, completed
+```
+
+`copied` 确实是新数组，但里面仍放着原来的任务对象；对象内部的 `details` 和 `labels` 也没有复制。于是“历史记录”一起变成已完成。另一个常见问题是直接对函数参数调用 `tasks.sort(...)`：`sort` 会修改原数组顺序，其他页面会在没有执行更新操作的情况下突然重排。
 
 ### 正确写法
 
 ```ts
-function completeFirst(tasks: readonly StudyTask[]): StudyTask[] {
-  const updated = tasks.map((task, index) =>
-    // ✅ 命中项创建新对象；未命中项可以安全复用旧引用。
-    index === 0 ? { ...task, status: "done" as const } : task
+function completeForBoard(
+  tasks: readonly BoardTask[],
+  id: string,
+): BoardTask[] {
+  const updated = tasks.map((task) =>
+    task.id === id
+      ? {
+          ...task,
+          status: "done" as const,
+          details: {
+            ...task.details,
+            labels: [...task.details.labels, "completed"],
+          },
+        }
+      : task,
   );
 
-  // ✅ updated 已是新数组；也可写 [...tasks].sort(...) 后再做其他处理。
+  // ✅ map 已创建新数组，sort 只会重排 updated，不会重排参数 tasks。
   return updated.sort((a, b) => a.minutes - b.minutes);
 }
 ```
+
+这里一共复制了四层：数组、命中的任务、它的 `details`、要修改的 `labels`。未命中的任务没有变化，可以继续复用旧引用。需要复制哪些层，不取决于对象有多深，而取决于这次更新会改到哪一条引用链。
 
 ## 面试时怎么回答
 
 **问：** TypeScript 的结构化类型和不可变更新有什么关系？
 
-**答：** 结构化类型看对象“有哪些成员”，不要求类型名称相同。`updateById<T extends { readonly id: string }>` 因此能接收任务、商品等不同对象，只要它们有字符串 `id`，泛型 `T` 还会保留各自的 `title`、`stock` 等字段。更新时用 `map` 创建新数组；命中项用 `{ ...item, status: "done" }` 创建新对象，未命中项可以复用旧引用。这样 `original !== updated`，目标项引用不同，而未变化项引用可以相同。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要把 `readonly` 说成运行时冻结，它主要限制 TypeScript 中的写操作；也不要说对象展开会深拷贝。若任务含 `details.notes`，只展开任务仍会共享 `details`。面试官可能追问 `sort`：它会原地改数组，所以要在筛选或复制得到的新数组上排序。不可变更新更容易追踪历史，但会分配新容器，深层更新还要明确复制哪些层。
+TypeScript 使用结构化类型，兼容性主要看成员是否匹配，不要求对象声明过同一个类型名称。因此 `updateById<T extends { readonly id: string }>` 可以处理任务或商品，只要值至少有字符串 `id`；返回 `T[]` 又能保留各自的其他字段。不可变更新属于运行时的数据更新策略：`map` 创建新数组，命中项用对象展开创建新对象，未变化项可以复用旧引用。
+
+`readonly` 主要在类型检查阶段阻止写操作，不会执行 `Object.freeze`。对象展开也是浅复制；如果要改 `details.labels`，需要继续复制 `details` 和 `labels`。`Array.prototype.sort` 会原地修改调用它的数组，所以我只在已经复制、筛选或映射得到的新数组上排序。这样调用者持有的旧快照和顺序都不会被业务函数偷偷改变。
+
+官方参考：[TypeScript Type Compatibility](https://www.typescriptlang.org/docs/handbook/type-compatibility)、[TypeScript Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html)、[MDN `Array.prototype.sort`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
 
 ## 拓展思考（不要求写代码）
 

@@ -1,16 +1,19 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 const weightText = "2.5";
 const distanceText = "30";
 
-const weight = 0; // TODO：把 weightText 显式转换为数字，保存到 weight。
-const distance = 0; // TODO：把 distanceText 显式转换为数字，保存到 distance。
-
+// 调用关系：两项表单文字分别经过 Number，转换结果再进入费用公式。
+const weight = Number(weightText);
+const distance = Number(distanceText);
 const baseFee = 8;
-const deliveryFee = 0; // TODO：计算 baseFee + weight * 2 + distance / 10。
+const deliveryFee = baseFee + weight * 2 + distance / 10;
 
 let route = "Standard";
-// TODO：当 distance 达到或超过 30 时，把 route 更新为 "Long distance"。
+// 30 千米也属于长距离，所以边界判断使用 >=。
+if (distance >= 30) {
+  route = "Long distance";
+}
 
+// 调用关系：转换结果、运费和路线 -> console.log -> 四行报价。
 console.log(`Weight: ${weight} kg`);
 console.log(`Distance: ${distance} km`);
 console.log(`Fee: ${deliveryFee}`);

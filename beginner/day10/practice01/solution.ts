@@ -1,45 +1,54 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
 type TicketId = string | number;
 type TopicInput = string | string[];
 type Priority = "low" | "medium" | "high";
+
 interface EmailContact {
   name: string;
   email: string;
 }
+
 interface PhoneContact {
   name: string;
   phone: string;
 }
+
 type Contact = EmailContact | PhoneContact;
+
 function formatTicketId(id: TicketId): string {
   if (typeof id === "string") {
-    // 这里 id 已收窄为 string。
-    return ""; // TODO：空字符串只是 string 占位；把当前 string 类型的 id 转成大写，并在前面加 "编号: " 后返回。
+    // 字符串分支可以调用 string 的 toUpperCase，再 return 格式化结果。
+    return `编号: ${id.toUpperCase()}`;
   }
-  // 这里剩余成员是 number。
-  return ""; // TODO：空字符串只是 string 占位；把当前 number 类型的 id 放在 "#" 后，再加 "编号: " 前缀并返回。
+  // 剩余分支中的 id 是 number，用模板字符串把它放在 # 后。
+  return `编号: #${id}`;
 }
+
 function describeTopics(topics: TopicInput): string {
   if (Array.isArray(topics)) {
-    // 这里 topics 已收窄为 string[]。
-    return ""; // TODO：空字符串只是 string 占位；用 ", " 连接当前 string[] topics，在前面加 "主题列表: " 并返回。
+    // 数组分支用 join 连接所有主题，再 return 一行列表。
+    return `主题列表: ${topics.join(", ")}`;
   }
-  return ""; // TODO：空字符串只是 string 占位；当前 topics 是单个 string，在前面加 "主题: " 并返回。
+  // 剩余分支是单个 string，直接放进主题文字。
+  return `主题: ${topics}`;
 }
+
 function describeContact(contact: Contact): string {
   if ("email" in contact) {
-    // 这里 contact 已收窄为 EmailContact。
-    return ""; // TODO：空字符串只是 string 占位；读取 EmailContact 的 contact.email，在前面加 "邮箱: " 并返回。
+    // 存在 email 字段时，contact 已收窄为 EmailContact。
+    return `邮箱: ${contact.email}`;
   }
-  // 这里 contact 已收窄为 PhoneContact。
-  return ""; // TODO：空字符串只是 string 占位；读取 PhoneContact 的 contact.phone，在前面加 "电话: " 并返回。
+  // 剩余成员是 PhoneContact，因此可以安全读取 phone。
+  return `电话: ${contact.phone}`;
 }
+
 function describePriority(priority: Priority): string {
   if (priority === "high") {
-    return ""; // TODO：空字符串只是 string 占位；priority 为 "high" 时返回带“立即处理”提示的完整优先级文字。
+    // high 分支额外返回立即处理提示。
+    return `优先级: ${priority}（立即处理）`;
   }
-  return ""; // TODO：空字符串只是 string 占位；当前 priority 只能是 "low" 或 "medium"，在前面加 "优先级: " 并返回。
+  return `优先级: ${priority}`;
 }
+
 const emailContact: EmailContact = {
   name: "Lin",
   email: "a@example.com",
@@ -48,6 +57,8 @@ const phoneContact: PhoneContact = {
   name: "Mei",
   phone: "13800000000",
 };
+
+// 调用关系：各固定输入 -> 对应收窄函数 -> string 返回值 -> console.log。
 console.log(formatTicketId("ts-10"));
 console.log(formatTicketId(42));
 console.log(describeTopics("variables"));

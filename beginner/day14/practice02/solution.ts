@@ -1,7 +1,17 @@
-// 这是解题结构，不是完整答案。TODO 旁的空字符串、0、false、[] 等只是占位值，完成时要替换或删除。
+import featuredProduct, {
+  warehouseName as warehouse,
+} from "./inventory-data.js";
+import formatPrice, { stockLabel } from "./inventory-tools.js";
 import type { Product } from "./inventory-types.js";
-// TODO：从 ./inventory-data.js 默认导入主推商品；具名导入 warehouseName，并把它改成本地名 warehouse。
-// TODO：从 ./inventory-tools.js 默认导入 formatPrice，并具名导入 stockLabel。
-// 注意：以上相对路径在 NodeNext 源码中仍保留 .js 扩展名。
-// TODO：导入完成后，让 selected: Product 接住默认商品；
-// 再从 warehouse、selected、formatPrice(selected.priceCents) 和 stockLabel(selected) 生成四行输出。
+
+// 调用关系：inventory-data 的默认导出 -> selected，并由 Product 检查形状。
+const selected: Product = featuredProduct;
+// 调用关系：selected.priceCents -> formatPrice -> priceText。
+const priceText = formatPrice(selected.priceCents);
+// 调用关系：selected -> stockLabel -> stockText。
+const stockText = stockLabel(selected);
+
+console.log(`仓库：${warehouse}`);
+console.log(`商品：${selected.name}（${selected.sku}）`);
+console.log(`价格：${priceText}`);
+console.log(`库存：${stockText}`);

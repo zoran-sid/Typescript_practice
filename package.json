@@ -9,6 +9,7 @@
     "beginner:doctor": "node beginner/scripts/doctor.mjs",
     "beginner:audit": "node beginner/scripts/audit.mjs",
     "beginner:check": "tsc -p beginner/tsconfig.check.json --noEmit",
+    "day23:strict": "tsc -p beginner/day23/tsconfig.json --noEmit",
     "beginner": "node beginner/scripts/run.mjs practice",
     "beginner:example": "node beginner/scripts/run.mjs example",
     "beginner:solution": "node beginner/scripts/run.mjs solution",

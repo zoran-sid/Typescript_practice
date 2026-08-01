@@ -122,7 +122,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -137,38 +137,64 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const quantity = 3;
-const unitPrice = 40;
+假设发票模块要先计算 5% 的服务费，再把服务费加到小计中。开发者在函数里看到了正确的 12，于是误以为调用者也拿到了这个数字：
 
-function calculateSubtotal(): number {
-  console.log(quantity * unitPrice);
-  // ❌ console.log 只负责显示；函数没有 return，调用者拿不到 120。
+```ts
+const invoiceSubtotal = 240;
+
+function calculateServiceFee(subtotal: number): number {
+  const fee = subtotal * 0.05;
+  console.log(`Fee: ${fee}`);
+  // ❌ 这里只显示 fee，没有用 return 交回它。
 }
 
-const subtotal = calculateSubtotal();
+const serviceFee = calculateServiceFee(invoiceSubtotal);
+const amountToPay = invoiceSubtotal + serviceFee;
+
+console.log(`Amount to pay: ${amountToPay}`);
 ```
+
+TypeScript 会先在函数声明处报错：函数承诺返回 `number`，但执行到末尾没有 `return`。如果项目忽略类型错误仍生成并运行 JavaScript，函数调用的实际结果是 `undefined`，于是会看到：
+
+```text
+Fee: 12
+Amount to pay: NaN
+```
+
+`console.log` 收到 12 后只把它显示出来；它自己的返回结果和这个业务数字没有关系。函数走到末尾没有执行 `return`，调用处的 `serviceFee` 就拿不到 12。终端里“已经出现正确数字”是这类错误最容易迷惑人的地方。
 
 ### 正确写法
 
 ```ts
-function calculateSubtotal(
-  quantity: number,
-  unitPrice: number,
-): number {
-  return quantity * unitPrice; // ✅ 把结果交回调用位置。
+function calculateServiceFee(subtotal: number): number {
+  const fee = subtotal * 0.05;
+  return fee; // ✅ 把数字交回调用位置。
 }
 
-// ✅ 外部值通过实参进入函数，函数不依赖同名全局变量。
-const subtotal = calculateSubtotal(3, 40);
-console.log(subtotal);
+const invoiceSubtotal = 240;
+const serviceFee = calculateServiceFee(invoiceSubtotal);
+const amountToPay = invoiceSubtotal + serviceFee;
+
+console.log(`Fee: ${serviceFee}`);
+console.log(`Amount to pay: ${amountToPay}`);
 ```
+
+实际输出：
+
+```text
+Fee: 12
+Amount to pay: 252
+```
+
+`subtotal` 参数接收本次调用的数据，局部变量 `fee` 只负责保存计算过程，`return fee` 才把 12 交回调用位置。最外层代码接住返回值后，可以继续计算，也可以决定什么时候显示。
 
 ## 面试时怎么回答
 
 **问：`return`、`console.log` 和返回类型 `void` 是一回事吗？**
 
-不是。`return` 把计算结果交给调用者，调用者可以继续保存、比较或组合它；`console.log` 只是把内容打印到终端，是一次副作用。例如：
+可以这样回答：
+
+`return` 把值交回调用位置，调用者可以继续保存、比较或组合它；`console.log` 只是把内容写到控制台，是一次副作用。函数如果执行到末尾都没有运行 `return`，JavaScript 调用结果就是 `undefined`。
 
 ```ts
 function double(value: number): number {
@@ -181,12 +207,18 @@ const result = double(3); // result 是 6
 
 `void` 表达的是“调用者不应依赖这个函数的返回结果”，它不等于所有场景下都只能出现字面量 `undefined`。一个被当作 `() => void` 使用的回调，即使内部表达式产生了值，调用它的 API 也会忽略该值；但你自己声明 `function save(): void` 时，不应 `return 123`。面试时先讲调用约定，再讲这条回调边界，会比把 `void` 背成“空值类型”更准确。
 
+官方参考：
+
+- [TypeScript：Everyday Types 中的函数](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#functions)
+- [TypeScript：More on Functions 中的 `void`](https://www.typescriptlang.org/docs/handbook/2/functions.html#return-type-void)
+- [MDN：function 声明](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)
+
 ## 拓展思考（不要求写代码）
 
 如果 `calculateSubtotal` 内部把 120 打印出来却没有 `return`，为什么后面的 `calculateDiscount(subtotal, isMember)` 仍然无法得到正确的小计？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点比较函数边界，而不只比较最终数字。

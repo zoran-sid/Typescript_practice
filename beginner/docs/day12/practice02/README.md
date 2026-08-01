@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day12/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day12/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day12/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -31,6 +31,61 @@ message + formatter ──> dispatch ──> formattedMessage
                                      └── archiveSink ──> archived[]
 sinks.length ──> 投递数量
 archived[0] ──> 存档输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 prefix = [课程]"] --> B["调用 createFormatter(prefix)"]
+  B --> C["return formatter 回调<br/>闭包记住 prefix"]
+  C --> D["formatter 变量"]
+  E["固定 message = 课程已更新"] --> F["调用 dispatch(message, formatter, console.log, archiveSink)"]
+  D --> F
+  F --> G["只调用一次 formatter(message)"]
+  G --> H["formattedMessage"]
+  H --> I["循环第一个 sink<br/>console.log(formattedMessage)"]
+  H --> J["循环第二个 sink<br/>archiveSink(formattedMessage)"]
+  J --> K["archived.push(message)"]
+  F -->|"return sinks.length"| L["deliveredCount = 2"]
+  L --> M["输出投递数量"]
+  K --> N["读取 archived[0]<br/>输出存档"]
+```
+
+## 起始代码
+
+固定消息、函数签名、两个 sink、调用和输出已经提供。你需要完成返回 formatter 的回调、`dispatch` 中的循环与 `return`，以及 `archiveSink` 的回调内容。
+
+```ts
+type MessageFormatter = (message: string) => string;
+type MessageSink = (message: string) => void;
+
+function createFormatter(prefix = "[系统]"): MessageFormatter {
+  throw new Error("TODO：return 一个使用 prefix 的 formatter 回调");
+}
+
+function dispatch(
+  message: string,
+  formatter: MessageFormatter,
+  ...sinks: MessageSink[]
+): number {
+  throw new Error("TODO：格式化一次，循环执行每个 sink，再 return 实际数量");
+}
+
+const archived: string[] = [];
+const archiveSink: MessageSink = (message) => {
+  // TODO：把 message 加入 archived。
+};
+
+const formatter = createFormatter("[课程]");
+const deliveredCount = dispatch(
+  "课程已更新",
+  formatter,
+  console.log,
+  archiveSink,
+);
+console.log(`投递数量：${deliveredCount}`);
+console.log(`存档：${archived[0]}`);
 ```
 
 ## 要完成的功能
@@ -70,4 +125,4 @@ archived[0] ──> 存档输出
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

@@ -111,7 +111,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -130,42 +130,97 @@ flowchart TD
 
 ### 错误代码示例
 
+订单编辑页会先保留服务器返回的 `savedOrder`，再创建一份草稿。取消编辑时，页面应恢复服务器版本。下面只复制了最外层对象，地址对象和商品数组仍被两份数据共同引用：
+
 ```ts
-const updated = { ...original };
-updated.preferences.theme = "dark";
-// ❌ spread 只复制外层；两个对象仍共享 preferences，original 也被改了。
+type Order = {
+  customer: {
+    name: string;
+    address: { city: string };
+  };
+  lines: { sku: string; quantity: number }[];
+};
+
+const savedOrder: Order = {
+  customer: {
+    name: "Ada",
+    address: { city: "杭州" },
+  },
+  lines: [{ sku: "KB", quantity: 1 }],
+};
+
+const draftOrder = { ...savedOrder }; // ❌ 只复制了最外层。
+draftOrder.customer.address.city = "上海";
+draftOrder.lines.push({ sku: "MS", quantity: 1 });
+
+console.log("已保存城市：" + savedOrder.customer.address.city);
+console.log("已保存商品数：" + savedOrder.lines.length);
 ```
+
+实际输出：
+
+```text
+已保存城市：上海
+已保存商品数：2
+```
+
+`draftOrder !== savedOrder`，但 `draftOrder.customer === savedOrder.customer`，`lines` 也是同一个数组。撤销、差异对比和审计日志都会误以为服务器原值就是修改后的内容。
 
 ### 正确写法
 
 ```ts
-const updated = {
-  ...original,
-  preferences: {
-    ...original.preferences,
-    theme: "dark", // ✅ 沿着要修改的路径逐层创建新对象。
+const draftOrder: Order = {
+  ...savedOrder,
+  // ✅ 修改路径上的嵌套对象也分别创建新版本。
+  customer: {
+    ...savedOrder.customer,
+    address: {
+      ...savedOrder.customer.address,
+      city: "上海",
+    },
   },
+  lines: [
+    ...savedOrder.lines,
+    { sku: "MS", quantity: 1 },
+  ],
 };
+
+console.log("已保存城市：" + savedOrder.customer.address.city);
+console.log("草稿城市：" + draftOrder.customer.address.city);
 ```
+
+实际输出：
+
+```text
+已保存城市：杭州
+草稿城市：上海
+```
+
+真正被修改的路径是“订单 → customer → address → city”，所以这条路径上的每层对象都要新建；追加商品还要创建新的 `lines` 数组。没变化的字符串和商品对象可以继续复用。
 
 ## 面试时怎么回答
 
 **问：对象 spread 是深复制吗，为什么顺序还会影响结果？**
 
-**答：**spread 解决的是快速创建一层新容器，它只复制当前层的属性值。嵌套对象仍可能是同一个引用，因此不是深复制。属性从左到右写入，同名属性以后出现的值覆盖以前的值：
+**答：**对象 spread 只创建新的外层对象，再把源对象当前层的可枚举自有属性值复制进去。嵌套对象复制的是引用，所以它不是深复制。属性按从左到右写入，同名属性由后出现的值覆盖：
 
 ```ts
 const next = { ...profile, name: "Ada Lin" }; // 新 name 覆盖旧 name
 const wrong = { name: "Ada Lin", ...profile }; // 旧 name 又把新值覆盖
 ```
 
-语言负责展开和覆盖，开发者仍要判断真正修改的路径，并为那条路径上的每一层创建新容器。复制会增加对象分配，数据很大时也要考虑成本。
+更新嵌套字段时，要沿修改路径逐层创建新容器。spread 还会带来对象分配成本，也不会复制类原型上的方法。
 
 **问：`readonly` 是否会把对象彻底冻结？**
 
-**答：**不会。属性上的 `readonly` 和 `Readonly<T>` 主要在编译阶段阻止重新赋值，而且默认只约束当前层；嵌套对象内部仍可能可写。即使 `as const` 能得到更深的只读字面量类型，也不会在运行时自动调用 `Object.freeze`。
+**答：**不会。`readonly` 和 `Readonly<T>` 是 TypeScript 的静态检查，默认只约束当前层；它们不会在运行时自动调用 `Object.freeze`。`const` 也只阻止变量重新指向另一个值，不会阻止修改对象内部字段。
 
-**容易答错或追问：**不要把类型检查当成运行时保护；外部 JavaScript、断言或共享引用仍可能改变真实对象。
+需要运行时防改时，要另外设计冻结、复制或受控更新边界；即便使用 `Object.freeze`，嵌套对象是否一起冻结也要单独处理。
+
+官方参考：
+
+- [TypeScript Handbook：变量声明、解构与 spread](https://www.typescriptlang.org/docs/handbook/variable-declarations.html)
+- [MDN：Spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
 
 ## 拓展思考（不要求写代码）
 

@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day18/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day18/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day18/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -35,6 +35,63 @@ new StorageQuota("团队盘", 100) ──> quota（used = 0）
 quota ──> summary() ───────────────────────> 配额摘要
 quota ──> QuotaPanel(SummaryProvider) ──> render() ──> 带前缀摘要
 第三次 consume 的 boolean ──> 接受/拒绝文字
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["new StorageQuota(团队盘, 100)<br/>used = 0"] --> B["调用 consume(20)"]
+  B --> C{"20 > 0 且 used + 20 <= limit？"}
+  C -- "是" --> D["used = 20<br/>return true"]
+  D --> E["调用 consume(10)"]
+  E --> F["used = 30<br/>return true"]
+  F --> G["调用 consume(80)"]
+  G --> H{"30 + 80 <= 100？"}
+  H -- "否" --> I["used 保持 30<br/>return false"]
+  I --> J["oversizedAccepted = false"]
+  A --> K["调用 quota.summary()<br/>return 配额摘要"]
+  A --> L["new QuotaPanel(quota)"]
+  L --> M["调用 panel.render"]
+  M --> N["provider.summary()<br/>return 面板文字"]
+  K --> O["console.log 摘要"]
+  J --> P["判断 接受/拒绝<br/>console.log"]
+  N --> Q["console.log 面板"]
+```
+
+## 起始代码
+
+接口、类结构、固定容量、三次写入、面板调用和输出已经提供。你要完成容量判断、状态更新及所有 `return`。
+
+```ts
+interface SummaryProvider { summary(): string; }
+
+class StorageQuota implements SummaryProvider {
+  private used = 0;
+  constructor(public readonly name: string, private readonly limit: number) {}
+  consume(gigabytes: number): boolean {
+    throw new Error("TODO：判断正数和容量上限，更新 used，并 return boolean");
+  }
+  summary(): string {
+    throw new Error("TODO：读取 name、used、limit 并 return 摘要");
+  }
+}
+
+class QuotaPanel {
+  constructor(private readonly provider: SummaryProvider) {}
+  render(): string {
+    throw new Error("TODO：使用 provider.summary() 并 return 面板文字");
+  }
+}
+
+const quota = new StorageQuota("团队盘", 100);
+quota.consume(20);
+quota.consume(10);
+const oversizedAccepted = quota.consume(80);
+const panel = new QuotaPanel(quota);
+console.log(quota.summary());
+console.log(`超额写入：${oversizedAccepted ? "接受" : "拒绝"}`);
+console.log(panel.render());
 ```
 
 ## 要完成的功能
@@ -74,4 +131,4 @@ quota ──> QuotaPanel(SummaryProvider) ──> render() ──> 带前缀摘�
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day15/practice01/practice.ts)
-- 结构提示代码：[solution.ts](../../../day15/practice01/solution.ts)
+- 完整参考答案：[solution.ts](../../../day15/practice01/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -26,6 +26,64 @@
    └── makePair<A, B> ──> [A, B]
 
 各次调用推断出的具体结果 ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定调用 lastOrFallback<br/>字符串数组 + 无"] --> B["循环遍历 items"]
+  B --> C["当前 item 覆盖 result"]
+  C --> B
+  B -->|"循环结束"| D["return result<br/>lastTopic = 泛型"]
+  E["固定调用 lastOrFallback<br/>空数组 + 0"] --> F["循环没有进入"]
+  F --> G["return fallback<br/>emptyScore = 0"]
+  H["课程 + TypeScript"] --> I["调用 makeBox"]
+  I --> J["return Box<br/>course"]
+  K["7 + count 3"] --> L["调用 repeat"]
+  L --> M["循环 push 3 次"]
+  M --> N["return Item[]<br/>repeatedNumbers"]
+  O["level + 3"] --> P["调用 makePair"]
+  P --> Q["return [Left, Right]<br/>pair"]
+  D --> R["console.log 最后主题"]
+  G --> S["console.log 空分数"]
+  J --> T["console.log 盒子"]
+  N --> U["console.log 重复结果"]
+  Q --> V["console.log 配对"]
+```
+
+## 起始代码
+
+类型、四个函数签名、固定调用和输出已经提供。你需要完成循环、对象/数组创建和所有 `return`。
+
+```ts
+function lastOrFallback<Item>(items: readonly Item[], fallback: Item): Item {
+  throw new Error("TODO：循环保留末项，并 return 末项或 fallback");
+}
+
+type Box<Value> = { label: string; value: Value };
+function makeBox<Value>(label: string, value: Value): Box<Value> {
+  throw new Error("TODO：return 使用两个参数组成的 Box");
+}
+
+function repeat<Item>(value: Item, count: number): Item[] {
+  throw new Error("TODO：循环生成 count 项，并 return 新数组");
+}
+
+function makePair<Left, Right>(left: Left, right: Right): [Left, Right] {
+  throw new Error("TODO：按输入顺序 return 元组");
+}
+
+const lastTopic = lastOrFallback(["变量", "泛型"], "无");
+const emptyScore = lastOrFallback([], 0);
+const course = makeBox("课程", "TypeScript");
+const repeatedNumbers = repeat(7, 3);
+const pair = makePair("level", 3);
+console.log(`最后主题：${lastTopic}`);
+console.log(`空分数：${emptyScore}`);
+console.log(`盒子：${course.label}=${course.value}`);
+console.log(`重复：${repeatedNumbers.join("+")}`);
+console.log(`配对：${pair[0]}=${pair[1]}`);
 ```
 
 ## 要完成的功能
@@ -113,4 +171,4 @@ function makeBox<Value>(
 ## 文件
 
 - 在 `practice.ts` 中独立作答。
-- 完成并运行通过后，再查看 `solution.ts` 的 TODO 解题结构与 `SOLUTION.md` 的结构提示。
+- 完成并运行通过后，再查看 `solution.ts` 的完整参考答案与 `SOLUTION.md` 的调用说明。

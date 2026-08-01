@@ -1,20 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day12/practice02/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。请沿 `solution.ts` 中的 `// 调用关系：` 注释检查 formatter 是否只调用一次，以及两个 sink 是否收到同一个字符串。
 
-## 方案一
+## 直接调用逻辑
 
-1. `createFormatter` 返回一个箭头函数，让它记住创建时收到的前缀。
-2. `dispatch` 先调用一次 formatter，保存格式化结果。
-3. 遍历 rest 参数收集到的 sinks，把同一结果依次交给每个 `void` 回调并计数。
-4. 一个 sink 输出，另一个 sink 写入数组；入口再读取计数和存档结果。
+1. `createFormatter("[课程]")` 返回一个记住前缀的 formatter。
+2. `dispatch` 先调用一次 `formatter(message)`，让 `formattedMessage` 接住结果。
+3. 循环依次把同一个结果交给 `console.log` 和 `archiveSink`，再返回 `sinks.length`。
+4. `deliveredCount` 用于数量输出，`archived[0]` 用于存档输出。
 
-## 关键检查点
-
-- formatter 只调用一次，避免不同 sink 收到不一致的结果或重复执行有副作用的格式器。
-
-- `void` sink 负责动作，投递数量由 dispatch 的循环维护。
-
-- rest 参数在函数体内是普通数组，可以是零个、一个或多个接收方。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位返回值。

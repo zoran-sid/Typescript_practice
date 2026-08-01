@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day15/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day15/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day15/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -35,6 +35,52 @@ emptyScores: number[] ──> firstOrUndefined<number>
 value + label ──> labelValue<T> ──> LabeledValue<T>
 
 三个首项结果 + course ──> 输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定姓名数组 Ada, Lin"] --> B["调用 firstOrUndefined"]
+  B --> C["return items[0]<br/>firstName = Ada"]
+  D["固定分数数组 80, 90"] --> E["调用 firstOrUndefined"]
+  E --> F["return items[0]<br/>firstScore = 80"]
+  G["固定空成绩数组"] --> H["调用 firstOrUndefined"]
+  H --> I["return items[0]<br/>firstEmptyScore = undefined"]
+  J["课程 + TypeScript"] --> K["调用 labelValue"]
+  K --> L["return LabeledValue<br/>course"]
+  C --> M{"firstName ?? 暂无"}
+  F --> N{"firstScore ?? 暂无"}
+  I --> O{"firstEmptyScore ?? 暂无"}
+  M --> P["console.log 第一位"]
+  N --> Q["console.log 第一个分数"]
+  O --> R["console.log 空成绩"]
+  L --> S["console.log 标签"]
+```
+
+## 起始代码
+
+类型、固定数组、函数签名、调用和输出已给出。你需要完成两个函数的对象创建与 `return`；空值展示继续由调用处的 `??` 负责。
+
+```ts
+function firstOrUndefined<Item>(items: readonly Item[]): Item | undefined {
+  throw new Error("TODO：return 第一项；空数组自然得到 undefined");
+}
+
+type LabeledValue<Value> = { label: string; value: Value };
+function labelValue<Value>(label: string, value: Value): LabeledValue<Value> {
+  throw new Error("TODO：return 由参数组成的标签对象");
+}
+
+const firstName = firstOrUndefined(["Ada", "Lin"]);
+const firstScore = firstOrUndefined([80, 90]);
+const emptyScores: readonly number[] = [];
+const firstEmptyScore = firstOrUndefined(emptyScores);
+const course = labelValue("课程", "TypeScript");
+console.log(`第一位：${firstName ?? "暂无"}`);
+console.log(`第一个分数：${firstScore ?? "暂无"}`);
+console.log(`空成绩：${firstEmptyScore ?? "暂无"}`);
+console.log(`标签：${course.label}=${course.value}`);
 ```
 
 ## 要完成的功能
@@ -109,4 +155,4 @@ function labelValue<Value>(
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

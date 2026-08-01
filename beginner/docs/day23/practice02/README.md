@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day23/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day23/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day23/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题不重复修复空值代码。你要比较“只做类型检查”和“正式构建”两份配置，并验证外部传入的配置键是否是团队支持的选项。
 
@@ -24,6 +24,72 @@ typeCheckProfile(noEmit=true) ──> describeEmit ──> 不生成文件
 buildProfile(noEmit=false) ─────> describeEmit ──> 生成 JavaScript
 buildProfile.target + module ──> 运行环境说明
 外部 option "paths" ──> isKnownOption ──> rejected
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定 diagnostics 数组"] --> B["firstDiagnostic(diagnostics)"]
+  B --> C["读取索引 0"]
+  C --> D["return string | undefined"]
+  D --> E["first ?? 'none'"]
+  E --> F["输出 First step"]
+  G["固定 type-check profile<br/>noEmit=true"] --> H["describeEmit(profile)"]
+  I["固定 build profile<br/>noEmit=false"] --> H
+  H --> J{"profile.noEmit？"}
+  J --> K["return 不生成/生成 JavaScript 的文字"]
+  K --> L["输出两个 profile 结果"]
+  I --> M["读取 target/module"]
+  M --> N["输出 Runtime"]
+  O["固定外部键 'paths'"] --> P["isKnownOption(value)"]
+  P --> Q["比较四个允许值"]
+  Q --> R["return boolean"]
+  R --> S["输出 rejected"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type BuildProfile = {
+  name: "type-check" | "build";
+  noEmit: boolean;
+  target: "ES2022";
+  module: "NodeNext";
+};
+type KnownOption = "strict" | "noEmit" | "target" | "module";
+function firstDiagnostic(diagnostics: readonly string[]): string | undefined {
+  // TODO：读取第一项并 return。
+  void diagnostics;
+  return undefined;
+}
+function describeEmit(profile: BuildProfile): string {
+  // TODO：判断 noEmit 并 return 描述。
+  void profile;
+  return "";
+}
+function isKnownOption(value: string): value is KnownOption {
+  // TODO：比较四个允许值并 return boolean。
+  void value;
+  return false;
+}
+const typeCheckProfile: BuildProfile = {
+  name: "type-check", noEmit: true, target: "ES2022", module: "NodeNext",
+};
+const buildProfile: BuildProfile = {
+  name: "build", noEmit: false, target: "ES2022", module: "NodeNext",
+};
+const first = firstDiagnostic(["fix first diagnostic", "check related diagnostics"]);
+console.log(`First step: ${first ?? "none"}`);
+console.log(describeEmit(typeCheckProfile));
+console.log(describeEmit(buildProfile));
+console.log(`Runtime: ${buildProfile.target}/${buildProfile.module}`);
+console.log(`Unknown option: ${isKnownOption("paths") ? "accepted" : "rejected"}`);
 ```
 
 ## 和 Practice 01 的区别
@@ -61,4 +127,4 @@ Unknown option: rejected
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

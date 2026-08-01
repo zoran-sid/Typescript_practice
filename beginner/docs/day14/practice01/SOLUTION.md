@@ -1,17 +1,14 @@
-# 解题结构
+# 完整参考答案说明
 
 [返回题目](./README.md) · [打开 solution.ts](../../../day14/practice01/solution.ts)
 
-本文件不提供完整答案。对应的 `solution.ts` 只保留可通过类型检查的 TODO 脚手架，请先独立作答，再用这里检查思路。
+本文件提供完整参考答案。`solution.ts` 的 `// 调用关系：` 注释说明每个导入值进入了哪次函数调用或输出。
 
-## 方案一
+## 直接调用逻辑
 
-1. 先根据各模块的导出形式补齐值导入与类型导入。
-2. 让导入的 `Student` 类型约束本地学生数据，再把值交给各模块函数。
-3. 入口只负责组合课程数据、学生摘要、分数格式和及格线的展示顺序。
+1. `Student` 通过 `import type` 约束本地 `student`，不参与运行。
+2. `courseTitle` 和 `lessonCount` 直接进入课程概况输出。
+3. `student` 进入 `summarizeStudent(student)`，返回摘要后输出。
+4. 循环把两个分数依次交给 `formatScore`；最后输出导入的 `passingScore`。
 
-## 关键检查点
-
-- 只用于类型位置的名字使用 `import type`。
-
-- 相对模块路径保留项目要求的 `.js` 扩展名。
+完整实现位于 `solution.ts`，其中没有 TODO 或占位导入。

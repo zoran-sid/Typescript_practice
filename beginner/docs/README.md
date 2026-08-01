@@ -6,10 +6,10 @@
 
 1. 从下表进入当天课程文档，先看概念、常见错误示例与 Example 流程图。
 2. 打开对应代码 `beginner/dayXX/example.ts`，右击 **Run Code**。
-3. 从当天文档选择一道 Practice，先读场景背景、需求、变量关联数据流和预期输出。
-4. 打开对应代码 `beginner/dayXX/practiceXX/practice.ts` 独立作答。
+3. 从当天文档选择一道 Practice，先读场景背景、变量数据流、代码流程图和预期输出。
+4. 把题目中的“起始代码”复制到 `beginner/dayXX/practiceXX/practice.ts`，只完成标出的核心逻辑。
 5. 程序通过后先关掉代码，完成题目末尾的“写完后自检”：预测一次变式，再解释一次设计选择。
-6. 卡住时先看常见错误；最后才查看代码目录的 `solution.ts` 和本资料库中的 `SOLUTION.md`。
+6. 卡住时先看常见错误；最后再运行完整 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。
 
 通用资料：[完整课程说明](../README.md) · [官方手册按 Day 分类](./OFFICIAL-READING.md) · [值判断速查](./VALUE-CHECKS.md) · [间隔复习](../REVIEW.md) · [学习进度](../PROGRESS.md)
 

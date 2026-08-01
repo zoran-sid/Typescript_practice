@@ -103,7 +103,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -118,56 +118,90 @@ flowchart TD
 
 ### 错误代码示例
 
-```ts
-const orderTotal = 200;
-const isMember = true;
-const hasCoupon = false;
-let discount = 0;
+假设客服队列有三条互斥规则：系统故障工单进入 `"P0"`；否则，等待超过 120 分钟或 VIP 已等待至少 30 分钟的工单进入 `"P1"`；其余进入普通队列。下面把三条规则写成了互不关联的 `if`：
 
-if (isMember && orderTotal > 100) {
-  discount = 20; // ❌ 会员分支先成立，200 元订单错误地停在这里。
-} else if (orderTotal >= 200) {
-  discount = 40;
-} else if (hasCoupon) {
-  discount = 10;
+```ts
+const serviceDown = true;
+const isVipCustomer = true;
+const waitingMinutes = 180;
+let queue = "normal";
+
+if (serviceDown) {
+  queue = "P0";
 }
-// ❌ > 100 还漏掉了恰好 100 元的边界。
+
+if (isVipCustomer && waitingMinutes >= 30) {
+  queue = "P1"; // ❌ 独立 if 继续执行并覆盖更高优先级结果。
+}
+
+if (waitingMinutes >= 120) {
+  queue = "P1";
+}
+
+console.log(`Queue: ${queue}`);
 ```
+
+实际输出：
+
+```text
+Queue: P1
+```
+
+第一条规则已经选中最高优先级 `"P0"`，但程序不会自动停止。后两个 `if` 仍会执行，并把结果覆盖成 `"P1"`。这种问题常出现在新增业务规则时：每一条单独看都正确，组合后却破坏了原有优先级。
 
 ### 正确写法
 
 ```ts
-const orderTotal = 200;
-const isMember = true;
-const hasCoupon = false;
-const canUseMemberDiscount =
-  isMember && orderTotal >= 100 && !hasCoupon;
+const serviceDown = true;
+const isVipCustomer = true;
+const waitingMinutes = 180;
 
-let discount = 0;
+const isVipOverdue =
+  isVipCustomer && waitingMinutes >= 30;
 
-if (orderTotal >= 200) {
-  discount = 40; // ✅ 最高优先级规则放在最前面。
-} else if (canUseMemberDiscount) {
-  discount = 20; // ✅ 包含 100 元边界，并排除已使用优惠券的情况。
-} else if (hasCoupon || orderTotal >= 80) {
-  discount = 10;
+let queue = "normal";
+
+if (serviceDown) {
+  queue = "P0"; // ✅ 命中后，else if 分支不再执行。
+} else if (waitingMinutes >= 120 || isVipOverdue) {
+  queue = "P1";
+} else {
+  queue = "normal";
 }
+
+console.log(`Queue: ${queue}`);
 ```
+
+实际输出：
+
+```text
+Queue: P0
+```
+
+`if / else if / else` 表达“只采用第一条成立的规则”。最高优先级放在最前面后，一旦 `serviceDown` 为 `true`，后面的队列规则就不会再覆盖结果。`isVipOverdue` 把一段组合条件起了名字，便于核对 VIP 与等待边界是否同时满足。
 
 ## 面试时怎么回答
 
 **问：为什么组合业务条件时要关心短路和优先级？**
 
-`&&` 表示左边不成立时，整组条件已经不可能成立，所以右边不用再算；`||` 表示左边成立时，整组条件已经成立，右边也不用再算。这叫短路。它既能少做无用计算，也常用于“先确认值存在，再访问它”的保护，但不能拿短路代替本该写清楚的业务分支。JavaScript 的 `&&` 和 `||` 实际交回的是其中一个操作数，不会强制得到 `boolean`；这里能按真假条件理解，是因为两边本来就是布尔表达式。
+可以这样回答：
 
-优先级会决定代码先组合哪一部分：`true || false && false` 会先算 `false && false`，最后结果是 `true`。当需求是“会员并且满 100，或者持有优惠券”时，写成 `(isMember && total >= 100) || hasCoupon` 更容易核对。边界值也必须来自需求：`>= 100` 包含正好 `100`，`> 100` 不包含；类型系统不会替你决定这条业务规则。
+`&&` 左侧为假时，右侧不会执行；`||` 左侧为真时，右侧不会执行，这就是短路。它常用于“先确认前提，再执行后续检查”，但 JavaScript 的 `&&` 和 `||` 返回的是某个操作数，不一定是字面量 `true` 或 `false`。业务代码里若需要明确布尔值，参与组合的表达式本身也应清楚。
+
+运算符优先级决定表达式先组合哪一部分，分支顺序则决定多条规则同时成立时采用哪一条。复杂条件最好加括号或保存成有名字的布尔变量。`>= 100` 是否应包含 100、哪条规则优先，都来自业务需求，类型系统不会替开发者决定。
+
+官方参考：
+
+- [MDN：if...else](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/if...else)
+- [MDN：Logical AND (`&&`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND)
+- [MDN：Logical OR (`||`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_OR)
 
 ## 拓展思考（不要求写代码）
 
 如果 `orderTotal` 改成 200，同时仍是会员且没有优惠券，程序为什么应该只优惠 40 而不是先优惠 40 再优惠 20，这与分支顺序有什么关系？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照条件名称和分支优先级。

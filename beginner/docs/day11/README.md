@@ -214,7 +214,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -233,47 +233,82 @@ flowchart TD
 
 ### 错误代码示例
 
+假设上传面板需要显示排队、上传中、完成和失败四种状态。刚开始只有“上传中”状态，开发者直接读取 `progress`；后来状态变多，旧写法就不再安全：
+
 ```ts
-function readFirstItem(state: LoadState): string {
-  // ❌ 还没有检查 status；idle、loading、error 都没有 items。
-  return state.items[0];
-}
+type UploadState =
+  | { status: "queued"; fileName: string }
+  | { status: "uploading"; fileName: string; progress: number }
+  | { status: "done"; fileName: string; fileUrl: string }
+  | { status: "failed"; fileName: string; message: string };
 
-type FileSummary = { label: string; isEmpty: boolean };
-
-function summarizeFile(name: string, lineCount: number): FileSummary {
-  // ❌ 返回类型要求的是 FileSummary 对象，只交回字符串会缺少 isEmpty。
-  return `${name}：${lineCount} 行`;
+function renderUpload(state: UploadState): string {
+  return `${state.fileName}：${state.progress}%`; // ❌ 未检查状态就读取专属字段。
+  //                         ~~~~~~~~~~~~~~
+  // TS2339：并非每种 UploadState 都有 progress。
 }
 ```
+
+项目中常见的错误补救是把所有专属字段改成可选，让报错先消失：
+
+```ts
+type LooseUploadState = {
+  status: "queued" | "uploading" | "done" | "failed";
+  fileName: string;
+  progress?: number;
+  fileUrl?: string;
+  message?: string;
+};
+
+function renderLooseUpload(state: LooseUploadState): string {
+  return `${state.fileName}：${state.progress}%`;
+}
+
+console.log(renderLooseUpload({
+  status: "queued",
+  fileName: "report.pdf",
+}));
+```
+
+实际输出：
+
+```text
+report.pdf：undefined%
+```
+
+这段类型还会接受 `{ status: "done", fileName: "report.pdf" }`：状态声称上传完成，却没有下载地址。编译虽然安静了，非法状态已经进入系统。
 
 ### 正确写法
 
 ```ts
-function readFirstItem(state: LoadState): string {
-  if (state.status === "success") {
-    // ✅ 检查为 success 后，TypeScript 才允许读取 items。
-    return state.items[0] ?? "没有项目";
-  }
-  return "当前状态没有项目";
+function assertUploadStateHandled(value: never): never {
+  throw new Error("未处理的上传状态：" + JSON.stringify(value));
 }
 
-type FileSummary = { label: string; isEmpty: boolean };
-
-function summarizeFile(name: string, lineCount: number): FileSummary {
-  // ✅ 一次 return 交回一个对象，对象里同时保存两项有关联的结果。
-  return {
-    label: `${name}：${lineCount} 行`,
-    isEmpty: lineCount === 0,
-  };
+function renderUpload(state: UploadState): string {
+  // ✅ 先按判别字段分支，再读取当前成员拥有的数据。
+  switch (state.status) {
+    case "queued":
+      return `${state.fileName}：等待上传`;
+    case "uploading":
+      return `${state.fileName}：${state.progress}%`;
+    case "done":
+      return `${state.fileName}：${state.fileUrl}`;
+    case "failed":
+      return `${state.fileName}：${state.message}`;
+    default:
+      return assertUploadStateHandled(state);
+  }
 }
 ```
+
+`switch` 先检查标签，每个分支才能读取自己的字段。以后加入 `"paused"`，`default` 中的 `state` 不再是 `never`，编译器会把遗漏指出来，而不是让页面显示一条模糊的未知状态。
 
 ## 面试时怎么回答
 
 **问：为什么状态对象更适合写成判别联合，而不是把所有字段都设为可选？**
 
-**答：**先说它解决的问题：可选字段会允许“`status` 是 `success`，却没有 `items`”这种不完整数据，使用者还要到处判断字段在不在。判别联合给每种对象放同一个标签字段，TypeScript 在判断标签后自动收窄；开发者仍要决定有哪些状态、每种状态带什么数据。比如：
+**答：**我会用判别联合把“状态”和“该状态拥有的数据”绑在一起。所有成员共享一个字面量标签，例如 `status`；检查标签后，TypeScript 会把对象收窄到对应成员。这样 `{ status: "success" }` 却缺少 `items` 的对象在创建时就会报错，不需要把风险留给使用者：
 
 ```ts
 type State =
@@ -281,13 +316,17 @@ type State =
   | { status: "error"; message: string };
 ```
 
-检查 `state.status === "success"` 后才能读 `items`。这只是类型层面的约束，接口传来的 JSON 仍要在运行时验证。
+检查 `state.status === "success"` 后才能读 `items`。这属于编译期约束；接口和 JSON 仍要经过运行时验证。
 
 **问：`never` 穷尽检查到底检查了什么？**
 
-**答：**它检查的是“按照当前联合类型，前面的分支是否已经覆盖全部可能”。新增一种状态却忘记补 `case` 时，剩余值不能传给 `never` 参数，编译器会报错。
+**答：**`never` 代表经过前面所有收窄后不该再有值的分支。把 `switch` 的剩余值赋给 `never`，就是让编译器确认联合成员已经全部处理。新增成员却没有补 `case` 时，剩余值仍有具体类型，不能赋给 `never`，因此会在编译阶段报错。
 
-**容易答错或追问：**不要说 `never` 会自动处理未知状态；它不会生成运行时校验。`assertNever` 真被调用时通常只是抛错，业务分支和外部数据验证仍要自己写。
+`never` 不会生成运行时校验，也不会替业务决定默认行为；`assertNever` 真被调用时通常只是暴露“类型声明与真实输入不一致”。
+
+官方参考：
+
+- [TypeScript Handbook：Narrowing、判别联合与 `never` 穷尽检查](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
 
 ## 拓展思考（不要求写代码）
 

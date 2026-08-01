@@ -5,7 +5,7 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day13/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day13/practice02/solution.ts)
+- 完整参考答案：[solution.ts](../../../day13/practice02/solution.ts)
 - 方案说明：[SOLUTION.md](./SOLUTION.md)
 
 ## 场景背景
@@ -32,6 +32,75 @@ originalCart + sku + nextQuantity ──> updateQuantity
 
 数量更新结果 + "TS20" ──> applyCoupon ──> updatedCart
 originalCart + updatedCart ──> 对照输出
+```
+
+## 代码流程图
+
+```mermaid
+flowchart TD
+  A["固定 originalCart<br/>KB=2，MS=1"] --> B["调用 updateQuantity(originalCart, KB, 3)"]
+  B --> C{"SKU 存在且数量不为负？"}
+  C -- "否" --> D["return 原 cart"]
+  C -- "是" --> E{"nextQuantity === 0？"}
+  E -- "是" --> F["filter 回调移除目标商品<br/>return 新 Cart"]
+  E -- "否" --> G["map 回调替换目标商品<br/>return 新 Cart"]
+  G --> H["withKeyboardUpdated"]
+  H --> I["调用 updateQuantity(..., MS, 0)"]
+  I --> F
+  F --> J["withoutMouse"]
+  J --> K["调用 applyCoupon(withoutMouse, TS20)"]
+  K --> L["spread 添加 coupon<br/>return 新 Cart"]
+  L --> M["updatedCart"]
+  A --> N["调用 findQuantity(originalCart, KB)"]
+  M --> O["调用 findQuantity(updatedCart, KB)"]
+  N --> P["return originalKeyboardQuantity"]
+  O --> Q["return updatedKeyboardQuantity"]
+  A --> R["读取原商品数"]
+  M --> S["读取新商品数和 coupon"]
+  P --> T["console.log 新旧对照"]
+  Q --> T
+  R --> T
+  S --> T
+```
+
+## 起始代码
+
+类型、固定购物车、三个函数签名、连续调用和最终输出都已给出。你要完成存在性判断、`filter`/`map` 回调以及各条路径的 `return`。
+
+```ts
+type CartItem = { readonly sku: string; name: string; quantity: number };
+type Cart = { readonly id: string; items: readonly CartItem[]; coupon?: string };
+
+const originalCart: Cart = {
+  id: "cart-1",
+  items: [
+    { sku: "KB", name: "机械键盘", quantity: 2 },
+    { sku: "MS", name: "鼠标", quantity: 1 },
+  ],
+};
+
+function updateQuantity(cart: Cart, sku: string, nextQuantity: number): Cart {
+  throw new Error("TODO：判断 SKU 和数量；用 filter 或 map 生成 items，并 return 对应 Cart");
+}
+
+function applyCoupon(cart: Cart, coupon: string): Cart {
+  throw new Error("TODO：使用 spread 并 return 带 coupon 的新 Cart");
+}
+
+function findQuantity(cart: Cart, sku: string): number | undefined {
+  throw new Error("TODO：查找匹配 SKU，并 return 它的可选数量");
+}
+
+const withKeyboardUpdated = updateQuantity(originalCart, "KB", 3);
+const withoutMouse = updateQuantity(withKeyboardUpdated, "MS", 0);
+const updatedCart = applyCoupon(withoutMouse, "TS20");
+const originalKeyboardQuantity = findQuantity(originalCart, "KB");
+const updatedKeyboardQuantity = findQuantity(updatedCart, "KB");
+console.log(`原商品数：${originalCart.items.length}`);
+console.log(`新商品数：${updatedCart.items.length}`);
+console.log(`原键盘数量：${originalKeyboardQuantity}`);
+console.log(`新键盘数量：${updatedKeyboardQuantity}`);
+console.log(`优惠券：${updatedCart.coupon}`);
 ```
 
 ## 要完成的功能
@@ -100,4 +169,4 @@ type Cart = {
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 解题结构。
+在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的完整参考答案。

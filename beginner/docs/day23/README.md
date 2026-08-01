@@ -29,6 +29,18 @@
 | `module` | `import` / `export` 怎样组织 | 不检查业务公式 |
 | `noEmit` | 只检查，不生成 JavaScript 文件 | 不等于运行了测试 |
 
+### 本课程怎样演示这两条额外规则
+
+`strict` 不包含 `noUncheckedIndexedAccess` 和 `exactOptionalPropertyTypes`。本项目的主配置 `beginner/tsconfig.json` 当前也没有打开它们，因为直接改主配置会让其他天的代码一起接受新检查，初学时很难分清报错来自哪一天。
+
+Day 23 单独准备了 `beginner/day23/tsconfig.json`，只给当天代码增加这两项检查。要亲自观察数组索引和可选属性的提示，在项目根目录运行：
+
+```bash
+npm run day23:strict
+```
+
+常见编辑器会按文件位置自动识别离 Day 23 最近的这份配置；上面的命令则是在终端里明确使用同一配置，方便确认命令行和持续集成也能得到相同结果。看到报错时先看文件路径，确认它来自 Day 23，再按本节的方法处理第一条。
+
 严格规则是在暴露原本就存在的分支：`find` 可能找不到，数组索引可能越界，可选属性可能没有这个键，外部的 `unknown` 也可能根本不是数字。你要做的是把这些情况写成明确判断，不是用断言把提示盖掉。
 
 读错误时固定做五步：只看第一条；找到行号和出错表达式；读出它现在的类型；读出当前位置需要的类型；做最小修改后重新检查。第一条消失后，后面的错误有时也会一起消失。
@@ -41,7 +53,7 @@
 
 ## 把一条错误翻译成人话
 
-看到 `const first: number = scores[0]` 报错，可以这样读：右侧 `scores[0]` 的实际类型是 `number | undefined`，左侧却要求一定是 `number`。这条提示可以翻译成：空数组没有第一项。先把结果放进 `first`，检查 `first !== undefined`，再调用数字方法。
+看到 `const first: number = scores[0]` 报错，可以这样读：右侧 `scores[0]` 的实际类型是 `number | undefined`，左侧却要求一定是 `number`。这条提示可以翻译成：空数组没有第一项。修复时要先去掉错误的 `: number`，让 `first` 保留 `number | undefined`；然后检查 `first !== undefined`，再调用数字方法。也可以明确写成 `const first: number | undefined = scores[0]`。
 
 ## Example 实际输出
 
@@ -75,7 +87,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -89,59 +101,94 @@ flowchart TD
 - 用类型断言或非空断言压掉提示；
 - 认为 `number[]` 的任意索引必然是数字；
 - 对 `unknown` 直接做乘法；
-- 用 `theme: undefined` 假装删除可选属性；
+- 给可选属性写入 `undefined`，误以为这样就等于“没有这个键”；
 - 同时猜测多条错误，而没有先处理第一条。
 
 ### 错误代码示例
 
+批量导入工具开始使用 Day 23 的专用严格配置后，编译器指出了两个原本就存在的问题：用户选择的文件序号可能越界，可选的追踪编号也可能根本没有提供。为了赶发布，有人用 `!` 压掉第一条提示，又把 `undefined` 当成“没有这个字段”：
+
 ```ts
-interface Preferences {
-  theme?: "light" | "dark";
+interface ImportRequest {
+  fileName: string;
+  traceId?: string;
 }
 
-function double(value) {
-  // ❌ value 隐式为 any；严格模式无法检查调用者传入了什么。
-  return value * 2;
+function selectImportFile(
+  fileNames: readonly string[],
+  selectedIndex: number,
+): string {
+  // ❌ 非空断言只让 TypeScript 暂时相信这个位置有 string，
+  // 不会给越界的序号创建文件名。
+  return fileNames[selectedIndex]!.toUpperCase();
 }
 
-const scores: number[] = [];
-const first: number = scores[0]; // ❌ 索引可能越界，结果可能是 undefined。
+function createImportRequestWrong(
+  fileName: string,
+  traceId: string | undefined,
+): ImportRequest {
+  return {
+    // ❌ 开启 exactOptionalPropertyTypes 后会报错：
+    // 可选字段缺失时应不创建这个键，而不是写入 undefined。
+    fileName,
+    traceId,
+  };
+}
 
-const preferences: Preferences = {
-  theme: undefined, // ❌ exactOptionalPropertyTypes 下，这不等于“属性不存在”。
-};
+console.log(selectImportFile(["users.csv"], 3));
 ```
+
+选择序号 `3` 时，数组里没有对应文件，程序会在 `undefined` 上调用 `toUpperCase`，运行时得到 `TypeError`。`traceId: undefined` 也不等于字段缺失：`"traceId" in object` 仍然是 `true`。如果日志系统用“字段是否存在”判断要不要关联一次追踪记录，就会走错分支。
 
 ### 正确写法
 
 ```ts
-interface Preferences {
-  theme?: "light" | "dark";
+function selectImportFile(
+  fileNames: readonly string[],
+  selectedIndex: number,
+): string {
+  const selected = fileNames[selectedIndex];
+  if (selected === undefined) {
+    // ✅ 这里的业务选择是拒绝无效序号，而不是返回占位文字。
+    throw new RangeError(`没有序号为 ${selectedIndex} 的导入文件`);
+  }
+  return selected.toUpperCase();
 }
 
-function double(value: unknown): number | undefined {
-  // ✅ unknown 必须先收窄，非数字输入得到明确的缺失结果。
-  return typeof value === "number" ? value * 2 : undefined;
+function createImportRequest(
+  fileName: string,
+  traceId: string | undefined,
+): ImportRequest {
+  if (traceId === undefined) {
+    // ✅ 没有追踪编号时，直接创建一份不含 traceId 键的对象。
+    return { fileName };
+  }
+  return { fileName, traceId };
 }
 
-const scores: number[] = [];
-const first = scores[0];
-if (first !== undefined) {
-  console.log(first.toFixed(1)); // ✅ 使用的正是刚刚检查过的变量。
-}
+const request = createImportRequest("users.csv", undefined);
+console.log(selectImportFile(["users.csv"], 0));
+console.log("traceId" in request);
+```
 
-const preferences: Preferences = { theme: "dark" };
-const { theme: _removed, ...withoutTheme } = preferences;
-// ✅ withoutTheme 中真正不存在 theme 这个键。
+实际输出：
+
+```text
+USERS.CSV
+false
 ```
 
 ## 面试时怎么回答
 
 **问：** `strict`、`noUncheckedIndexedAccess` 和 `skipLibCheck` 分别管什么？
 
-**答：** `strict` 是一组严格检查的总开关，会连带开启空值、隐式 `any` 等规则。`noUncheckedIndexedAccess` 针对类型中没有明确声明结果一定存在的索引读取补上 `undefined`：例如 `const scores: number[] = []` 后，`scores[0]` 会是 `number | undefined`，使用前要检查。`skipLibCheck` 跳过 `.d.ts` 文件本身的完整检查，可以在迁移期或检查耗时过长时作为权衡；它不会跳过自己的 `.ts` 源码，也不会让运行时更安全。
+**可以直接这样回答：**
 
-**容易答错或追问：** 不要把 `noUncheckedIndexedAccess` 说成“数组永远不能取下标”，它只是让未声明为必然存在的索引结果带上 `undefined`。也不要说 `skipLibCheck` 会忽略所有类型错误或修复错误声明；调用处仍可能相信一份不准确的 `.d.ts`。如果冲突来自同一个库的多个类型版本，应先统一依赖版本。`target`、`module` 和 `moduleResolution` 也没有一份适合所有项目的万能配置，它们要和 Node、浏览器或打包器的真实加载方式匹配。若被问怎样选择，我会先保留 `strict`，对缺失值写明确分支；`skipLibCheck` 只作为短期权衡，并记录要消除的声明问题。
+`strict` 是一组严格类型检查的总开关，打开后会启用多项严格规则，而且 TypeScript 升级时这组规则还可能加入更严格的检查。`noUncheckedIndexedAccess` 专门处理索引读取：对类型没有明确保证存在的键或数组下标，结果会增加 `undefined`，因此 `scores[0]` 要先检查再使用。`skipLibCheck` 只跳过声明文件本身的完整检查，用编译速度和迁移便利换取一部分类型准确性；它不会跳过项目自己的 `.ts` 文件，也不会修复错误声明。
+
+如果项目因为依赖中出现两份互相冲突的类型而考虑 `skipLibCheck`，我会先尝试统一依赖版本。确实要临时开启时，也会记录原因和退出条件。`target`、`module`、`moduleResolution` 则要和实际 Node、浏览器或打包器的运行方式匹配，不能照抄一份所谓万能配置。
+
+官方参考：[strict](https://www.typescriptlang.org/tsconfig/strict.html)、[noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)、[skipLibCheck](https://www.typescriptlang.org/tsconfig/skipLibCheck.html)
 
 ## 拓展思考（不要求写代码）
 

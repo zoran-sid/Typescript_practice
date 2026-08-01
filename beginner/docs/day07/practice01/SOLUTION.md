@@ -1,21 +1,13 @@
-# Day 07 · Practice 01 解题结构提示
+# Practice 01 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day07/practice01/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。四个回调/循环中的核心表达式与查找成功后的赋值仍是 `TODO`。
+[打开 solution.ts](../../../day07/practice01/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-数据按顺序流过不同数组方法：`filter` 的回调回答“保不保留当前完整对象”；`map` 的回调回答“当前对象要变成什么”；`find` 的回调回答“当前对象是不是要找的第一项”。三种回调的返回值含义不能混用。
+## 直接调用逻辑
 
-汇总金额继续使用 `for...of`，循环的是筛选结果而不是原数组。`find` 的返回类型包含 `undefined`，所以默认编号先存在外部变量中，检查成功后才更新。
+`orders` → `filter` 回调 return 完成状态 → `completedOrders` → `map` 回调 return id → `completedIds`；`orders` 同时进入 `find` → 首个金额达到 100 的订单 → `firstLargeOrder`；完成订单再由循环累加 → 三个结果共同输出。
 
-骨架中的 `return false` 只表示“TODO 还没完成时，暂时让当前项不匹配”。本题的大额边界在 README 中固定为 100，完成时应让回调返回“当前订单金额是否达到该边界”的比较结果。可以使用单表达式箭头自动返回，也可以保留花括号并明确 `return`；不要把字面量 `false` 当成额外步骤。
-
-## 自检
-
-- `filter` 回调返回 `boolean`。
-- `map` 回调返回编号字符串。
-- `find` 条件使用金额边界，并只取第一项。
-- `firstLargeOrder` 在收窄前不读取 `.id`。
-- 原数组及其中对象都没有被修改。
+回调里的 `return false` 不是额外步骤。最终代码直接 return 比较结果，`find` 收到 true 就停止查找。

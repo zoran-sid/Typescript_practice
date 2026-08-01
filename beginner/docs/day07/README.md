@@ -124,23 +124,30 @@ const found = numbers.find((number) => number === 2);
 
 ## 为什么要这样设计
 
-`find` 知道怎样从左到右检查数组、找到后停止，却不知道你的业务里什么叫“大额”。如果每种查找规则都要发明一个新的数组方法，库会变得又多又难记。因此数组方法负责重复流程，你通过回调只提供“当前项是否符合”这条规则。`filter` 和 `map` 也是同样分工：库负责遍历与收集，你决定保留条件或转换结果。
+`find` 知道怎样从左到右检查数组、找到后停止，却不知道你的业务里什么叫“需要处理”。如果每种查找规则都要发明一个新的数组方法，库会变得又多又难记。因此数组方法负责重复流程，你通过回调只提供“当前项是否符合”这条规则。`filter` 和 `map` 也是同样分工：库负责遍历与收集，你决定保留条件或转换结果。
 
-Practice 01 已把“大额”明确定义为 `amount >= 100`，所以可以直接写：
+例如，运维面板要找出第一台离线服务，可以把“`online` 是 `false`”作为匹配条件：
 
 ```ts
-const firstLargeOrder = orders.find((order) => order.amount >= 100);
+const servers = [
+  { name: "api-1", online: true },
+  { name: "api-2", online: false },
+];
+
+const firstOfflineServer = servers.find(
+  (server) => server.online === false,
+);
 ```
 
 它与下面的花括号写法完全等价：
 
 ```ts
-const firstLargeOrder = orders.find((order) => {
-  return order.amount >= 100;
+const firstOfflineServer = servers.find((server) => {
+  return server.online === false;
 });
 ```
 
-每检查一笔订单，回调返回 `true` 表示“当前订单匹配”，`find` 会立刻停止并交回这笔订单；返回 `false` 表示“当前订单不匹配”，`find` 会继续检查下一笔。`solution.ts` 里的 `return false` 只是为了让未完成的脚手架暂时返回一个 boolean。作答时要把整句 `return false` 替换成金额判断，不需要在正确写法后面再加一条 `return false`。因此你写的单表达式形式是正确的。
+每检查一台服务，回调返回 `true` 表示“当前服务匹配”，`find` 会立刻停止并交回这台服务；返回 `false` 表示“当前服务不匹配”，`find` 会继续检查下一台。如果错误地让每一轮都执行字面量 `return false`，就永远找不到结果。正确写法应直接返回题目要求的比较条件，不需要在条件后面再补一条 `return false`。
 
 `filter` 也最好让每一轮都明确交回布尔比较结果。如果只在匹配分支写 `return true`，其他情况什么都不返回，那些轮次实际交回的是 `undefined`；`filter` 会把它当成“不保留”，结果有时碰巧正确，但代码没有清楚表达完整规则。直接返回一个条件判断，可以同时说明什么时候保留、什么时候不保留。
 
@@ -207,7 +214,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和完整参考答案；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -222,52 +229,87 @@ flowchart TD
 
 ### 错误代码示例
 
+假设构建服务要汇总每个源文件的警告数量，并找出第一个存在警告的文件。开发者一直使用“至少有一个文件会报警”的测试数据，于是同时做了两个危险假设：`map` 的花括号会自动返回数量，`find` 一定能找到文件。某次构建没有任何警告，问题才暴露：
+
 ```ts
-const orders = [
-  { id: "A1", amount: 40 },
-  { id: "B2", amount: 120 },
+const buildFiles = [
+  { path: "src/app.ts", warningCount: 0 },
+  { path: "src/api.ts", warningCount: 0 },
 ];
 
-const ids = orders.map((order) => {
-  order.id; // ❌ 使用花括号后漏写 return，每一项都会变成 undefined。
+const warningCounts = buildFiles.map((file) => {
+  file.warningCount; // ❌ 有花括号却没有 return。
 });
 
-const largeOrder = orders.find((order) => order.amount >= 100);
-console.log(largeOrder.id); // ❌ find 可能返回 undefined，不能直接读取 id。
+const firstProblemFile = buildFiles.find(
+  (file) => file.warningCount > 0,
+);
+
+console.log(`Warning counts: ${warningCounts.join(", ")}`);
+console.log(`First problem: ${firstProblemFile.path}`);
+// ❌ find 可能返回 undefined，不能直接读取 path。
 ```
+
+TypeScript 会先指出 `firstProblemFile` 可能是 `undefined`。如果忽略错误运行 JavaScript，第一行会显示两个空位置，因为 `map` 每轮都交回 `undefined`；随后读取 `firstProblemFile.path` 时程序会因 `firstProblemFile` 实际是 `undefined` 而中断。
+
+这类错误在项目中很常见：固定测试数据让 `find` 总能命中，直到代码质量提升、筛选条件改变或接口返回空列表，隐藏的空结果才出现。
 
 ### 正确写法
 
 ```ts
-const orders = [
-  { id: "A1", amount: 40 },
-  { id: "B2", amount: 120 },
+const buildFiles = [
+  { path: "src/app.ts", warningCount: 0 },
+  { path: "src/api.ts", warningCount: 0 },
 ];
 
-const ids = orders.map((order) => order.id);
-// ✅ 单表达式箭头函数会隐式返回 order.id。
+const warningCounts = buildFiles.map(
+  (file) => file.warningCount,
+);
+// ✅ 单表达式箭头函数会自动交回 warningCount。
+const firstProblemFile = buildFiles.find(
+  (file) => file.warningCount > 0,
+);
 
-const largeOrder = orders.find((order) => order.amount >= 100);
+console.log(`Warning counts: ${warningCounts.join(", ")}`);
 
-if (largeOrder !== undefined) {
-  console.log(largeOrder.id); // ✅ 收窄后才能确定对象存在。
+if (firstProblemFile !== undefined) {
+  console.log(`First problem: ${firstProblemFile.path}`);
+} else {
+  console.log("First problem: none");
 }
 ```
+
+实际输出：
+
+```text
+Warning counts: 0, 0
+First problem: none
+```
+
+单表达式箭头函数会把 `file.warningCount` 自动交给 `map`；若改用花括号，就要明确写 `return file.warningCount;`。`find` 的返回类型保留了“可能没找到”，所以调用处必须同时处理文件对象和 `undefined` 两条路线。
 
 ## 面试时怎么回答
 
 **问：`map`、`filter`、`find` 的回调分别要交回什么？**
 
-三者都会逐项调用回调，但使用回调结果的方式不同。`map` 把每轮交回的值收集成等长新数组，例如 `[1, 2].map(n => n * 2)` 输出 `[2, 4]`；`filter` 把回调结果当作“留不留当前项”，真值就保留；`find` 把它当作“当前项是不是答案”，第一次得到真值就停止，没有匹配项则返回 `undefined`。原数组容器不会因为这三个方法自动改变，但回调若主动修改对象项，里面的对象仍可能被改动。
+可以这样回答：
 
-箭头右侧是单个表达式时会自动交回结果；用了 `{}` 就要明确 `return`。因此 `orders.find(order => order.amount >= 100)` 与 `orders.find(order => { return order.amount >= 100; })` 等价。骨架中的 `return false` 只是保证未完成代码暂时符合布尔返回类型，它表示“当前项不匹配，继续找”，完成练习时必须整体替换，不是正确答案的一部分。
+三者都会逐项调用回调，但处理回调结果的方式不同。`map` 收集每轮返回值，得到与原数组等长的新数组；`filter` 用每轮结果判断是否保留当前原始项；`find` 在第一次得到真值时返回当前项，全部不匹配则返回 `undefined`。这三个方法不会因为调用本身修改原数组容器，但回调如果主动修改对象属性，数组中的对象仍可能变化。
+
+箭头右侧是单个表达式时会自动交回结果；用了 `{}` 就要明确 `return`。因此 `servers.find(server => server.online === false)` 与 `servers.find(server => { return server.online === false; })` 等价。单独写字面量 `return false` 表示“所有当前项都不匹配”，实际项目中常会因此让查找结果始终是 `undefined`。
+
+官方参考：
+
+- [MDN：Array.prototype.map()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+- [MDN：Array.prototype.filter()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
+- [MDN：Array.prototype.find()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
 
 ## 拓展思考（不要求写代码）
 
 如果先把所有订单 `map` 成只包含编号的字符串，再尝试筛选 `status === "done"`，为什么已经无法完成筛选，这说明数组操作的顺序会怎样影响后续可用信息？
 
-## 解题结构提示
+## 完整参考答案
 
-代码目录中的 `solution.ts` 与题目文档目录中的 `SOLUTION.md` 只提供带 TODO 的结构提示，不提供完整答案。
+代码目录中的 `solution.ts` 提供可运行的完整答案，题目文档目录中的 `SOLUTION.md` 解释直接调用逻辑。
 
 完成后再通过对应练习文档的“文件位置”链接查看 `solution.ts` 与 `SOLUTION.md`，重点对照三个数组方法各自保存的中间结果。

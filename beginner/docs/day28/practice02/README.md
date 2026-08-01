@@ -5,8 +5,8 @@
 ## 文件位置
 
 - 作答文件：[practice.ts](../../../day28/practice02/practice.ts)
-- 结构提示代码：[solution.ts](../../../day28/practice02/solution.ts)
-- 方案说明：[SOLUTION.md](./SOLUTION.md)
+- 完整参考答案：[solution.ts](../../../day28/practice02/solution.ts)
+- 答案调用说明：[SOLUTION.md](./SOLUTION.md)
 
 这题把四种函数类型关系放进一个通知发送场景。先根据调用方需要判断何时使用元组、可变参数泛型、重载和显式 `this`，不要因为它们都属于“高级函数”就混成一个宽泛联合。
 
@@ -25,6 +25,77 @@ invoice 函数 + [quantity, unitPrice, discount]
 单个地址 ──> normalizeRecipients(string) ──> string
 地址数组 ──> normalizeRecipients(string[]) ──> string[]
 BillingContext + message ──> formatNotice.call ──> 带部门前缀的通知
+```
+
+
+## 代码流程图
+
+下面这张图按实际执行顺序展开；菱形是判断，箭头上的文字表示走哪条分支。
+
+```mermaid
+flowchart TD
+  A["固定元组<br/>email + 地址"] --> B["describeDelivery(pair)"]
+  B --> C["按位置解构 channel/recipient"]
+  C --> D["return 描述"]
+  D --> E["console.log delivery"]
+  F["账单回调 + 3,80,24"] --> G["invoke(fn,...args)"]
+  G --> H["调用 fn(...args)"]
+  H --> I["回调计算并 return 216"]
+  I --> J["invoke return invoice"]
+  J --> K["console.log Invoice"]
+  L["固定单地址"] --> M["normalizeRecipients(value)"]
+  N["固定地址数组"] --> M
+  M --> O{"value 是 string？"}
+  O -- "是" --> P["trim/lowercase 后 return string"]
+  O -- "否" --> Q["map 回调规范化后 return string[]"]
+  P --> R["console.log Single"]
+  Q --> S["join 后 console.log Batch"]
+  T["固定 this.prefix='billing' + paid"] --> U["formatNotice.call"]
+  U --> V["读取 this 并 return notice"]
+  V --> W["console.log [billing] paid"]
+```
+
+## 起始代码
+
+以下代码提前给出固定数据、函数签名、调用位置和输出位置。代码可作为完整脚手架阅读；判断、循环、回调与 `return` 的正确实现仍留在 TODO 中。
+
+```ts
+type DeliveryPair = readonly [channel: "email" | "sms", recipient: string];
+function describeDelivery(pair: DeliveryPair): string {
+  // TODO：解构并 return。
+  void pair;
+  return "";
+}
+function invoke<Args extends unknown[], Result>(
+  fn: (...args: Args) => Result, ...args: Args
+): Result {
+  // TODO：执行 fn(...args) 并 return。
+  return fn(...args);
+}
+function normalizeRecipients(value: string): string;
+function normalizeRecipients(value: readonly string[]): string[];
+function normalizeRecipients(value: string | readonly string[]): string | string[] {
+  // TODO：判断；单值或 map；return。
+  void value;
+  return "";
+}
+type BillingContext = { prefix: string };
+function formatNotice(this: BillingContext, message: string): string {
+  // TODO：读取 this 并 return。
+  void message;
+  return "";
+}
+console.log(describeDelivery(["email", "learner@example.com"]));
+const invoice = invoke(
+  (quantity: number, unitPrice: number, discount: number) =>
+    quantity * unitPrice - discount,
+  3, 80, 24,
+);
+console.log(`Invoice: ${invoice}`);
+console.log(`Single: ${normalizeRecipients(" Learner@Example.com ")}`);
+const batch = normalizeRecipients([" A@Example.com ", " B@Example.com "]);
+console.log(`Batch: ${batch.join(", ")}`);
+console.log(formatNotice.call({ prefix: "billing" }, "paid"));
 ```
 
 ## 和 Practice 01 的区别
@@ -61,4 +132,4 @@ Batch: a@example.com, b@example.com
 
 ## 文件
 
-在上方链接的 `practice.ts` 作答；独立完成后再查看 `solution.ts` 的 TODO 代码骨架与 `SOLUTION.md` 的解题结构；两者都不提供完整答案。
+在上方链接的 `practice.ts` 作答；独立完成后再查看完整的 `solution.ts`，并用 `SOLUTION.md` 对照直接调用逻辑。

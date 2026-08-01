@@ -1,20 +1,13 @@
-# Day 03 · Practice 01 解题结构提示
+# Practice 01 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day03/practice01/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。`solution.ts` 已保留数组、循环和分支，累加、比较与更新仍是 `TODO`。
+[打开 solution.ts](../../../day03/practice01/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-循环外的 `totalMinutes` 与 `longestSession` 保存跨轮次状态；循环变量 `minutes` 只代表当前一项。每轮先用旧总计和当前项得到新总计，再判断当前项是否足以替换最长记录。
+## 直接调用逻辑
 
-## 变量追踪
+`studyMinutes` → `for...of` 每轮取出 `minutes` → 累加进 `totalMinutes` → 与 `longestSession` 比较并按需更新 → 循环结束 → 输出次数、总时长和最长单次时长。
 
-手写四行追踪表，每行记录：当前 `minutes`、更新前总计、更新后总计、更新后最长值。如果某一列每轮都等于当前项，说明你可能覆盖了旧状态。
-
-## 自检
-
-- 只有一个 `for...of`。
-- 累加表达式同时读取旧总计与当前项。
-- 最长值只在条件成立时更新。
-- 数量来自 `.length`，不手写 4。
+最长值只在本轮更大时覆盖；较小值不会把已经找到的最长记录改回去。

@@ -135,7 +135,7 @@ flowchart TD
 
 ## 独立练习导航
 
-本日共有 2 道独立练习。每道题都有单独目录、说明、作答文件和解题结构提示；题目之间不共享代码。
+本日共有 2 道独立练习。每道题都有单独目录、题目说明、作答文件、完整参考答案和调用逻辑说明；题目之间不共享代码。
 
 | 目录 | 场景 | 类型 |
 | --- | --- | --- |
@@ -154,42 +154,100 @@ flowchart TD
 
 ### 错误代码示例
 
+表单模型和校验器经常由不同人维护。下面的结算字段已经规定了具体类型，手写校验器却又复制了一份名称，并把输入退回 `any`：
+
 ```ts
-type ElementOf<T> = T[keyof T];
-// ❌ 对数组使用时还会混入 length、数组方法等成员类型。
+type CheckoutFields = {
+  email: string;
+  quantity: number;
+};
 
-declare const userIdBrand: unique symbol;
-type UserId = string & { readonly [userIdBrand]: true };
+type CheckoutValidators = {
+  validateEmail: (value: any) => boolean;
+  validateQuantity: (value: any) => boolean;
+};
 
-const id = rawInput as UserId;
-// ❌ 到处断言品牌值，任何普通字符串都能绕过格式检查。
+const validators: CheckoutValidators = {
+  validateEmail(value) {
+    return value.length > 3;
+  },
+  validateQuantity(value) {
+    return value > 0;
+  },
+};
+
+console.log(validators.validateQuantity("3"));
+// ❌ any 允许字符串进入数字校验；JavaScript 比较时发生隐式转换，结果还是 true。
 ```
+
+如果 `CheckoutFields` 再增加 `coupon`，手写的 `CheckoutValidators` 也不会自动要求新增 `validateCoupon`。字段表和校验器变成两份需要人工同步的清单。
+
+品牌值也经常被随手断言绕过。仓库 SKU 和物流单号在运行时都是字符串，但业务上不能混用：
+
+```ts
+declare const shipmentCodeBrand: unique symbol;
+type ShipmentCode = string & {
+  readonly [shipmentCodeBrand]: true;
+};
+
+const productSku = "sku-42";
+const shipmentCode = productSku as ShipmentCode;
+// ❌ 编译器被迫相信断言，商品 SKU 会被发给物流查询接口。
+console.log(`/shipments/${shipmentCode}`);
+```
+
+品牌只在创建入口受控时才有意义。业务代码到处写 `as ShipmentCode`，等于主动绕过它想建立的边界。
 
 ### 正确写法
 
 ```ts
-type ElementOf<T> = T extends readonly (infer Item)[] ? Item : never;
-// ✅ infer 只提取数组元素，不会把数组方法混进结果。
+type Validators<Model> = {
+  [Key in keyof Model as `validate${Capitalize<string & Key>}`]: (
+    value: Model[Key],
+  ) => boolean;
+};
 
-declare const userIdBrand: unique symbol;
-type UserId = string & { readonly [userIdBrand]: true };
+const validators: Validators<CheckoutFields> = {
+  validateEmail(value) {
+    return value.length > 3;
+  },
+  validateQuantity(value) {
+    return value > 0;
+  },
+};
 
-function createUserId(value: string): UserId {
-  if (!value.startsWith("usr_") || value.length <= 4) {
-    throw new Error("Invalid user id");
+declare const shipmentCodeBrand: unique symbol;
+type ShipmentCode = string & {
+  readonly [shipmentCodeBrand]: true;
+};
+
+function parseShipmentCode(value: string): ShipmentCode | null {
+  if (!value.startsWith("ship-") || value.length <= 5) {
+    return null;
   }
-  // ✅ 窄断言只集中在已经完成运行时验证的构造边界。
-  return value as UserId;
+  // ✅ 只有经过前缀和长度检查的入口能建立品牌。
+  return value as ShipmentCode;
+}
+
+const shipmentCode = parseShipmentCode("ship-42");
+if (shipmentCode !== null) {
+  console.log(`/shipments/${shipmentCode}`);
 }
 ```
+
+`Validators<CheckoutFields>` 从字段模型生成校验器名称和参数类型，`validateQuantity` 只能接收数字。字段新增、删除或改名时，校验器对象会立即出现类型提示。`parseShipmentCode` 则返回“合法品牌值或 `null`”，把唯一一次窄断言放在已完成运行时检查的位置。
 
 ## 面试时怎么回答
 
 **问：** 条件类型、`infer`、映射类型和模板字面量类型分别解决什么问题？
 
-**答：** 映射类型遍历来源键，例如 `{ [K in keyof Settings]: boolean }` 会把 `theme`、`pageSize` 都变成布尔标记。模板字面量和键重映射能把事件 `ready` 变成 `onReady`。条件类型按类型形状分支，`T extends readonly (infer Item)[] ? Item : never` 中的 `infer Item` 只在匹配数组时提取元素，所以 `["types", "modules"] as const` 能得到字面量联合 `"types" | "modules"`。
+**可以直接这样回答：**
 
-**容易答错或追问：** 这些工具都在编译阶段计算，不会在运行时创建 flags、重命名对象键或验证用户输入。`infer` 也不是随处可写的变量声明，它要出现在条件类型的匹配位置。面试官若追问品牌类型，我会说明 `UserId` 运行时仍是字符串，必须先检查 `usr_42` 的格式，再在唯一构造边界建立品牌；失败时抛错还是返回 `undefined` 要和函数签名采用同一协议。
+映射类型遍历已有类型的键，例如 `[K in keyof Settings]` 可以为每个配置项生成一个布尔标记。键重映射配合模板字面量类型可以把 `ready` 生成 `onReady`。条件类型根据类型关系选择结果；在 `T extends readonly (infer Item)[] ? Item : never` 中，`infer` 给匹配到的数组元素类型起临时名字，因此能提取出 `Item`。
+
+这些计算只发生在类型检查阶段，不会在运行时创建对象、重命名字段或验证用户输入。品牌类型也不会改变字符串本身；我会把格式检查集中在构造函数中，验证成功后才建立品牌。能用 `Awaited`、`ReturnType`、`Record` 等内置工具类型时，我会优先使用内置版本，减少团队维护自定义类型的成本。
+
+官方参考：[Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)、[Conditional Types 与 `infer`](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html)、[Template Literal Types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html)
 
 ## 拓展思考（不要求写代码）
 

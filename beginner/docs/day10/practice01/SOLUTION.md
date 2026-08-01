@@ -1,23 +1,13 @@
-# Day 10 · Practice 01 解题结构提示
+# Practice 01 · 完整参考答案说明
 
-[返回题目](./README.md) · [打开 solution.ts](../../../day10/practice01/solution.ts)
+[返回题目](./README.md)
 
-> 本文件不提供完整答案。四种收窄的控制流已经保留，所有格式化返回值仍是 `TODO`。
+[打开 solution.ts](../../../day10/practice01/solution.ts)
 
-## 标准结构
+本文件提供完整参考答案。
 
-每个联合类型先经过与其形状匹配的运行时检查，再使用成员专属能力：基础类型用 `typeof`，数组用 `Array.isArray`，对象联合用属性存在检查，字面量联合用严格相等判断。
+## 直接调用逻辑
 
-## 分支中的类型变化
+每组固定数据传入对应函数：编号 → `typeof` → return 格式化编号；主题 → `Array.isArray` → return 单项或列表；联系人 → `"email" in contact` → return 邮箱或电话；优先级 → 字面量判断 → return 提示文字。七个返回值直接交给七次 `console.log`。
 
-- `typeof id === "string"` 的分支中，`id` 才能使用字符串方法；另一条路径剩下数字。
-- `Array.isArray(topics)` 成立后，`topics` 才能作为数组连接；否则是单个字符串。
-- `"email" in contact` 成立后可读取邮箱；否则联合中剩下电话联系人。
-- `priority === "high"` 只处理特殊字面量，其余合法值共享另一条路径。
-
-## 自检
-
-- 没有 `any`、`as` 或非空断言。
-- 每个函数的所有路径都返回 `string`。
-- 运行时检查发生在读取专属属性或方法之前。
-- 输出只调用函数，不把七行最终文字直接写死。
+先用运行时条件收窄，分支内才能安全使用该成员独有的属性或方法。
